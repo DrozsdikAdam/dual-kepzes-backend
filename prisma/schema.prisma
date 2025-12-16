@@ -1,14 +1,308 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// prisma/schema.prisma
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------
+
+enum Role {
+  STUDENT
+  COMPANY_ADMIN
+  MENTOR
+  UNIVERSITY_USER
+  SYSTEM_ADMIN
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  NO_RESPONSE
+}
+
+enum LogStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DocumentType {
+  CV
+  MOTIVATION
+  LANGUAGE_CERT
+  DIPLOMA
+  SCHOOL_CERT
+  LOG_EXPORT
+  PPT
+  OTHER
+}
+
+enum PartnershipStatus {
+  ACTIVE
+  FINISHED
+  TERMINATED
+}
+
+enum TargetLevel {
+  BSC
+  MSC
+  BSC_MSC
+}
+
+// ---------------------------------------------------------
+// FELHASZNÁLÓK ÉS PROFILOK
+// ---------------------------------------------------------
+
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  password           String
+  role               Role
+  
+  isActive           Boolean   @default(true)
+  
+  passwordResetToken String?
+  tokenExpiry        DateTime?
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  // Kapcsolatok
+  studentProfile     StudentProfile?
+  companyEmployee    CompanyEmployee?
+  
+  uniPartnerships    DualPartnership[] 
+  
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+}
+
+model StudentProfile {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+
+  fullName        String
+  mothersName     String
+  birthDate       DateTime
+  address         String
+
+  highSchool      String
+  graduationYear  Int
+  neptunCode      String?
+  currentMajor    String
+  studyMode       String
+  hasLanguageCert Boolean   @default(false)
+
+  deletedAt       DateTime?
+
+  documents       Document[]
+  applications    Application[]
+  partnerships    DualPartnership[]
+}
+
+model CompanyEmployee {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id])
+  
+  companyId   String
+  company     Company   @relation(fields: [companyId], references: [id])
+  
+  jobTitle    String?
+  deletedAt   DateTime?
+
+  mentoredPartnerships DualPartnership[]
+}
+
+// ---------------------------------------------------------
+// CÉGEK ÉS POZÍCIÓK
+// ---------------------------------------------------------
+
+model Company {
+  id           String    @id @default(uuid())
+  
+  name         String
+  taxId        String    @unique
+  headquarters String
+  contactName  String
+  contactEmail String
+  website      String?
+  logoUrl      String?
+  
+  isActive     Boolean   @default(true)
+  deletedAt    DateTime?
+
+  employees    CompanyEmployee[]
+  positions    Position[]
+}
+
+model Position {
+  id           String    @id @default(uuid())
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id])
+
+  title        String
+  description  String?
+
+  tagId        String?
+  tag          Tag?      @relation(fields: [tagId], references: [id])
+
+  deadline     DateTime?
+  
+  isActive     Boolean   @default(true)
+  deletedAt    DateTime?
+
+  applications Application[]
+}
+
+// JAVÍTVA: Tags -> Tag (konvenció miatt) és back-relation hozzáadva
+model Tag {
+  id             String      @id @default(uuid())
+  name           String
+
+  language       String?     
+  address        String?
+  industry       String?
+  targetLevelTag TargetLevel?
+  targetMajor    String?
+  semester       String?
+
+  deletedAt      DateTime?
+
+  positions      Position[] 
+}
+
+// ---------------------------------------------------------
+// JELENTKEZÉS ÉS KÉPZÉS FOLYAMATA
+// ---------------------------------------------------------
+
+model Application {
+  id           String    @id @default(uuid())
+  
+  studentId    String
+  student      StudentProfile @relation(fields: [studentId], references: [id])
+  
+  positionId   String
+  position     Position       @relation(fields: [positionId], references: [id])
+  
+  status       ApplicationStatus @default(SUBMITTED)
+  
+  companyNote  String?
+  studentNote  String?
+  
+  submittedAt  DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@unique([studentId, positionId])
+}
+
+model DualPartnership {
+  id              String    @id @default(uuid())
+  
+  studentId       String
+  student         StudentProfile @relation(fields: [studentId], references: [id])
+  
+  mentorId        String?
+  mentor          CompanyEmployee? @relation(fields: [mentorId], references: [id])
+  
+  uniEmployeeId   String?
+  uniEmployee     User?     @relation(fields: [uniEmployeeId], references: [id])
+
+  semester        String
+  contractNumber  String?
+  
+  status          PartnershipStatus @default(ACTIVE)
+  startDate       DateTime
+  endDate         DateTime?
+  
+  createdAt       DateTime  @default(now())
+
+  logbookEntries  LogbookEntry[]
+}
+
+// ---------------------------------------------------------
+// DOKUMENTUMOK ÉS NAPLÓ
+// ---------------------------------------------------------
+
+model Document {
+  id           String       @id @default(uuid())
+  
+  ownerId      String
+  student      StudentProfile @relation(fields: [ownerId], references: [id])
+  
+  type         DocumentType
+  filePath     String
+  originalName String
+  mimeType     String?
+  
+  uploadedAt   DateTime     @default(now())
+  deletedAt    DateTime?
+}
+
+model LogbookEntry {
+  id            String    @id @default(uuid())
+  
+  partnershipId String
+  partnership   DualPartnership @relation(fields: [partnershipId], references: [id])
+  
+  date          DateTime
+  activity      String
+  
+  status        LogStatus @default(DRAFT)
+  rejectionNote String?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+}
+
+// ---------------------------------------------------------
+// RENDSZER ÉS BIZTONSÁG
+// ---------------------------------------------------------
+
+model Notification {
+  id        String    @id @default(uuid())
+  
+  userId    String    // JAVÍTVA: @unique eltávolítva!
+  user      User      @relation(fields: [userId], references: [id])
+  
+  title     String
+  message   String
+  type      String
+  createdAt DateTime  @default(now())
+}
+
+model AuditLog {
+  id        String    @id @default(uuid())
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
+  
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  
+  ipAddress String?
+  timestamp DateTime  @default(now())
+}
+
+model Message {
+  id          String    @id @default(uuid())
+  senderId    String
+  receiverId  String
+  subject     String?
+  content     String
+  sentAt      DateTime  @default(now())
 }
