@@ -95,8 +95,12 @@ model StudentProfile {
   fullName        String
   mothersName     String
   birthDate       DateTime
-  address         String
 
+  country         String    @default("Magyarország") // Ország
+  zipCode         String    // Irányítószám
+  city            String    // Település
+  streetAddress   String    // Közterület neve, jellege, házszám (pl. Kossuth Lajos utca 12.)
+  
   highSchool      String
   graduationYear  Int
   neptunCode      String?
@@ -134,7 +138,13 @@ model Company {
   
   name         String
   taxId        String    @unique
-  headquarters String
+
+  // Korábban: headquarters String
+  hqCountry    String    @default("Magyarország")
+  hqZipCode    String
+  hqCity       String
+  hqAddress    String    // Utca, házszám
+
   contactName  String
   contactEmail String
   website      String?
@@ -166,13 +176,18 @@ model Position {
   applications Application[]
 }
 
-// JAVÍTVA: Tags -> Tag (konvenció miatt) és back-relation hozzáadva
 model Tag {
   id             String      @id @default(uuid())
   name           String
 
-  language       String?     
-  address        String?
+  language       String?   
+
+  // Korábban: headquarters String
+  Country    String    @default("Magyarország")
+  ZipCode    String
+  City       String
+  Address    String    // Utca, házszám
+
   industry       String?
   targetLevelTag TargetLevel?
   targetMajor    String?
