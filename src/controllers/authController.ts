@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import prisma from "../config/prisma";
 import { hashPassword, comparePassword, generateToken } from "../utils/auth";
 import { RegisterInput, LoginInput } from "../schemas/authSchema";
 
 export const register = async (req: Request<{}, {}, RegisterInput>, res: Response) => {
-    const { email, password, role } = req.body;
+    const { email, password, role, ...studentData } = req.body as any;
 
     try {
         const existingUser = await prisma.user.findUnique({
@@ -16,19 +17,51 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
 
         const hashedPassword = await hashPassword(password);
 
-        const newUser = await prisma.user.create({
-            data: {
-                email,
-                password: hashedPassword,
-                role
+        const newUser = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+            const user = await tx.user.create({
+                data: {
+                    email,
+                    password: hashedPassword,
+                    role
+                }
+            });
+
+            if (role === 'STUDENT') {
+                await tx.studentProfile.create({
+                    data: {
+                        userId: user.id,
+                        fullName: studentData.fullName,
+                        mothersName: studentData.mothersName,
+                        // Dátum konvertálása stringből
+                        birthDate: new Date(studentData.dateOfBirth),
+
+                        // Cím adatok (Adatbázis sémához igazítva)
+                        country: studentData.country || "Magyarország",
+                        zipCode: String(studentData.zipCode), // FONTOS: Szám -> String konverzió!
+                        city: studentData.city,
+                        streetAddress: studentData.streetAddress,
+
+                        highSchool: studentData.highSchool,
+                        graduationYear: Number(studentData.graduationYear), // String -> Number
+                        neptunCode: studentData.neptuneCode, // PowerShellben 'neptuneCode' volt
+                        currentMajor: studentData.currentMajor,
+                        studyMode: studentData.studyMode,
+                        hasLanguageCert: Boolean(studentData.hasLanguageCert)
+                    }
+                });
             }
-        })
+
+            return user;
+        });
 
         res.status(201).json({ message: 'Sikeres regisztráció', userId: newUser.id, role: newUser.role })
 
     } catch (error) {
         console.error("Register Error:", error);
-        res.status(500).json({ message: 'Hiba történt a regisztráció során', error: error })
+        res.status(500).json({
+            message: 'Hiba történt a regisztráció során',
+            error: error instanceof Error ? error.message : error
+        })
     }
 }
 

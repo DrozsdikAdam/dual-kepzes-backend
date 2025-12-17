@@ -7,6 +7,8 @@ export const RoleEnum = z.enum([
     "UNIVERSITY_USER",
     "SYSTEM_ADMIN"
 ]);
+const eighteenYearsAgo = new Date();
+eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
 
 export const RegisterSchema = z.object({
     body: z.object({
@@ -14,9 +16,14 @@ export const RegisterSchema = z.object({
         password: z.string().trim().regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,64}$/),
         role: RoleEnum,
 
-        fullName: z.string().trim().includes(" ").min(1),
-        mothersName: z.string().trim().includes(" ").includes(" ").min(1),
-        dateOfBirth: z.date().min(new Date("1900-01-01"), { error: "Túl öreg!" }).max(new Date().getFullYear() - 18, { error: "Túl fiatal!" }),
+        fullName: z.string().trim().includes(" ", { message: "A teljes név legalább egy szóközt tartalmaz" }).min(1),
+        mothersName: z.string().trim().includes(" ", { message: "A teljes név legalább egy szóközt tartalmaz" }).includes(" ").min(1),
+
+
+        // A sémában:
+        dateOfBirth: z.coerce.date()
+            .min(new Date("1900-01-01"), { message: "Túl öreg!" })
+            .max(eighteenYearsAgo, { message: "Túl fiatal! 18 éven aluliak nem regisztrálhatnak." }),
         zipCode: z.int().min(1000).max(9999),
         city: z.string().trim().min(1),
         streetAddress: z.string().trim().includes(" ").min(1),
