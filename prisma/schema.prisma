@@ -96,10 +96,10 @@ model StudentProfile {
   mothersName     String
   birthDate       DateTime
 
-  country         String    @default("Magyarország") // Ország
-  zipCode         String    // Irányítószám
-  city            String    // Település
-  streetAddress   String    // Közterület neve, jellege, házszám (pl. Kossuth Lajos utca 12.)
+  country         String?    @default("Magyarország") // Ország
+  zipCode         String?    // Irányítószám
+  city            String?    // Település
+  streetAddress   String?    // Közterület neve, jellege, házszám (pl. Kossuth Lajos utca 12.)
   
   highSchool      String
   graduationYear  Int

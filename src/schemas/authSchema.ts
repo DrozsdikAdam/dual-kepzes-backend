@@ -11,14 +11,15 @@ export const RoleEnum = z.enum([
 export const RegisterSchema = z.object({
     body: z.object({
         email: z.string().trim().email({ message: "Érvénytelen email cím formátum" }),
-        password: z.string().trim().min(8), //todo: add more complex password rules
+        password: z.string().trim().regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,64}$/),
         role: RoleEnum,
 
-        fullName: z.string().trim().min(1),
-        mothersName: z.string().trim().min(1),
+        fullName: z.string().trim().includes(" ").min(1),
+        mothersName: z.string().trim().includes(" ").includes(" ").min(1),
         dateOfBirth: z.date().min(new Date("1900-01-01"), { error: "Túl öreg!" }).max(new Date().getFullYear() - 18, { error: "Túl fiatal!" }),
-        zipCode: z.string().trim().min(4).max(10),
+        zipCode: z.int().min(1000).max(9999),
         city: z.string().trim().min(1),
+        streetAddress: z.string().trim().includes(" ").min(1),
 
         highSchool: z.string().trim().min(1),
         neptuneCode: z.string().trim().length(6, { message: "A neptun kód pontosan 6 karakter hosszú." }).optional(),
@@ -32,7 +33,7 @@ export const RegisterSchema = z.object({
 export const LoginSchema = z.object({
     body: z.object({
         email: z.string().trim().email({ message: "Érvénytelen email cím formátum" }),
-        password: z.string().trim().min(8), //todo: add more complex password rules
+        password: z.string().trim().regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,64}$/),
     })
 })
 
