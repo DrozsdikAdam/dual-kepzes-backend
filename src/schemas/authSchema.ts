@@ -24,9 +24,9 @@ export const RegisterSchema = z.object({
         dateOfBirth: z.coerce.date()
             .min(new Date("1900-01-01"), { message: "Túl öreg!" })
             .max(eighteenYearsAgo, { message: "Túl fiatal! 18 éven aluliak nem regisztrálhatnak." }),
-        zipCode: z.int().min(1000).max(9999),
-        city: z.string().trim().min(1),
-        streetAddress: z.string().trim().includes(" ").min(1),
+        zipCode: z.int().min(1000).max(9999).optional(),
+        city: z.string().trim().min(1).optional(),
+        streetAddress: z.string().trim().includes(" ").optional(),
 
         highSchool: z.string().trim().min(1),
         neptuneCode: z.string().trim().length(6, { message: "A neptun kód pontosan 6 karakter hosszú." }).optional(),

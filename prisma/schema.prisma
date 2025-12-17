@@ -5,8 +5,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -64,68 +64,68 @@ enum TargetLevel {
 // ---------------------------------------------------------
 
 model User {
-  id                 String    @id @default(uuid())
-  email              String    @unique
-  password           String
-  role               Role
-  
-  isActive           Boolean   @default(true)
-  
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  role     Role
+
+  isActive Boolean @default(true)
+
   passwordResetToken String?
   tokenExpiry        DateTime?
 
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  deletedAt          DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   // Kapcsolatok
-  studentProfile     StudentProfile?
-  companyEmployee    CompanyEmployee?
-  
-  uniPartnerships    DualPartnership[] 
-  
-  notifications      Notification[]
-  auditLogs          AuditLog[]
+  studentProfile  StudentProfile?
+  companyEmployee CompanyEmployee?
+
+  uniPartnerships DualPartnership[]
+
+  notifications Notification[]
+  auditLogs     AuditLog[]
 }
 
 model StudentProfile {
-  id              String    @id @default(uuid())
-  userId          String    @unique
-  user            User      @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
-  fullName        String
-  mothersName     String
-  birthDate       DateTime
+  fullName    String
+  mothersName String
+  birthDate   DateTime
 
-  country         String?    @default("Magyarország") // Ország
-  zipCode         String?    // Irányítószám
-  city            String?    // Település
-  streetAddress   String?    // Közterület neve, jellege, házszám (pl. Kossuth Lajos utca 12.)
-  
+  country       String? @default("Magyarország") // Ország
+  zipCode       String? // Irányítószám
+  city          String? // Település
+  streetAddress String? // Közterület neve, jellege, házszám (pl. Kossuth Lajos utca 12.)
+
   highSchool      String
   graduationYear  Int
   neptunCode      String?
   currentMajor    String
   studyMode       String
-  hasLanguageCert Boolean   @default(false)
+  hasLanguageCert Boolean @default(false)
 
-  deletedAt       DateTime?
+  deletedAt DateTime?
 
-  documents       Document[]
-  applications    Application[]
-  partnerships    DualPartnership[]
+  documents    Document[]
+  applications Application[]
+  partnerships DualPartnership[]
 }
 
 model CompanyEmployee {
-  id          String    @id @default(uuid())
-  userId      String    @unique
-  user        User      @relation(fields: [userId], references: [id])
-  
-  companyId   String
-  company     Company   @relation(fields: [companyId], references: [id])
-  
-  jobTitle    String?
-  deletedAt   DateTime?
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  jobTitle  String?
+  deletedAt DateTime?
 
   mentoredPartnerships DualPartnership[]
 }
@@ -135,68 +135,68 @@ model CompanyEmployee {
 // ---------------------------------------------------------
 
 model Company {
-  id           String    @id @default(uuid())
-  
-  name         String
-  taxId        String    @unique
+  id String @id @default(uuid())
+
+  name  String
+  taxId String @unique
 
   // Korábban: headquarters String
-  hqCountry    String    @default("Magyarország")
-  hqZipCode    String
-  hqCity       String
-  hqAddress    String    // Utca, házszám
+  hqCountry String @default("Magyarország")
+  hqZipCode String
+  hqCity    String
+  hqAddress String // Utca, házszám
 
   contactName  String
   contactEmail String
   website      String?
   logoUrl      String?
-  
-  isActive     Boolean   @default(true)
-  deletedAt    DateTime?
 
-  employees    CompanyEmployee[]
-  positions    Position[]
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+
+  employees CompanyEmployee[]
+  positions Position[]
 }
 
 model Position {
-  id           String    @id @default(uuid())
-  companyId    String
-  company      Company   @relation(fields: [companyId], references: [id])
+  id        String  @id @default(uuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
 
-  title        String
-  description  String?
+  title       String
+  description String?
 
-  tagId        String?
-  tag          Tag?      @relation(fields: [tagId], references: [id])
+  tagId String?
+  tag   Tag?    @relation(fields: [tagId], references: [id])
 
-  deadline     DateTime?
-  
-  isActive     Boolean   @default(true)
-  deletedAt    DateTime?
+  deadline DateTime?
+
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
 
   applications Application[]
 }
 
 model Tag {
-  id             String      @id @default(uuid())
-  name           String
+  id   String @id @default(uuid())
+  name String
 
-  language       String?   
+  language String?
 
   // Korábban: headquarters String
-  Country    String    @default("Magyarország")
-  ZipCode    String
-  City       String
-  Address    String    // Utca, házszám
+  Country String @default("Magyarország")
+  ZipCode String
+  City    String
+  Address String // Utca, házszám
 
   industry       String?
   targetLevelTag TargetLevel?
   targetMajor    String?
   semester       String?
 
-  deletedAt      DateTime?
+  deletedAt DateTime?
 
-  positions      Position[] 
+  positions Position[]
 }
 
 // ---------------------------------------------------------
@@ -204,48 +204,48 @@ model Tag {
 // ---------------------------------------------------------
 
 model Application {
-  id           String    @id @default(uuid())
-  
-  studentId    String
-  student      StudentProfile @relation(fields: [studentId], references: [id])
-  
-  positionId   String
-  position     Position       @relation(fields: [positionId], references: [id])
-  
-  status       ApplicationStatus @default(SUBMITTED)
-  
-  companyNote  String?
-  studentNote  String?
-  
-  submittedAt  DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
+  id String @id @default(uuid())
+
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id])
+
+  positionId String
+  position   Position @relation(fields: [positionId], references: [id])
+
+  status ApplicationStatus @default(SUBMITTED)
+
+  companyNote String?
+  studentNote String?
+
+  submittedAt DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   @@unique([studentId, positionId])
 }
 
 model DualPartnership {
-  id              String    @id @default(uuid())
-  
-  studentId       String
-  student         StudentProfile @relation(fields: [studentId], references: [id])
-  
-  mentorId        String?
-  mentor          CompanyEmployee? @relation(fields: [mentorId], references: [id])
-  
-  uniEmployeeId   String?
-  uniEmployee     User?     @relation(fields: [uniEmployeeId], references: [id])
+  id String @id @default(uuid())
 
-  semester        String
-  contractNumber  String?
-  
-  status          PartnershipStatus @default(ACTIVE)
-  startDate       DateTime
-  endDate         DateTime?
-  
-  createdAt       DateTime  @default(now())
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id])
 
-  logbookEntries  LogbookEntry[]
+  mentorId String?
+  mentor   CompanyEmployee? @relation(fields: [mentorId], references: [id])
+
+  uniEmployeeId String?
+  uniEmployee   User?   @relation(fields: [uniEmployeeId], references: [id])
+
+  semester       String
+  contractNumber String?
+
+  status    PartnershipStatus @default(ACTIVE)
+  startDate DateTime
+  endDate   DateTime?
+
+  createdAt DateTime @default(now())
+
+  logbookEntries LogbookEntry[]
 }
 
 // ---------------------------------------------------------
@@ -253,35 +253,35 @@ model DualPartnership {
 // ---------------------------------------------------------
 
 model Document {
-  id           String       @id @default(uuid())
-  
-  ownerId      String
-  student      StudentProfile @relation(fields: [ownerId], references: [id])
-  
+  id String @id @default(uuid())
+
+  ownerId String
+  student StudentProfile @relation(fields: [ownerId], references: [id])
+
   type         DocumentType
   filePath     String
   originalName String
   mimeType     String?
-  
-  uploadedAt   DateTime     @default(now())
-  deletedAt    DateTime?
+
+  uploadedAt DateTime  @default(now())
+  deletedAt  DateTime?
 }
 
 model LogbookEntry {
-  id            String    @id @default(uuid())
-  
+  id String @id @default(uuid())
+
   partnershipId String
   partnership   DualPartnership @relation(fields: [partnershipId], references: [id])
-  
-  date          DateTime
-  activity      String
-  
+
+  date     DateTime
+  activity String
+
   status        LogStatus @default(DRAFT)
   rejectionNote String?
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 // ---------------------------------------------------------
@@ -289,36 +289,36 @@ model LogbookEntry {
 // ---------------------------------------------------------
 
 model Notification {
-  id        String    @id @default(uuid())
-  
-  userId    String    // JAVÍTVA: @unique eltávolítva!
-  user      User      @relation(fields: [userId], references: [id])
-  
+  id String @id @default(uuid())
+
+  userId String // JAVÍTVA: @unique eltávolítva!
+  user   User   @relation(fields: [userId], references: [id])
+
   title     String
   message   String
   type      String
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 }
 
 model AuditLog {
-  id        String    @id @default(uuid())
-  userId    String?
-  user      User?     @relation(fields: [userId], references: [id])
-  
-  action    String
-  entity    String
-  entityId  String?
-  details   Json?
-  
+  id     String  @id @default(uuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  action   String
+  entity   String
+  entityId String?
+  details  Json?
+
   ipAddress String?
-  timestamp DateTime  @default(now())
+  timestamp DateTime @default(now())
 }
 
 model Message {
-  id          String    @id @default(uuid())
-  senderId    String
-  receiverId  String
-  subject     String?
-  content     String
-  sentAt      DateTime  @default(now())
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  subject    String?
+  content    String
+  sentAt     DateTime @default(now())
 }
