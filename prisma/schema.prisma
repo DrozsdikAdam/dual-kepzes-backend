@@ -7,6 +7,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------
@@ -96,10 +97,10 @@ model StudentProfile {
   mothersName     String
   birthDate       DateTime
 
-  country         String    @default("Magyarország") // Ország
-  zipCode         String    // Irányítószám
-  city            String    // Település
-  streetAddress   String    // Közterület neve, jellege, házszám (pl. Kossuth Lajos utca 12.)
+  country         String?    @default("Magyarország") // Ország
+  zipCode         String?    // Irányítószám
+  city            String?    // Település
+  streetAddress   String?    // Közterület neve, jellege, házszám (pl. Kossuth Lajos utca 12.)
   
   highSchool      String
   graduationYear  Int
