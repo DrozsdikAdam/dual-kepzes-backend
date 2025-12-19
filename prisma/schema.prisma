@@ -53,11 +53,6 @@ enum PartnershipStatus {
   TERMINATED
 }
 
-enum TargetLevel {
-  BSC
-  MSC
-  BSC_MSC
-}
 
 // ---------------------------------------------------------
 // FELHASZNÁLÓK ÉS PROFILOK
@@ -67,6 +62,8 @@ model User {
   id       String @id @default(uuid())
   email    String @unique
   password String
+  fullName    String
+  phoneNumber String
   role     Role
 
   isActive Boolean @default(true)
@@ -86,27 +83,29 @@ model User {
 
   notifications Notification[]
   auditLogs     AuditLog[]
+
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 model StudentProfile {
   id     String @id @default(uuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
-
-  fullName    String
+  
   mothersName String
   birthDate   DateTime
 
-  country       String? @default("Magyarország") // Ország
-  zipCode       String? // Irányítószám
-  city          String? // Település
-  streetAddress String? // Közterület neve, jellege, házszám (pl. Kossuth Lajos utca 12.)
+  country       String? @default("Magyarország")
+  zipCode       String?
+  city          String?
+  streetAddress String? 
 
-  highSchool      String
-  graduationYear  Int
-  neptunCode      String?
-  currentMajor    String
-  studyMode       String
+  highSchool     String
+  graduationYear Int
+  neptunCode     String?
+  currentMajor   String
+  studyMode      String
   hasLanguageCert Boolean @default(false)
 
   deletedAt DateTime?
@@ -127,7 +126,7 @@ model CompanyEmployee {
   jobTitle  String?
   deletedAt DateTime?
 
-  mentoredPartnerships DualPartnership[]
+  mentoredPartnerships DualPartnership[] 
 }
 
 // ---------------------------------------------------------
@@ -140,11 +139,10 @@ model Company {
   name  String
   taxId String @unique
 
-  // Korábban: headquarters String
   hqCountry String @default("Magyarország")
   hqZipCode String
   hqCity    String
-  hqAddress String // Utca, házszám
+  hqAddress String
 
   contactName  String
   contactEmail String
@@ -166,8 +164,11 @@ model Position {
   title       String
   description String?
 
-  tagId String?
-  tag   Tag?    @relation(fields: [tagId], references: [id])
+  zipCode String
+  city    String
+  address String
+
+  tags        Tag[]   
 
   deadline DateTime?
 
@@ -180,19 +181,6 @@ model Position {
 model Tag {
   id   String @id @default(uuid())
   name String
-
-  language String?
-
-  // Korábban: headquarters String
-  Country String @default("Magyarország")
-  ZipCode String
-  City    String
-  Address String // Utca, házszám
-
-  industry       String?
-  targetLevelTag TargetLevel?
-  targetMajor    String?
-  semester       String?
 
   deletedAt DateTime?
 
@@ -291,7 +279,7 @@ model LogbookEntry {
 model Notification {
   id String @id @default(uuid())
 
-  userId String // JAVÍTVA: @unique eltávolítva!
+  userId String 
   user   User   @relation(fields: [userId], references: [id])
 
   title     String
@@ -316,8 +304,14 @@ model AuditLog {
 
 model Message {
   id         String   @id @default(uuid())
+  
+  // JAVÍTVA: Kapcsolatok a User táblával (Sender/Receiver)
   senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  
   receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  
   subject    String?
   content    String
   sentAt     DateTime @default(now())

@@ -13,14 +13,13 @@ CREATE TYPE "DocumentType" AS ENUM ('CV', 'MOTIVATION', 'LANGUAGE_CERT', 'DIPLOM
 -- CreateEnum
 CREATE TYPE "PartnershipStatus" AS ENUM ('ACTIVE', 'FINISHED', 'TERMINATED');
 
--- CreateEnum
-CREATE TYPE "TargetLevel" AS ENUM ('BSC', 'MSC', 'BSC_MSC');
-
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
+    "fullName" TEXT NOT NULL,
+    "phoneNumber" TEXT NOT NULL,
     "role" "Role" NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "passwordResetToken" TEXT,
@@ -36,13 +35,12 @@ CREATE TABLE "User" (
 CREATE TABLE "StudentProfile" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "fullName" TEXT NOT NULL,
     "mothersName" TEXT NOT NULL,
     "birthDate" TIMESTAMP(3) NOT NULL,
-    "country" TEXT NOT NULL DEFAULT 'Magyarország',
-    "zipCode" TEXT NOT NULL,
-    "city" TEXT NOT NULL,
-    "streetAddress" TEXT NOT NULL,
+    "country" TEXT DEFAULT 'Magyarország',
+    "zipCode" TEXT,
+    "city" TEXT,
+    "streetAddress" TEXT,
     "highSchool" TEXT NOT NULL,
     "graduationYear" INTEGER NOT NULL,
     "neptunCode" TEXT,
@@ -90,7 +88,9 @@ CREATE TABLE "Position" (
     "companyId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
-    "tagId" TEXT,
+    "zipCode" TEXT NOT NULL,
+    "city" TEXT NOT NULL,
+    "address" TEXT NOT NULL,
     "deadline" TIMESTAMP(3),
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "deletedAt" TIMESTAMP(3),
@@ -102,15 +102,6 @@ CREATE TABLE "Position" (
 CREATE TABLE "Tag" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "language" TEXT,
-    "Country" TEXT NOT NULL DEFAULT 'Magyarország',
-    "ZipCode" TEXT NOT NULL,
-    "City" TEXT NOT NULL,
-    "Address" TEXT NOT NULL,
-    "industry" TEXT,
-    "targetLevelTag" "TargetLevel",
-    "targetMajor" TEXT,
-    "semester" TEXT,
     "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "Tag_pkey" PRIMARY KEY ("id")
@@ -214,6 +205,12 @@ CREATE TABLE "Message" (
     CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "_PositionToTag" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -229,6 +226,12 @@ CREATE UNIQUE INDEX "Company_taxId_key" ON "Company"("taxId");
 -- CreateIndex
 CREATE UNIQUE INDEX "Application_studentId_positionId_key" ON "Application"("studentId", "positionId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "_PositionToTag_AB_unique" ON "_PositionToTag"("A", "B");
+
+-- CreateIndex
+CREATE INDEX "_PositionToTag_B_index" ON "_PositionToTag"("B");
+
 -- AddForeignKey
 ALTER TABLE "StudentProfile" ADD CONSTRAINT "StudentProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -240,9 +243,6 @@ ALTER TABLE "CompanyEmployee" ADD CONSTRAINT "CompanyEmployee_companyId_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "Position" ADD CONSTRAINT "Position_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Position" ADD CONSTRAINT "Position_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "Tag"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Application" ADD CONSTRAINT "Application_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "StudentProfile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -270,3 +270,15 @@ ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Message" ADD CONSTRAINT "Message_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Message" ADD CONSTRAINT "Message_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_PositionToTag" ADD CONSTRAINT "_PositionToTag_A_fkey" FOREIGN KEY ("A") REFERENCES "Position"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_PositionToTag" ADD CONSTRAINT "_PositionToTag_B_fkey" FOREIGN KEY ("B") REFERENCES "Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
