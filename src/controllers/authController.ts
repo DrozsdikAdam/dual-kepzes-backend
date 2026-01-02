@@ -45,7 +45,7 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
 
                             highSchool: data.highSchool,
                             graduationYear: Number(data.graduationYear), // String -> Number
-                            neptunCode: data.neptuneCode, // PowerShellben 'neptuneCode' volt
+                            neptunCode: data.neptunCode,
                             currentMajor: data.currentMajor,
                             studyMode: data.studyMode,
                             hasLanguageCert: Boolean(data.hasLanguageCert)
