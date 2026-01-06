@@ -1,17 +1,20 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
 import authRoutes from './routes/authRoutes';
+import { securityMiddleware } from './middlewares/securityMiddleware';
+import { apiRateLimiter, authRateLimiter } from './middlewares/rateLimitMiddleware';
+import { errorHandler } from './middlewares/errorMiddleware';
 
 const app: Application = express();
 
 // Global Middlewares
-app.use(helmet());
+app.use(securityMiddleware);
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRateLimiter, authRoutes);
 
+app.use('/api', apiRateLimiter);
 // Test Route
 app.get('/', (req: Request, res: Response) => {
     res.json({
@@ -20,5 +23,7 @@ app.get('/', (req: Request, res: Response) => {
         timestamp: new Date()
     });
 });
+
+app.use(errorHandler)
 
 export default app;
