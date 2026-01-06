@@ -5,9 +5,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ---------------------------------------------------------
@@ -53,18 +52,17 @@ enum PartnershipStatus {
   TERMINATED
 }
 
-
 // ---------------------------------------------------------
 // FELHASZNÁLÓK ÉS PROFILOK
 // ---------------------------------------------------------
 
 model User {
-  id       String @id @default(uuid())
-  email    String @unique
-  password String
+  id          String @id @default(uuid())
+  email       String @unique
+  password    String
   fullName    String
   phoneNumber String
-  role     Role
+  role        Role
 
   isActive Boolean @default(true)
 
@@ -92,20 +90,20 @@ model StudentProfile {
   id     String @id @default(uuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
-  
+
   mothersName String
   birthDate   DateTime
 
   country       String? @default("Magyarország")
   zipCode       String?
   city          String?
-  streetAddress String? 
+  streetAddress String?
 
-  highSchool     String
-  graduationYear Int
-  neptunCode     String?
-  currentMajor   String
-  studyMode      String
+  highSchool      String
+  graduationYear  Int
+  neptunCode      String?
+  currentMajor    String
+  studyMode       String
   hasLanguageCert Boolean @default(false)
 
   deletedAt DateTime?
@@ -126,7 +124,7 @@ model CompanyEmployee {
   jobTitle  String?
   deletedAt DateTime?
 
-  mentoredPartnerships DualPartnership[] 
+  mentoredPartnerships DualPartnership[]
 }
 
 // ---------------------------------------------------------
@@ -168,7 +166,7 @@ model Position {
   city    String
   address String
 
-  tags        Tag[]   
+  tags Tag[]
 
   deadline DateTime?
 
@@ -279,7 +277,7 @@ model LogbookEntry {
 model Notification {
   id String @id @default(uuid())
 
-  userId String 
+  userId String
   user   User   @relation(fields: [userId], references: [id])
 
   title     String
@@ -303,16 +301,16 @@ model AuditLog {
 }
 
 model Message {
-  id         String   @id @default(uuid())
-  
+  id String @id @default(uuid())
+
   // JAVÍTVA: Kapcsolatok a User táblával (Sender/Receiver)
-  senderId   String
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
-  
+  senderId String
+  sender   User   @relation("SentMessages", fields: [senderId], references: [id])
+
   receiverId String
-  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  
-  subject    String?
-  content    String
-  sentAt     DateTime @default(now())
+  receiver   User   @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  subject String?
+  content String
+  sentAt  DateTime @default(now())
 }
