@@ -17,7 +17,7 @@ const baseUserSchema = z.object({
     phoneNumber: z.string().trim().regex(/^\+?[0-9]{7,15}$/, { message: "Érvénytelen telefonszám formátum" }),
 });
 
-const studentSchema = baseUserSchema.extend({
+export const studentSchema = baseUserSchema.extend({
     role: z.literal(RoleEnum.enum.STUDENT),
 
     mothersName: z.string().trim().includes(" ", { message: "Az anyja neve legalább egy szóközt tartalmaz" }).min(1),
@@ -36,23 +36,23 @@ const studentSchema = baseUserSchema.extend({
     hasLanguageCert: z.boolean()
 });
 
-const mentorSchema = baseUserSchema.extend({
+export const mentorSchema = baseUserSchema.extend({
     role: z.literal(RoleEnum.enum.MENTOR),
     companyId: z.string().uuid(),
     jobTitle: z.string(),
 });
 
-const companyAdminSchema = baseUserSchema.extend({
+export const companyAdminSchema = baseUserSchema.extend({
     role: z.literal(RoleEnum.enum.COMPANY_ADMIN),
     companyId: z.string().uuid(),
     jobTitle: z.string()
 });
 
-const systemAdminSchema = baseUserSchema.extend({
+export const systemAdminSchema = baseUserSchema.extend({
     role: z.literal(RoleEnum.enum.SYSTEM_ADMIN),
 })
 
-const universityUserSchema = baseUserSchema.extend({
+export const universityUserSchema = baseUserSchema.extend({
     role: z.literal(RoleEnum.enum.UNIVERSITY_USER),
 });
 

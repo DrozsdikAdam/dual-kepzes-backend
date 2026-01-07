@@ -2,6 +2,72 @@ import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { CompanyInput, PositionInput, TagInput } from "../schemas/jobSchema";
 
+export const getAllCompanies = async (req: Request, res: Response) => {
+    try {
+        const companies = await prisma.company.findMany({
+            where: { deletedAt: null },
+            include: {
+                _count: { select: { positions: true } }
+            }
+        })
+        res.json(companies);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a cégek lekérésekor." });
+    }
+}
+
+export const getCompanyById = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    try {
+        const company = await prisma.company.findUnique({
+            where: { id, deletedAt: null },
+            include: {
+                positions: { where: { deletedAt: null } },
+                employees: { select: { jobTitle: true, user: { select: { fullName: true } } } }
+            }
+        })
+
+        if (!company) return res.status(404).json({ message: "Cég nem található." });
+        res.json(company);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a cég lekérésekor." });
+    }
+}
+
+export const getAllPositions = async (req: Request, res: Response) => {
+    try {
+        const positions = await prisma.position.findMany({
+            where: { deletedAt: null, isActive: true },
+            include: {
+                company: { select: { name: true, logoUrl: true, hqCity: true } },
+                tags: { select: { name: true } }
+            },
+            orderBy: { deadline: 'asc' }
+
+        })
+        res.json(positions);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a pozíciók lekérésekor." });
+    }
+}
+
+export const getPositionById = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    try {
+        const position = await prisma.position.findUnique({
+            where: { id, deletedAt: null },
+            include: {
+                company: true,
+                tags: true
+            }
+        })
+        if (!position) return res.status(404).json({ message: "Pozíció nem található." });
+        res.json(position);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a pozíció lekérésekor." });
+    }
+}
+
 export const createTag = async (
     req: Request<{}, {}, TagInput>,
     res: Response
@@ -104,3 +170,86 @@ export const createPosition = async (
         res.status(500).json({ message: "Hiba történt a pozíció mentése során." });
     }
 };
+
+export const updateCompany = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const data = req.body;
+
+    try {
+        const updatedCompany = await prisma.company.update({
+            where: { id },
+            data: data,
+        })
+        res.json({ message: "Cég adatai frissítve", company: updatedCompany });
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a cég frissítésekor. Lehet, hogy az ID nem létezik." });
+    }
+}
+
+export const updatePosition = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { tagNames, ...data } = req.body;
+
+    try {
+        const updatedPosition = await prisma.position.update({
+            where: { id },
+            data: {
+                ...data,
+                tags: tagNames ? {
+                    set: [],
+                    connectOrCreate: tagNames.map((name: string) => ({
+                        where: { name },
+                        create: { name }
+                    }))
+                } : undefined
+            },
+            include: { tags: true }
+        })
+        res.json({ message: "Pozíció frissítve", position: updatedPosition });
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a pozíció frissítésekor." });
+    }
+}
+
+export const deleteCompany = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+
+        await prisma.company.update({
+            where: { id },
+            data: {
+                isActive: false,
+                deletedAt: new Date()
+            }
+        })
+
+        // A céghez tartozó összes pozíció deaktiválása is
+        await prisma.position.updateMany({
+            where: { companyId: id },
+            data: { isActive: false, deletedAt: new Date() }
+        });
+
+        res.json({ message: "Cég és kapcsolódó pozíciói törölve." });
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a cég törlésekor." });
+    }
+}
+
+export const deletePosition = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+
+        await prisma.position.update({
+            where: { id },
+            data: {
+                isActive: false,
+                deletedAt: new Date()
+            }
+        })
+        res.json({ message: "Pozíció sikeresen törölve." });
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a pozíció törlésekor." });
+    }
+}
