@@ -54,6 +54,22 @@ export const TagCreateSchema = z.object({
     }),
 });
 
+export const CompanyUpdateSchema = z.object({
+    params: z.object({
+        companyId: z.string().uuid("Érvénytelen cég azonosító"),
+    }),
+    body: CompanyCreateSchema.shape.body.partial()
+})
+
+export const PositionUpdateSchema = z.object({
+    params: z.object({
+        id: z.string().uuid("Érvénytelen cég azonosító"),
+    }),
+    body: PositionCreateSchema.shape.body.partial()
+})
+
 export type CompanyInput = z.infer<typeof CompanyCreateSchema>["body"];
 export type PositionInput = z.infer<typeof PositionCreateSchema>["body"];
 export type TagInput = z.infer<typeof TagCreateSchema>["body"];
+export type CompanyUpdateInput = z.infer<typeof CompanyUpdateSchema>['body'];
+export type PositionUpdateInput = z.infer<typeof PositionUpdateSchema>['body'];
