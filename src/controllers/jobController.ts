@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { CompanyInput, PositionInput, TagInput } from "../schemas/jobSchema";
-import { connect } from "node:http2";
 
 export const createTag = async (
     req: Request<{}, {}, TagInput>,
