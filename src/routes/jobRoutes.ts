@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createCompany, createPosition, updateCompany, updatePosition } from "../controllers/jobController";
+import { createCompany, createPosition, deleteCompany, deletePosition, updateCompany, updatePosition } from "../controllers/jobController";
 import { validate } from "../middlewares/validateMiddleware";
 import {
     CompanyCreateSchema,
@@ -36,6 +36,16 @@ router.put(
     authenticateToken,
     validate(PositionUpdateSchema),
     updatePosition
+);
+
+router.delete('/companies/:id',
+    authenticateToken,
+    deleteCompany
+);
+
+router.delete('/positions/:id',
+    authenticateToken,
+    deletePosition
 );
 
 export default router;
