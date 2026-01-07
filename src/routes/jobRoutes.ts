@@ -1,5 +1,16 @@
 import { Router } from "express";
-import { createCompany, createPosition, deleteCompany, deletePosition, updateCompany, updatePosition } from "../controllers/jobController";
+import {
+    createCompany,
+    createPosition,
+    deleteCompany,
+    deletePosition,
+    getAllCompanies,
+    getAllPositions,
+    getCompanyById,
+    getPositionById,
+    updateCompany,
+    updatePosition
+} from "../controllers/jobController";
 import { validate } from "../middlewares/validateMiddleware";
 import {
     CompanyCreateSchema,
@@ -11,17 +22,22 @@ import { authenticateToken } from "../middlewares/authMiddleware";
 
 const router = Router();
 
+// Cég végpontok
+router.get('/companies',
+    authenticateToken,
+    getAllCompanies
+);
+
+router.get('/companies/:id',
+    authenticateToken,
+    getCompanyById
+);
+
 router.post(
     "/companies",
     authenticateToken,
     validate(CompanyCreateSchema),
     createCompany
-);
-router.post(
-    "/positions",
-    authenticateToken,
-    validate(PositionCreateSchema),
-    createPosition
 );
 
 router.put(
@@ -31,16 +47,34 @@ router.put(
     updateCompany
 );
 
+router.delete('/companies/:id',
+    authenticateToken,
+    deleteCompany
+);
+
+// Pozíció végpontok
+router.get('/positions',
+    authenticateToken,
+    getAllPositions
+);
+
+router.get('/positions/:id',
+    authenticateToken,
+    getPositionById
+);
+
+router.post(
+    "/positions",
+    authenticateToken,
+    validate(PositionCreateSchema),
+    createPosition
+);
+
 router.put(
     "/positions/:id",
     authenticateToken,
     validate(PositionUpdateSchema),
     updatePosition
-);
-
-router.delete('/companies/:id',
-    authenticateToken,
-    deleteCompany
 );
 
 router.delete('/positions/:id',
