@@ -41,6 +41,20 @@ export const getStudentById = async (req: Request, res: Response) => {
     }
 }
 
+export const getAllStudents = async (req: Request, res: Response) => {
+    try {
+        const students = await prisma.user.findMany({
+            where: { role: 'STUDENT', deletedAt: null },
+            include: { studentProfile: true },
+            orderBy: { createdAt: 'desc' }
+        })
+        res.status(200).json(students);
+    } catch (error) {
+        console.error("GetAllStudents Error:", error);
+        res.status(500).json({ message: "Hiba történt a hallgatók listázásakor." });
+    }
+}
+
 export const updateMyProfile = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
     const { fullName, phoneNumber, ...profileData } = req.body;
@@ -66,20 +80,6 @@ export const updateMyProfile = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Hiba a profil frissítése során." });
     }
 
-}
-
-export const getAllStudents = async (req: Request, res: Response) => {
-    try {
-        const students = await prisma.user.findMany({
-            where: { role: 'STUDENT', deletedAt: null },
-            include: { studentProfile: true },
-            orderBy: { createdAt: 'desc' }
-        })
-        res.status(200).json(students);
-    } catch (error) {
-        console.error("GetAllStudents Error:", error);
-        res.status(500).json({ message: "Hiba történt a hallgatók listázásakor." });
-    }
 }
 
 export const updateStudentById = async (req: Request, res: Response) => {

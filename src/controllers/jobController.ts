@@ -144,3 +144,46 @@ export const updatePosition = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Hiba a pozíció frissítésekor." });
     }
 }
+
+export const deleteCompany = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+
+        await prisma.company.update({
+            where: { id },
+            data: {
+                isActive: false,
+                deletedAt: new Date()
+            }
+        })
+
+        // A céghez tartozó összes pozíció deaktiválása is
+        await prisma.position.updateMany({
+            where: { companyId: id },
+            data: { isActive: false, deletedAt: new Date() }
+        });
+
+        res.json({ message: "Cég és kapcsolódó pozíciói törölve." });
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a cég törlésekor." });
+    }
+}
+
+export const deletePosition = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+
+        await prisma.position.update({
+            where: { id },
+            data: {
+                isActive: false,
+                deletedAt: new Date()
+            }
+        })
+        res.json({ message: "Pozíció sikeresen törölve." });
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a pozíció törlésekor." });
+    }
+}
