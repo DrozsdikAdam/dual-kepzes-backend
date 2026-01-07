@@ -37,6 +37,13 @@ export const PositionCreateSchema = z.object({
     city: z.string(),
     address: z.string(),
     deadline: z.coerce.date().optional().nullable(),
+    tagIds: z.array(z.string().uuid()).optional(),
+  }),
+});
+
+export const TagCreateSchema = z.object({
+  body: z.object({
+    name: z.string().trim().min(1, "A címke neve nem lehet üres."),
   }),
 });
 
