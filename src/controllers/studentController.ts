@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
 
-export const myProfile = async (req: Request, res: Response) => {
+export const getMyProfile = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
 
     if (!userId) {
@@ -21,6 +21,23 @@ export const myProfile = async (req: Request, res: Response) => {
         res.status(200).json(student);
     } catch (error) {
         res.status(500).json({ message: "Hiba a profil lekérésekor." });
+    }
+}
+
+export const getStudentById = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    try {
+        const student = await prisma.user.findUnique({
+            where: { id, role: 'STUDENT' },
+            include: { studentProfile: true }
+        })
+
+        if (!student) {
+            return res.status(404).json({ message: "Hallgató nem található." });
+        }
+        res.status(200).json(student);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a hallgató lekérésekor." });
     }
 }
 
@@ -96,5 +113,43 @@ export const updateSutdent = async (req: Request, res: Response) => {
 
         console.error("Student Update Error:", error);
         res.status(500).json({ message: "Szerver hiba történt a módosítás során." });
+    }
+}
+
+export const deleteMyProfile = async (req: Request, res: Response) => {
+    const userId = req.user?.userId;
+    try {
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                isActive: false,
+                deletedAt: new Date(),
+                studentProfile: {
+                    update: { deletedAt: new Date() }
+                }
+            }
+        });
+        res.json({ message: "Profilod sikeresen törölve." })
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a törlés során." });
+    }
+}
+
+export const deleteStudentById = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    try {
+        await prisma.user.update({
+            where: { id },
+            data: {
+                isActive: false,
+                deletedAt: new Date(),
+                studentProfile: {
+                    update: { deletedAt: new Date() }
+                }
+            }
+        })
+        res.json({ message: "A hallgatói profil sikeresen törölve." });
+    } catch (error) {
+        res.status(404).json({ message: "A hallgató nem található vagy már törölték." });
     }
 }
