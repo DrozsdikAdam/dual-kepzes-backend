@@ -82,7 +82,7 @@ export const getAllStudents = async (req: Request, res: Response) => {
     }
 }
 
-export const updateSutdent = async (req: Request, res: Response) => {
+export const updateStudentById = async (req: Request, res: Response) => {
     const id = req.params.id;
     const data = req.body;
     const { fullName, phoneNumber, ...profileData } = data;
