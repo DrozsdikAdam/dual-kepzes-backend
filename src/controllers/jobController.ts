@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { CompanyInput, PositionInput, TagInput } from "../schemas/jobSchema";
+import { connect } from "node:http2";
 
 export const createTag = async (
     req: Request<{}, {}, TagInput>,
@@ -104,3 +105,43 @@ export const createPosition = async (
         res.status(500).json({ message: "Hiba történt a pozíció mentése során." });
     }
 };
+
+export const updateCompany = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const data = req.body;
+
+    try {
+        const updatedCompany = await prisma.company.update({
+            where: { id },
+            data: data,
+        })
+        res.json({ message: "Cég adatai frissítve", company: updatedCompany });
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a cég frissítésekor. Lehet, hogy az ID nem létezik." });
+    }
+}
+
+export const updatePosition = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { tagNames, ...data } = req.body;
+
+    try {
+        const updatedPosition = await prisma.position.update({
+            where: { id },
+            data: {
+                ...data,
+                tags: tagNames ? {
+                    set: [],
+                    connectOrCreate: tagNames.map((name: string) => ({
+                        where: { name },
+                        create: { name }
+                    }))
+                } : undefined
+            },
+            include: { tags: true }
+        })
+        res.json({ message: "Pozíció frissítve", position: updatedPosition });
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a pozíció frissítésekor." });
+    }
+}
