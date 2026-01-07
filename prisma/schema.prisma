@@ -178,7 +178,7 @@ model Position {
 
 model Tag {
   id   String @id @default(uuid())
-  name String
+  name String @unique
 
   deletedAt DateTime?
 
