@@ -65,7 +65,7 @@ export const PositionUpdateSchema = z.object({
     params: z.object({
         id: z.string().uuid("Érvénytelen cég azonosító"),
     }),
-    body: PositionCreateSchema.shape.body.partial()
+    body: PositionCreateSchema.shape.body.omit({ companyId: true }).partial()
 })
 
 export type CompanyInput = z.infer<typeof CompanyCreateSchema>["body"];
