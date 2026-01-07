@@ -12,4 +12,16 @@ export const StudentUpdateSchema = z.object({
     }).partial()
 })
 
+export const MyProfileUpdateSchema = z.object({
+    body: studentSchema
+        .omit({
+            role: true,
+            email: true,
+            password: true
+        })
+        .partial()
+});
+
+
 export type StudentUpdateInput = z.infer<typeof StudentUpdateSchema>['body'];
+export type MyProfileUpdateInput = z.infer<typeof MyProfileUpdateSchema>['body'];
