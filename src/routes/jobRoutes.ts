@@ -21,3 +21,5 @@ router.post(
   validate(PositionCreateSchema),
   createPosition
 );
+
+export default router;
