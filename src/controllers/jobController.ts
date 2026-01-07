@@ -2,6 +2,72 @@ import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { CompanyInput, PositionInput, TagInput } from "../schemas/jobSchema";
 
+export const getAllCompanies = async (req: Request, res: Response) => {
+    try {
+        const companies = await prisma.company.findMany({
+            where: { deletedAt: null },
+            include: {
+                _count: { select: { positions: true } }
+            }
+        })
+        res.json(companies);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a cégek lekérésekor." });
+    }
+}
+
+export const getCompanyById = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    try {
+        const company = await prisma.company.findUnique({
+            where: { id, deletedAt: null },
+            include: {
+                positions: { where: { deletedAt: null } },
+                employees: { select: { jobTitle: true, user: { select: { fullName: true } } } }
+            }
+        })
+
+        if (!company) return res.status(404).json({ message: "Cég nem található." });
+        res.json(company);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a cég lekérésekor." });
+    }
+}
+
+export const getAllPositions = async (req: Request, res: Response) => {
+    try {
+        const positions = await prisma.position.findMany({
+            where: { deletedAt: null, isActive: true },
+            include: {
+                company: { select: { name: true, logoUrl: true, hqCity: true } },
+                tags: { select: { name: true } }
+            },
+            orderBy: { deadline: 'asc' }
+
+        })
+        res.json(positions);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a pozíciók lekérésekor." });
+    }
+}
+
+export const getPositionById = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    try {
+        const position = await prisma.position.findUnique({
+            where: { id, deletedAt: null },
+            include: {
+                company: true,
+                tags: true
+            }
+        })
+        if (!position) return res.status(404).json({ message: "Pozíció nem található." });
+        res.json(position);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a pozíció lekérésekor." });
+    }
+}
+
 export const createTag = async (
     req: Request<{}, {}, TagInput>,
     res: Response
