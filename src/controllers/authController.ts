@@ -101,7 +101,7 @@ export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => 
 
     try {
         const user = await prisma.user.findUnique({
-            where: { email }
+            where: { email, deletedAt: null }
         })
         if (!user) {
             return res.status(400).json({ message: 'Hibás email vagy jelszó.' })
