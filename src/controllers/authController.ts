@@ -17,7 +17,7 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
 
         const hashedPassword = await hashPassword(data.password);
 
-        const newUser = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        const newUser = await prisma.$transaction(async (tx) => {
             const user = await tx.user.create({
                 data: {
                     email: data.email,
@@ -101,7 +101,7 @@ export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => 
 
     try {
         const user = await prisma.user.findUnique({
-            where: { email, deletedAt: null }
+            where: { email }
         })
         if (!user) {
             return res.status(400).json({ message: 'Hibás email vagy jelszó.' })

@@ -10,7 +10,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
 
     try {
         const student = await prisma.user.findUnique({
-            where: { id: userId, deletedAt: null },
+            where: { id: userId },
             include: { studentProfile: true }
         })
 
@@ -28,7 +28,7 @@ export const getStudentById = async (req: Request, res: Response) => {
     const id = req.params.id;
     try {
         const student = await prisma.user.findUnique({
-            where: { id, role: 'STUDENT', deletedAt: null },
+            where: { id, role: 'STUDENT' },
             include: { studentProfile: true }
         })
 
@@ -44,7 +44,7 @@ export const getStudentById = async (req: Request, res: Response) => {
 export const getAllStudents = async (req: Request, res: Response) => {
     try {
         const students = await prisma.user.findMany({
-            where: { role: 'STUDENT', deletedAt: null },
+            where: { role: 'STUDENT' },
             include: { studentProfile: true },
             orderBy: { createdAt: 'desc' }
         })

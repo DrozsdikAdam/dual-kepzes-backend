@@ -9,7 +9,7 @@ export const getEmployeeById = async (req: Request, res: Response) => {
 
     try {
         const target = await prisma.companyEmployee.findUnique({
-            where: { userId: userToFind, deletedAt: null },
+            where: { userId: userToFind },
             include: { user: true }
         });
         const requester = await prisma.companyEmployee.findUnique({
@@ -45,7 +45,6 @@ export const getCompanyEmployees = async (req: Request, res: Response) => {
         const employees = await prisma.user.findMany({
             where: {
                 companyEmployee: { companyId: requester.companyId },
-                deletedAt: null
             },
             include: { companyEmployee: true }
         });

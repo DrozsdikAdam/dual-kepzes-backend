@@ -5,7 +5,6 @@ import { CompanyInput, PositionInput, TagInput } from "../schemas/jobSchema";
 export const getAllCompanies = async (req: Request, res: Response) => {
     try {
         const companies = await prisma.company.findMany({
-            where: { deletedAt: null },
             include: {
                 _count: { select: { positions: true } }
             }
@@ -20,9 +19,9 @@ export const getCompanyById = async (req: Request, res: Response) => {
     const id = req.params.id;
     try {
         const company = await prisma.company.findUnique({
-            where: { id, deletedAt: null },
+            where: { id },
             include: {
-                positions: { where: { deletedAt: null } },
+                positions: true,
                 employees: { select: { jobTitle: true, user: { select: { fullName: true } } } }
             }
         })
@@ -37,7 +36,7 @@ export const getCompanyById = async (req: Request, res: Response) => {
 export const getAllPositions = async (req: Request, res: Response) => {
     try {
         const positions = await prisma.position.findMany({
-            where: { deletedAt: null, isActive: true },
+            where: { isActive: true },
             include: {
                 company: { select: { name: true, logoUrl: true, hqCity: true } },
                 tags: { select: { name: true } }
@@ -55,7 +54,7 @@ export const getPositionById = async (req: Request, res: Response) => {
     const id = req.params.id;
     try {
         const position = await prisma.position.findUnique({
-            where: { id, deletedAt: null },
+            where: { id },
             include: {
                 company: true,
                 tags: true
@@ -132,7 +131,7 @@ export const createPosition = async (
     try {
         // 1. Cég ellenőrzése
         const company = await prisma.company.findUnique({
-            where: { id: data.companyId, deletedAt: null },
+            where: { id: data.companyId },
         });
 
         if (!company) {
