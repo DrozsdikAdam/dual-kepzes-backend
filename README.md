@@ -2,120 +2,172 @@
 
 Ez a repository tartalmazza a Duális Képzés rendszer backend API-ját. Az alkalmazás Node.js környezetben, Express keretrendszerrel, TypeScript nyelven íródott, PostgreSQL adatbázist használ Prisma ORM-mel, és Zod könyvtárat a validációhoz.
 
-# Technológiai Stack
+## Technológiai Stack
 
-* **Runtime:** Node.js
-* **Nyelv:** TypeScript
-* **Keretrendszer:** Express.js
-* **Adatbázis:** PostgreSQL
-* **ORM:** Prisma
-* **Validáció:** Zod
-* **Autentikáció:** JWT (JSON Web Token) + bcryptjs
-* **Biztonság:** Helmet, Cors
+*   **Runtime:** Node.js
+*   **Nyelv:** TypeScript
+*   **Keretrendszer:** Express.js
+*   **Adatbázis:** PostgreSQL
+*   **ORM:** Prisma
+*   **Validáció:** Zod
+*   **Autentikáció:** JWT (JSON Web Token) + bcryptjs
+*   **Biztonság:** Helmet, Cors, Rate Limiting
 
-# Telepítés és Konfiguráció
+## Telepítés és Konfiguráció
 
 Kövesd az alábbi lépéseket a fejlesztői környezet beállításához.
 
 ### Repository klónozása
 
+```bash
 git clone https://github.com/DrozsdikAdam/dual-kepzes-backend
-
 cd dual-kepzes-backend
-
 npm install
+```
 
+### Környezeti Változók (.env)
 
-### Szerver konfiguráció
+Hozd létre a `.env` fájlt a gyökérkönyvtárban az alábbi tartalommal:
+
+```env
+# Szerver konfiguráció
 PORT=3000
 
-### Adatbázis kapcsolat (PostgreSQL connection string)
+# Adatbázis kapcsolat (PostgreSQL connection string)
 DATABASE_URL="postgresql://felhasznalo:jelszo@localhost:5432/adatbazis_neve?schema=public"
 
-### Ha Supabase-t vagy tranzakciós poolert használsz (Opcionális)
+# Ha Supabase-t vagy tranzakciós poolert használsz (Opcionális)
 DIRECT_URL="postgresql://felhasznalo:jelszo@localhost:5432/adatbazis_neve?schema=public"
 
-### JWT Titkos kulcs (Aláíráshoz)
+# JWT Titkos kulcs (Aláíráshoz)
 JWT_SECRET="ide_irj_egy_eros_titkos_kulcsot"
 
-# Autentikáció
+# Környezet (development / production)
+NODE_ENV="development"
+```
 
-A rendszer robusztus regisztrációs és bejelentkezési folyamattal rendelkezik, amely szerepkörökre (Role) van bontva.
+## Biztonság és Middleware-ek
 
-## Regisztráció (POST /api/auth/register)
-A regisztráció során a rendszer adatbázis tranzakciót használ. Ez biztosítja, hogy a User (alapadatok) és a szerepkör-specifikus profil (pl. StudentProfile, CompanyEmployee) egyszerre jöjjön létre, vagy hiba esetén egyik sem.
+Az alkalmazás több rétegű védelmet használ a támadások ellen és a stabil működés érdekében.
 
-Támogatott szerepkörök:
+### 1. Rate Limiting (Forgalomkorlátozás)
 
-STUDENT: Hallgatói profil (Neptun kód, tanulmányi adatok).
+A `rateLimitMiddleware.ts` alapján kétféle korlátozás van érvényben a túlterheléses támadások (DDoS) és a brute-force próbálkozások ellen:
 
-MENTOR: Céges mentor (Cég ID, pozíció).
+*   **Autentikációs végpontok (`/api/auth/*`):** Szigorú limit.
+    *   Időablak: 15 perc.
+    *   Maximum kérés: 5 db / IP.
+    *   Cél: Jelszófeltörés megakadályozása.
+*   **Általános API végpontok (`/api/*`):** Enyhébb limit.
+    *   Időablak: 10 perc.
+    *   Maximum kérés: 100 db / IP.
 
-COMPANY_ADMIN: Céges adminisztrátor.
+### 2. HTTP Header Biztonság
 
-UNIVERSITY_USER: Egyetemi munkatárs.
+A `helmet` middleware gondoskodik a biztonsági HTTP fejlécek (pl. X-XSS-Protection, Strict-Transport-Security) beállításáról.
 
-SYSTEM_ADMIN: Rendszergazda.
+### 3. Jogosultságkezelés (RBAC)
 
-Validációs szabályok (Zod):
+Az `authMiddleware.ts` biztosítja a szerepkör alapú hozzáférést.
 
-Jelszó: Min. 12 karakter, tartalmaznia kell kisbetűt, nagybetűt, számot és speciális karaktert.
+*   `authenticateToken`: Ellenőrzi a JWT érvényességét.
+*   `requireRole`: Middleware gyár, amely ellenőrzi, hogy a felhasználó rendelkezik-e a szükséges szerepkörrel (pl. `isStudent`, `isMentor`, `isStaff`).
 
-Email: Érvényes email formátum.
+## Autentikáció
 
-Hallgatók: Csak 18. életévüket betöltött személyek regisztrálhatnak.
+A rendszer robusztus regisztrációs és bejelentkezési folyamattal rendelkezik.
 
-## Regisztrációs Folyamat (POST /register)
-Kérés érkezése: A kliens elküldi a regisztrációs adatokat (email, jelszó, szerepkör, profiladatok) a végpontra.
+### Regisztráció (`POST /api/auth/register`)
 
-Validáció: A rendszer a Zod sémák (RegisterSchema) alapján ellenőrzi a bemenő adatokat.
+A regisztráció során a rendszer adatbázis tranzakciót használ. Ez biztosítja, hogy a `User` (alapadatok) és a szerepkör-specifikus profil (pl. `StudentProfile`, `CompanyEmployee`) egyszerre jöjjön létre.
 
-Hiba ág: Ha az adatok nem felelnek meg (pl. gyenge jelszó, hiányzó mező), a szerver 400 Bad Request választ küld a hiba részleteivel.
+*   **Validáció:** Zod séma ellenőrzi a jelszó erősségét és a kötelező mezőket.
+*   **Email ellenőrzés:** Egyedi email cím kényszerítése.
+*   **Jelszó:** Bcrypt hashelés.
 
-Email ellenőrzés: A kontroller megnézi az adatbázisban, létezik-e már a megadott email cím.
+### Bejelentkezés (`POST /api/auth/login`)
 
-Hiba ág: Ha létezik, 400-as hibát dob ("Már létezik felhasználó").
+Sikeres azonosítás esetén a rendszer JWT tokent állít ki, amely tartalmazza a felhasználó azonosítóját (`userId`) és szerepkörét (`role`).
 
-Jelszó titkosítás: A nyers jelszót a rendszer bcrypt segítségével hasheli (sózza és titkosítja).
+## API Modulok
 
-Adatbázis Tranzakció:
+### 1. Hallgatói Modul (`/api/students`)
 
-Létrejön a User rekord az alapadatokkal (email, hash, role).
+A hallgatók kezelése, profilmódosítás és törlés.
 
-A role (szerepkör) alapján létrejön a specifikus profil:
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Összes hallgató listázása (csak aktívak). | Staff |
+| `GET` | `/me` | Saját profil lekérése. | Student |
+| `PUT` | `/me` | Saját profil frissítése. | Student |
+| `DELETE` | `/me` | Saját profil törlése (Soft Delete). | Student |
+| `GET` | `/:id` | Hallgató lekérése ID alapján. | Staff |
+| `PUT` | `/:id` | Hallgató módosítása ID alapján. | Staff |
+| `DELETE` | `/:id` | Hallgató törlése ID alapján (Soft Delete). | Staff |
 
-STUDENT esetén: StudentProfile (születési dátum, cím, oktatási adatok).
+**Kiemelt logikák:**
 
-MENTOR vagy COMPANY_ADMIN esetén: CompanyEmployee (céges adatok).
+*   **Nested Update:** A `PUT` kérések egyszerre frissítik a `User` táblát (név, telefon) és a kapcsolódó `StudentProfile` táblát (cím, iskola, stb.) egy tranzakcióban.
+*   **Soft Delete:** A törlés nem távolítja el fizikailag az adatot, hanem beállítja a `deletedAt` dátumot és az `isActive: false` flaget. A lekérdezések (pl. `findUnique`, `findMany`) automatikusan szűrik a törölt elemeket (`deletedAt: null`).
 
-Hiba ág: Ha bármelyik lépés sikertelen, a tranzakció visszavon mindent.
+### 2. Állásportál Modul (`/api/jobs`)
 
-Válasz: Sikeres mentés esetén 201 Created válasz érkezik.
+Cégek és álláshirdetések (pozíciók) kezelése.
 
-## Bejelentkezési Folyamat (POST /login)
-Kérés érkezése: A kliens elküldi az emailt és a jelszót.
+#### Cégek (`/api/jobs/companies`)
 
-Validáció: A bemeneti formátum ellenőrzése (LoginSchema).
+| Metódus | Végpont | Leírás | Validáció |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Cégek listázása + nyitott pozíciók száma (`_count`). | Authenticated |
+| `GET` | `/:id` | Cég részletei, pozíciók és kapcsolattartók. | Authenticated |
+| `POST` | `/` | Új cég létrehozása. | `CompanyCreateSchema` |
+| `PUT` | `/:id` | Cég adatainak frissítése. | `CompanyUpdateSchema` |
+| `DELETE` | `/:id` | Cég törlése (Soft Delete). | Authenticated |
 
-Felhasználó keresése: Az adatbázis keresi a felhasználót email alapján.
+**Különleges logika:**
 
-Hiba ág: Ha nincs találat, 400-as hiba.
+*   **Adószám ellenőrzés:** Létrehozáskor a rendszer ellenőrzi, hogy létezik-e már cég a megadott adószámmal (`taxId`).
+*   **Kaszkádolt törlés (Logikai):** Ha egy céget törölnek (`deleteCompany`), a rendszer automatikusan inaktiválja (`isActive: false`) és töröltnek jelöli (`deletedAt: new Date()`) a hozzá tartozó összes pozíciót is.
 
-Jelszó összehasonlítás: A rendszer összeveti a beírt jelszót az adatbázisban tárolt hash-el.
+#### Pozíciók (`/api/jobs/positions`)
 
-Hiba ág: Ha nem egyezik, 400-as hiba.
+| Metódus | Végpont | Leírás | Validáció |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Aktív pozíciók listázása (határidő szerint rendezve). | Authenticated |
+| `GET` | `/:id` | Pozíció részletei + Címkék (Tags). | Authenticated |
+| `POST` | `/` | Új pozíció meghirdetése. | `PositionCreateSchema` |
+| `PUT` | `/:id` | Pozíció frissítése. | `PositionUpdateSchema` |
+| `DELETE` | `/:id` | Pozíció törlése. | Authenticated |
 
-Token generálás: Sikeres azonosítás esetén a rendszer generál egy JWT tokent (amely tartalmazza a userId-t és a role-t), 24 órás lejárattal.
+**Címke (Tag) Kezelés:**
 
-Válasz: 200 OK válasz, amely tartalmazza a tokent és a felhasználó adatait.
+*   **Automatikus formázás:** A Zod séma a beérkező címkéket automatikusan formázza (pl. "javaScript" -> "Javascript").
+*   **ConnectOrCreate:** A Prisma `connectOrCreate` funkcióját használjuk. Ha a címke (pl. "React") már létezik az adatbázisban, hozzákapcsolja a pozícióhoz. Ha nem, akkor létrehozza az új címkét és úgy kapcsolja hozzá.
 
-## Token Ellenőrzés (Védett Végpontokhoz)
-Middleware futása: Minden védett kérésnél lefut az authenticateToken middleware.
+## Validáció (Zod)
 
-Header vizsgálat: Kiolvassa az Authorization fejlécet. Ha hiányzik, 401 Unauthorized.
+A beérkező adatok szigorú típus- és formátumellenőrzésen esnek át a `validate` middleware segítségével.
 
-Verifikálás: Ellenőrzi a JWT aláírását a titkos kulccsal (process.env.JWT_SECRET).
+*   **Adószám:** Fix karakterhosszúság és formátum.
+*   **Dátumok:** Automatikus konverzió stringből Date objektummá (`z.coerce.date()`).
+*   **Email:** Szabványos email formátum validáció.
+*   **Címkék:** Üres szóközök levágása (trim), tömbkezelés.
+*   **Update Sémák:** A `partial()` metódus használatával a frissítésnél nem kötelező minden mezőt elküldeni, csak azt, ami változik.
 
-Hiba ág: Ha lejárt vagy érvénytelen, 403 Forbidden.
+## Hibakezelés
 
-Továbbengedés: Ha érvényes, a felhasználói adatokat csatolja a kéréshez (req.user), és továbbengedi a vezérlést.
+Az alkalmazás központosított hibakezelést használ (`errorMiddleware.ts`).
+Minden hiba (legyen az adatbázis, validációs vagy egyéb szerverhiba) egységes JSON formátumban tér vissza a klienshez:
+
+```json
+{
+  "status": "error",
+  "message": "Validációs hiba",
+  "errors": [
+    {
+      "field": "email",
+      "message": "Érvénytelen email cím formátum"
+    }
+  ],
+  "stack": "..." // Csak development módban
+}
