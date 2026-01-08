@@ -4,10 +4,17 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// általános beállítások
 datasource db {
   provider = "postgresql"
-  url       = env("DIRECT_URL")    // Ezt használja a Prisma Client (Pooler)
+  url       = env("DIRECT_URL")  
 }
+/* migrációhoz szükséges beállítások
+datasource db {
+  provider = "postgresql"
+  directUrl = env("DIRECT_URL")
+  url       = env("DATABASE_URL")    
+}*/
 
 // ---------------------------------------------------------
 // ENUMS
@@ -179,7 +186,7 @@ model Position {
 model Tag {
   id   String @id @default(uuid())
   name String @unique
-
+  category String @default("Technology")
   deletedAt DateTime?
 
   positions Position[]
