@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteEmployeeById, getCompanyEmployees, updateEmployeeById } from "../controllers/employeeController";
+import { deleteEmployeeById, getCompanyEmployees, getEmployeeById, updateEmployeeById } from "../controllers/employeeController";
 import { UpdateEmployeeSchema } from "../schemas/employeeSchema";
 import { validate } from "../middlewares/validateMiddleware";
 import { authenticateToken } from "../middlewares/authMiddleware";
@@ -7,6 +7,8 @@ import { authenticateToken } from "../middlewares/authMiddleware";
 const router = Router();
 
 router.get('/', authenticateToken, getCompanyEmployees)
+
+router.get('/:id', authenticateToken, getEmployeeById)
 
 router.put("/:id", authenticateToken, validate(UpdateEmployeeSchema), updateEmployeeById);
 
