@@ -1,7 +1,61 @@
-import { Request, response, Response } from "express"
+import { Request, Response } from "express"
 import prisma from "../config/prisma"
 import { UpdateEmployeeInput } from "../schemas/employeeSchema"
 import { Role } from "@prisma/client"
+
+export const getMe = async (req: Request, res: Response) => {
+    const userId = req.user?.userId;
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: userId, deletedAt: null },
+            include: {
+                companyEmployee: {
+                    include: { company: true } // Visszaadjuk a cég adatait is
+                },
+            }
+        })
+
+        if (!user) return res.status(404).json({
+            message: "Nincs ilyen felhasználó."
+        })
+
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a saját adatok lekérésekor." });
+    }
+}
+
+export const getEmployeeById = async (req: Request, res: Response) => {
+    const userToFind = req.params.id;
+    const currentUser = req.user!;
+
+    try {
+        const target = await prisma.companyEmployee.findUnique({
+            where: { userId: userToFind, deletedAt: null },
+            include: { user: true }
+        });
+        const requester = await prisma.companyEmployee.findUnique({
+            where: { userId: currentUser.userId }
+        });
+
+        if (!target) {
+            return res.status(404).json({ message: "A dolgozó nem található." });
+        }
+
+        const isSameCompany = requester && target.companyId === requester.companyId;
+
+        if (!isSameCompany) {
+            return res.status(403).json({ message: "Nincs jogosultságod a dolgozó adatainak megtekintéséhez." });
+        }
+
+        res.json(target);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a dolgozó lekérésekor." });
+    }
+
+
+}
 
 export const getCompanyEmployees = async (req: Request, res: Response) => {
     if (!req.user) return res.status(401).json({ message: "Nincs azonosítva." });
