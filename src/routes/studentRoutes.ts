@@ -16,6 +16,11 @@ const router = Router();
 
 router.get("/", authenticateToken, getAllStudents);
 
+router.get('/me', authenticateToken, getMyProfile);
+
+router.put('/me', authenticateToken, validate(MyProfileUpdateSchema), updateMyProfile);
+
+router.delete('/me', authenticateToken, deleteMyProfile)
 
 router.get("/:id", authenticateToken, getStudentById)
 
@@ -24,10 +29,6 @@ router.delete('/:id', authenticateToken, deleteStudentById)
 router.put("/:id", authenticateToken, validate(StudentUpdateSchema), updateStudentById);
 
 
-router.get('/me', authenticateToken, getMyProfile);
 
-router.put('/me', authenticateToken, validate(MyProfileUpdateSchema), updateMyProfile);
-
-router.delete('/me', authenticateToken, deleteMyProfile)
 
 export default router;
