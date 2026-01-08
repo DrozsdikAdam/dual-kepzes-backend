@@ -12,26 +12,24 @@ const basePrisma =
         },
     });
 
-
 const prisma = basePrisma.$extends({
     query: {
         $allModels: {
-            async findMany({ model, operation, args, query }) {
-                args.where = { ...args.where, deletedAt: null }
-                return query(args)
+            // A 'model' paraméter tartalmazza a modell nevét (pl. "User", "Position")
+            async findMany({ model, args, query }) {
+                args.where = { ...args.where, deletedAt: null };
+                return query(args);
             },
-            async findFirst({ model, operation, args, query }) {
-                args.where = { ...args.where, deletedAt: null }
-                return query(args)
+            async findFirst({ model, args, query }) {
+                args.where = { ...args.where, deletedAt: null };
+                return query(args);
             },
-            async count({ model, operation, args, query }) {
-                args.where = { ...args.where, deletedAt: null }
-                return query(args)
+            async count({ model, args, query }) {
+                args.where = { ...args.where, deletedAt: null };
+                return query(args);
             },
-            async findUnique({ args, query }) {
-                // Itt nem a query(args)-t hívjuk meg közvetlenül a findUnique-ra,
-                // hanem a findFirst-et kényszerítjük ki
-                return (basePrisma as any)[(query as any).model].findFirst({
+            async findUnique({ model, args, query }) {
+                return (basePrisma as any)[model].findFirst({
                     where: { ...args.where, deletedAt: null }
                 });
             }
