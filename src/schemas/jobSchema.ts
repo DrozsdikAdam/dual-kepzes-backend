@@ -37,14 +37,24 @@ export const PositionCreateSchema = z.object({
         city: z.string(),
         address: z.string(),
         deadline: z.coerce.date().optional().nullable(),
-        tagNames: z.array(
-            z.string()
-                .trim()
-                .min(1)
-                .transform((val) => {
-                    return val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
-                })
-        ).optional(),
+        tags: z.array(
+            z.object({
+                name: z.string()
+                    .trim()
+                    .min(1)
+                    .transform((val) => {
+                        // Ugyanaz a normalizálás, mint eddig
+                        const trimmed = val.replace(/\s+/g, ' ');
+                        return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+                    }),
+                category: z.string()
+                    .trim()
+                    .min(1)
+                    .default("Technology") // Ha a kliens nem küldi, ez lesz az alapértelmezett
+            })
+        )
+            .optional()
+            .default([]),
     }),
 });
 

@@ -130,37 +130,47 @@ export const createPosition = async (
 ) => {
     const data = req.body;
     try {
+        // 1. Cég ellenőrzése
         const company = await prisma.company.findUnique({
-            where: { id: data.companyId },
+            where: { id: data.companyId, deletedAt: null },
         });
 
         if (!company) {
-            return res.status(404).json({ message: "A megadott cég nem találhazó." });
+            return res.status(404).json({ message: "A megadott cég nem található." });
         }
 
+        // 2. Pozíció létrehozása
         const newPosition = await prisma.position.create({
             data: {
-                companyId: data.companyId,
                 title: data.title,
                 description: data.description,
                 zipCode: data.zipCode,
                 city: data.city,
                 address: data.address,
                 deadline: data.deadline,
-                // Címkék kezelése: keresés vagy létrehozás név alapján
-                tags: data.tagNames
+                // Reláció a céghez (companyId helyett így biztosabb a típuskezelés)
+                company: {
+                    connect: { id: data.companyId }
+                },
+                // Címkék (kategóriák) kezelése
+                tags: data.tags && data.tags.length > 0
                     ? {
-                        connectOrCreate: data.tagNames.map((name) => ({
-                            where: { name: name }, // Itt feltételezzük, hogy a 'name' mező @unique a sémában
-                            create: { name: name },
+                        connectOrCreate: data.tags.map((tag) => ({
+                            where: { name: tag.name },
+                            create: {
+                                name: tag.name,
+                                category: tag.category
+                            },
                         })),
                     }
                     : undefined,
             },
             include: {
-                tags: true, // Visszaadjuk a mentett címkéket is az ellenőrzéshez
+                tags: true,
+                company: true // Opcionális: a válaszban a cég adatai is benne lesznek
             },
         });
+
         res.status(201).json({
             message: "Pozíció sikeresen meghirdetve",
             position: newPosition,
