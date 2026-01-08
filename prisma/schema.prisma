@@ -6,7 +6,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DIRECT_URL")
+  url       = env("DATABASE_URL")    // Ezt használja a Prisma Client (Pooler)
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------
