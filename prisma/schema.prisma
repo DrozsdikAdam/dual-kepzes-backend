@@ -9,12 +9,12 @@ datasource db {
   provider = "postgresql"
   url       = env("DIRECT_URL")  
 }
-/* migrációhoz szükséges beállítások
-datasource db {
-  provider = "postgresql"
-  directUrl = env("DIRECT_URL")
-  url       = env("DATABASE_URL")    
-}*/
+// migrációhoz szükséges beállítások
+// datasource db {
+//  provider = "postgresql"
+//  directUrl = env("DIRECT_URL")
+//  url       = env("DATABASE_URL")    
+// }*/
 
 // ---------------------------------------------------------
 // ENUMS
