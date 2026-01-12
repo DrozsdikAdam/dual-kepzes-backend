@@ -18,7 +18,8 @@ export const getSystemStats = async (req: Request, res: Response) => {
             prisma.application.count(),
             prisma.user.groupBy({
                 by: ["role"],
-                _count: { _all: true, isActive: true }
+                where: { isActive: true },
+                _count: { _all: true }
             }),
             prisma.dualPartnership.count({ where: { status: "ACTIVE" } })
         ])
