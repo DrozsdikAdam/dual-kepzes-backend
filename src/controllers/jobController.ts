@@ -218,6 +218,10 @@ export const updateCompany = async (req: Request, res: Response) => {
     const { companyId } = req.params;
     const data = req.body;
 
+    if (data.hqZipCode) {
+        data.hqZipCode = String(data.hqZipCode);
+    }
+
     try {
         const updatedCompany = await prisma.company.update({
             where: { id: companyId },
