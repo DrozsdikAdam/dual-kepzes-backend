@@ -3,6 +3,47 @@ import prisma from "../config/prisma"
 import { UpdateEmployeeInput } from "../schemas/employeeSchema"
 import { Role } from "@prisma/client"
 
+// 1. SELECT definíciók a konzisztencia érdekében
+// Amikor User-t kérünk le dolgozói adatokkal
+const userEmployeeSelect = {
+    id: true,
+    email: true,
+    fullName: true,
+    phoneNumber: true,
+    role: true,
+    companyEmployee: {
+        select: {
+            id: true,
+            jobTitle: true,
+            companyId: true,
+            company: {
+                select: {
+                    id: true,
+                    name: true,
+                    logoUrl: true
+                }
+            }
+        }
+    }
+};
+
+// Amikor a CompanyEmployee profilból indulunk ki
+const employeeProfileSelect = {
+    id: true,
+    jobTitle: true,
+    companyId: true,
+    user: {
+        select: {
+            id: true,
+            fullName: true,
+            email: true,
+            phoneNumber: true,
+            role: true,
+            isActive: true
+        }
+    }
+};
+
 export const getEmployeeById = async (req: Request, res: Response) => {
     const userToFind = req.params.id;
     const currentUser = req.user!;
@@ -10,7 +51,7 @@ export const getEmployeeById = async (req: Request, res: Response) => {
     try {
         const target = await prisma.companyEmployee.findUnique({
             where: { userId: userToFind },
-            include: { user: true }
+            select: employeeProfileSelect
         });
         const requester = await prisma.companyEmployee.findUnique({
             where: { userId: currentUser.userId }
@@ -46,7 +87,8 @@ export const getCompanyEmployees = async (req: Request, res: Response) => {
             where: {
                 companyEmployee: { companyId: requester.companyId },
             },
-            include: { companyEmployee: true }
+            select: userEmployeeSelect,
+            orderBy: { fullName: 'asc' }
         });
 
         res.json(employees);
@@ -94,7 +136,7 @@ export const updateEmployeeById = async (req: Request<{ id: string }, {}, Update
                     }
                 }
             },
-            include: { companyEmployee: true }
+            select: userEmployeeSelect
         });
 
         res.status(200).json({
@@ -114,9 +156,6 @@ export const deleteEmployeeById = async (req: Request, res: Response) => {
     const userIdToDelete = req.params.id;
 
     try {
-        // Itt már NEM kell: if (req.user.role !== 'COMPANY_ADMIN') ... 
-        // Mert az isCompanyAdmin middleware ezt már elvégezte!
-
         const target = await prisma.companyEmployee.findUnique({ where: { userId: userIdToDelete } });
         const requester = await prisma.companyEmployee.findUnique({ where: { userId: req.user!.userId } });
 
