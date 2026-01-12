@@ -52,7 +52,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
 export const getStudentById = async (req: Request, res: Response) => {
     const id = req.params.id;
     try {
-        const student = await prisma.user.findUnique({
+        const student = await prisma.user.findFirst({
             where: { id, role: 'STUDENT' },
             select: studentSelect
         });
