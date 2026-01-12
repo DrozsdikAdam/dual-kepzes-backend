@@ -11,6 +11,8 @@ import { errorHandler } from "./middlewares/errorMiddleware";
 import authRoutes from "./routes/authRoutes";
 import jobRoutes from "./routes/jobRoutes";
 import studentRoutes from "./routes/studentRoutes";
+import statsRoutes from "./routes/statsRoutes";
+
 
 const app: Application = express();
 app.set("trust proxy", 1);
@@ -23,6 +25,8 @@ app.use("/api/auth", authRateLimiter, authRoutes);
 app.use("/api", apiRateLimiter);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/students", studentRoutes);
+app.use("/api/stats", statsRoutes);
+
 
 // Test Route
 app.get("/", (req: Request, res: Response) => {
