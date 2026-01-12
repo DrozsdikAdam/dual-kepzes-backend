@@ -214,7 +214,6 @@ export const createPosition = async (
     }
 };
 
-
 export const updateCompany = async (req: Request, res: Response) => {
     const { companyId } = req.params;
     const data = req.body;
@@ -227,7 +226,9 @@ export const updateCompany = async (req: Request, res: Response) => {
         });
         return res.json({ message: "Cég adatai frissítve", company: updatedCompany });
     } catch (error) {
-        return res.status(500).json({ message: "Hiba a cég frissítésekor." });
+        // Fontos: Logold a konkrét hibát a Railway konzolra!
+        console.error("Prisma Update Error:", error);
+        return res.status(500).json({ message: "Hiba a cég frissítésekor. Ellenőrizd az adatokat!" });
     }
 }
 
@@ -264,7 +265,6 @@ export const updatePosition = async (req: Request, res: Response) => {
     }
 }
 
-// JAVÍTÁS: A törlési metódusokhoz is kell a return, hogy megállítsa a folyamatot!
 export const deleteCompany = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
@@ -284,18 +284,13 @@ export const deleteCompany = async (req: Request, res: Response) => {
 
 export const deletePosition = async (req: Request, res: Response) => {
     const { id } = req.params;
-
     try {
-
         await prisma.position.update({
             where: { id },
-            data: {
-                isActive: false,
-                deletedAt: new Date()
-            }
-        })
-        res.json({ message: "Pozíció sikeresen törölve." });
+            data: { isActive: false, deletedAt: new Date() }
+        });
+        return res.json({ message: "Pozíció sikeresen törölve." }); // JAVÍTVA: return hozzáadva
     } catch (error) {
-        res.status(500).json({ message: "Hiba a pozíció törlésekor." });
+        return res.status(500).json({ message: "Hiba a pozíció törlésekor." });
     }
 }
