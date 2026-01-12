@@ -1,6 +1,31 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
 
+const studentSelect = {
+    id: true,
+    email: true,
+    fullName: true,
+    phoneNumber: true,
+    role: true,
+    studentProfile: {
+        select: {
+            id: true,
+            mothersName: true,
+            birthDate: true,
+            country: true,
+            zipCode: true,
+            city: true,
+            streetAddress: true,
+            highSchool: true,
+            graduationYear: true,
+            neptunCode: true,
+            currentMajor: true,
+            studyMode: true,
+            hasLanguageCert: true
+        }
+    }
+};
+
 export const getMyProfile = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
 
@@ -11,7 +36,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
     try {
         const student = await prisma.user.findUnique({
             where: { id: userId },
-            include: { studentProfile: true }
+            select: studentSelect
         })
 
         if (!student) {
@@ -29,7 +54,7 @@ export const getStudentById = async (req: Request, res: Response) => {
     try {
         const student = await prisma.user.findUnique({
             where: { id, role: 'STUDENT' },
-            include: { studentProfile: true }
+            select: studentSelect
         })
 
         if (!student) {
@@ -45,7 +70,7 @@ export const getAllStudents = async (req: Request, res: Response) => {
     try {
         const students = await prisma.user.findMany({
             where: { role: 'STUDENT' },
-            include: { studentProfile: true },
+            select: studentSelect,
             orderBy: { createdAt: 'desc' }
         })
         res.status(200).json(students);
@@ -71,9 +96,7 @@ export const updateMyProfile = async (req: Request, res: Response) => {
                     update: profileData
                 }
             },
-            include: {
-                studentProfile: true
-            }
+            select: studentSelect
         })
         res.json({ message: "Profilod sikeresen frissítve!", user: updated });
     } catch (error) {
@@ -97,7 +120,7 @@ export const updateStudentById = async (req: Request, res: Response) => {
                     update: profileData // A profil adatokat ide küldjük
                 }
             },
-            include: { studentProfile: true }
+            select: studentSelect
         });
 
         res.status(200).json({
