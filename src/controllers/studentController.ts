@@ -53,7 +53,7 @@ export const getStudentById = async (req: Request, res: Response) => {
     const id = req.params.id;
     try {
         const student = await prisma.user.findFirst({
-            where: { id, role: 'STUDENT' },
+            where: { id, role: "STUDENT" },
             select: studentSelect
         });
 
@@ -72,9 +72,9 @@ export const getStudentById = async (req: Request, res: Response) => {
 export const getAllStudents = async (req: Request, res: Response) => {
     try {
         const students = await prisma.user.findMany({
-            where: { role: 'STUDENT' },
+            where: { role: "STUDENT" },
             select: studentSelect,
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: "desc" }
         })
         res.status(200).json(students);
     } catch (error) {
@@ -133,7 +133,7 @@ export const updateStudentById = async (req: Request, res: Response) => {
 
     } catch (error: any) {
         // Ha nem található az ID
-        if (error.code === 'P2025') {
+        if (error.code === "P2025") {
             return res.status(404).json({ message: "A megadott azonosítóval nem található hallgató." });
         }
 

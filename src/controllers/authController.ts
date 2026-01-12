@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { Prisma } from "@prisma/client";
 import prisma from "../config/prisma";
 import { hashPassword, comparePassword, generateToken } from "../utils/auth";
 import { RegisterInput, LoginInput } from "../schemas/authSchema";
@@ -12,7 +11,7 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
             where: { email: data.email }
         })
         if (existingUser) {
-            return res.status(400).json({ message: 'A megadott email címmel már létezik felhasználó.' })
+            return res.status(400).json({ message: "A megadott email címmel már létezik felhasználó." })
         }
 
         const hashedPassword = await hashPassword(data.password);
@@ -29,7 +28,7 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
             });
 
             switch (data.role) {
-                case 'STUDENT':
+                case "STUDENT":
                     await tx.studentProfile.create({
                         data: {
                             userId: user.id,
@@ -52,7 +51,7 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
                         }
                     });
                     break;
-                case 'MENTOR':
+                case "MENTOR":
 
                     await tx.companyEmployee.create({
                         data: {
@@ -63,10 +62,10 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
                     })
 
                     break;
-                case 'UNIVERSITY_USER':
+                case "UNIVERSITY_USER":
                     // Jelenleg nincs további adat a UNIVERSITY_USER számára
                     break;
-                case 'COMPANY_ADMIN':
+                case "COMPANY_ADMIN":
                     await tx.companyEmployee.create({
                         data: {
                             userId: user.id,
@@ -75,22 +74,22 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
                         }
                     })
                     break;
-                case 'SYSTEM_ADMIN':
+                case "SYSTEM_ADMIN":
                     // Jelenleg nincs további adat a SYSTEM_ADMIN számára
                     break;
                 default:
-                    throw new Error('Ismeretlen szerepkör a regisztráció során');
+                    throw new Error("Ismeretlen szerepkör a regisztráció során");
             }
 
             return user;
         });
 
-        res.status(201).json({ message: 'Sikeres regisztráció', userId: newUser.id, role: newUser.role })
+        res.status(201).json({ message: "Sikeres regisztráció", userId: newUser.id, role: newUser.role })
 
     } catch (error) {
         console.error("Register Error:", error);
         res.status(500).json({
-            message: 'Hiba történt a regisztráció során',
+            message: "Hiba történt a regisztráció során",
             error: error instanceof Error ? error.message : error
         })
     }
@@ -104,18 +103,18 @@ export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => 
             where: { email }
         })
         if (!user) {
-            return res.status(400).json({ message: 'Hibás email vagy jelszó.' })
+            return res.status(400).json({ message: "Hibás email vagy jelszó." })
         }
 
         const isValid = await comparePassword(password, user.password)
         if (!isValid) {
-            return res.status(400).json({ message: 'Hibás email vagy jelszó.' })
+            return res.status(400).json({ message: "Hibás email vagy jelszó." })
         }
 
         const token = generateToken(user.id, user.role)
 
         res.json({
-            message: 'Sikeres bejelentkezés',
+            message: "Sikeres bejelentkezés",
             token,
             user: {
                 id: user.id,
@@ -127,7 +126,7 @@ export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => 
     } catch (error) {
         console.error("Login Error:", error);
         res.status(500).json({
-            message: 'Hiba történt a bejelentkezés során',
+            message: "Hiba történt a bejelentkezés során",
             error: error instanceof Error ? error.message : error
         })
     }

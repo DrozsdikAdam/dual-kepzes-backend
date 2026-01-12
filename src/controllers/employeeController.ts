@@ -79,7 +79,7 @@ export const getCompanyEmployees = async (req: Request, res: Response) => {
     try {
         const requester = await prisma.companyEmployee.findUnique({ where: { userId: req.user.userId } });
 
-        if (!requester || (req.user.role !== 'COMPANY_ADMIN')) {
+        if (!requester || (req.user.role !== "COMPANY_ADMIN")) {
             return res.status(403).json({ message: "Nincs jogosultságod a lista megtekintéséhez." });
         }
 
@@ -88,7 +88,7 @@ export const getCompanyEmployees = async (req: Request, res: Response) => {
                 companyEmployee: { companyId: requester.companyId },
             },
             select: userEmployeeSelect,
-            orderBy: { fullName: 'asc' }
+            orderBy: { fullName: "asc" }
         });
 
         res.json(employees);
@@ -145,7 +145,7 @@ export const updateEmployeeById = async (req: Request<{ id: string }, {}, Update
         });
 
     } catch (error: any) {
-        if (error.code === 'P2025') {
+        if (error.code === "P2025") {
             return res.status(404).json({ message: "Nem található a módosítandó rekord." });
         }
         res.status(500).json({ message: "Szerver hiba történt." });

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const UpdateEmployeeSchema = z.object({
     body: z.object({
@@ -9,4 +9,4 @@ export const UpdateEmployeeSchema = z.object({
     })
 });
 
-export type UpdateEmployeeInput = z.infer<typeof UpdateEmployeeSchema>['body'];
+export type UpdateEmployeeInput = z.infer<typeof UpdateEmployeeSchema>["body"];

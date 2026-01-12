@@ -6,9 +6,9 @@ import { authenticateToken } from "../middlewares/authMiddleware";
 
 const router = Router();
 
-router.get('/', authenticateToken, getCompanyEmployees)
+router.get("/", authenticateToken, getCompanyEmployees)
 
-router.get('/:id', authenticateToken, getEmployeeById)
+router.get("/:id", authenticateToken, getEmployeeById)
 
 router.put("/:id", authenticateToken, validate(UpdateEmployeeSchema), updateEmployeeById);
 

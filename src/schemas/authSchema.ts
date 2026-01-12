@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const RoleEnum = z.enum([
     "STUDENT",
@@ -64,7 +64,7 @@ export const LoginSchema = z.object({
 });
 
 export const RegisterSchema = z.object({
-    body: z.discriminatedUnion('role', [
+    body: z.discriminatedUnion("role", [
         studentSchema,
         mentorSchema,
         universityUserSchema,
@@ -73,5 +73,5 @@ export const RegisterSchema = z.object({
     ])
 });
 
-export type RegisterInput = z.infer<typeof RegisterSchema>['body'];
-export type LoginInput = z.infer<typeof LoginSchema>['body'];
+export type RegisterInput = z.infer<typeof RegisterSchema>["body"];
+export type LoginInput = z.infer<typeof LoginSchema>["body"];

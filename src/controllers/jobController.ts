@@ -100,7 +100,7 @@ export const getAllPositions = async (req: Request, res: Response) => {
                     }
                 }
             },
-            orderBy: { deadline: 'asc' }
+            orderBy: { deadline: "asc" }
         });
         res.json(positions);
     } catch (error) {

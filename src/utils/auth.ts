@@ -1,5 +1,5 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET || "backup_titkos_kulcs_jwt_hez"
@@ -13,5 +13,5 @@ export const comparePassword = async (password: string, hash: string): Promise<b
 }
 
 export const generateToken = (userId: string, role: string) => {
-    return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '24h' })
+    return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: "24h" })
 }

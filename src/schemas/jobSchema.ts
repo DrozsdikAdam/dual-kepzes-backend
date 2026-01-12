@@ -44,7 +44,7 @@ export const PositionCreateSchema = z.object({
                     .min(1)
                     .transform((val) => {
                         // Ugyanaz a normalizálás, mint eddig
-                        const trimmed = val.replace(/\s+/g, ' ');
+                        const trimmed = val.replace(/\s+/g, " ");
                         return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
                     }),
                 category: z.string()
@@ -81,5 +81,5 @@ export const PositionUpdateSchema = z.object({
 export type CompanyInput = z.infer<typeof CompanyCreateSchema>["body"];
 export type PositionInput = z.infer<typeof PositionCreateSchema>["body"];
 export type TagInput = z.infer<typeof TagCreateSchema>["body"];
-export type CompanyUpdateInput = z.infer<typeof CompanyUpdateSchema>['body'];
-export type PositionUpdateInput = z.infer<typeof PositionUpdateSchema>['body'];
+export type CompanyUpdateInput = z.infer<typeof CompanyUpdateSchema>["body"];
+export type PositionUpdateInput = z.infer<typeof PositionUpdateSchema>["body"];

@@ -1,18 +1,18 @@
-import { Request, Response, NextFunction } from 'express'
-import jwt from 'jsonwebtoken'
-import { Role } from '@prisma/client'
+import { Request, Response, NextFunction } from "express"
+import jwt from "jsonwebtoken"
+import { Role } from "@prisma/client"
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
+    const authHeader = req.headers["authorization"]
+    const token = authHeader && authHeader.split(" ")[1]
 
     if (!token) {
-        return res.status(401).json({ message: 'Hozzáférés megtagadva: nincs token megadva.' })
+        return res.status(401).json({ message: "Hozzáférés megtagadva: nincs token megadva." })
     }
 
-    jwt.verify(token, process.env.JWT_SECRET || 'backup_titkos_kulcs_jwt_hez', (err: any, user: any) => {
+    jwt.verify(token, process.env.JWT_SECRET || "backup_titkos_kulcs_jwt_hez", (err: any, user: any) => {
         if (err) {
-            return res.status(403).json({ message: 'Érvénytelen token' })
+            return res.status(403).json({ message: "Érvénytelen token" })
         }
         req.user = user
         next()
@@ -23,7 +23,7 @@ export const requireRole = (allowedRoles: Role[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
 
         if (!req.user) {
-            return res.status(401).json({ message: 'Nem vagy bejelentkezve.' })
+            return res.status(401).json({ message: "Nem vagy bejelentkezve." })
         }
 
         if (!allowedRoles.includes(req.user!.role)) {

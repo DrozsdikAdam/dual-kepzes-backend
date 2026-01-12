@@ -23,12 +23,12 @@ import { authenticateToken } from "../middlewares/authMiddleware";
 const router = Router();
 
 // Cég végpontok
-router.get('/companies',
+router.get("/companies",
     authenticateToken,
     getAllCompanies
 );
 
-router.get('/companies/:id',
+router.get("/companies/:id",
     authenticateToken,
     getCompanyById
 );
@@ -47,18 +47,18 @@ router.put(
     updateCompany
 );
 
-router.delete('/companies/:id',
+router.delete("/companies/:id",
     authenticateToken,
     deleteCompany
 );
 
 // Pozíció végpontok
-router.get('/positions',
+router.get("/positions",
     authenticateToken,
     getAllPositions
 );
 
-router.get('/positions/:id',
+router.get("/positions/:id",
     authenticateToken,
     getPositionById
 );
@@ -77,7 +77,7 @@ router.put(
     updatePosition
 );
 
-router.delete('/positions/:id',
+router.delete("/positions/:id",
     authenticateToken,
     deletePosition
 );

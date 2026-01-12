@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
@@ -15,7 +15,7 @@ const basePrisma =
 const prisma = basePrisma.$extends({
     query: {
         $allModels: {
-            // A 'model' paraméter tartalmazza a modell nevét (pl. "User", "Position")
+            // A "model" paraméter tartalmazza a modell nevét (pl. "User", "Position")
             async findMany({ model, args, query }) {
                 args.where = { ...args.where, deletedAt: null };
                 return query(args);
@@ -37,6 +37,6 @@ const prisma = basePrisma.$extends({
     }
 });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = basePrisma;
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = basePrisma;
 
 export default prisma;

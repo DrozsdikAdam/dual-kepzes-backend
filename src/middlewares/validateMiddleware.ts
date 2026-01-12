@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { ZodObject, ZodError } from 'zod'
+import { Request, Response, NextFunction } from "express";
+import { ZodObject, ZodError } from "zod"
 
 export const validate = (schema: ZodObject<any, any>) => {
     return async (req: Request, res: Response, next: NextFunction) => {
@@ -15,10 +15,10 @@ export const validate = (schema: ZodObject<any, any>) => {
         } catch (error) {
             if (error instanceof ZodError) {
                 return res.status(400).json({
-                    status: 'error',
-                    message: 'Validációs hiba',
+                    status: "error",
+                    message: "Validációs hiba",
                     errors: error.issues.map((e) => ({
-                        field: e.path.join('.').replace('body.', ''),
+                        field: e.path.join(".").replace("body.", ""),
                         message: e.message,
                     })),
                 });
