@@ -2,10 +2,45 @@ import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { CompanyInput, PositionInput, TagInput } from "../schemas/jobSchema";
 
+// 1. Központi SELECT definíciók
+const companySelect = {
+    id: true,
+    name: true,
+    taxId: true,
+    hqCountry: true,
+    hqZipCode: true,
+    hqCity: true,
+    hqAddress: true,
+    contactName: true,
+    contactEmail: true,
+    website: true,
+    logoUrl: true,
+    isActive: true,
+    createdAt: true
+};
+
+const positionSelect = {
+    id: true,
+    title: true,
+    description: true,
+    zipCode: true,
+    city: true,
+    address: true,
+    deadline: true,
+    isActive: true,
+    tags: {
+        select: {
+            name: true,
+            category: true
+        }
+    }
+};
+
 export const getAllCompanies = async (req: Request, res: Response) => {
     try {
         const companies = await prisma.company.findMany({
-            include: {
+            select: {
+                ...companySelect,
                 _count: { select: { positions: true } }
             }
         })
@@ -20,9 +55,24 @@ export const getCompanyById = async (req: Request, res: Response) => {
     try {
         const company = await prisma.company.findUnique({
             where: { id },
-            include: {
-                positions: true,
-                employees: { select: { jobTitle: true, user: { select: { fullName: true } } } }
+            select: {
+                ...companySelect,
+                positions: {
+                    where: { isActive: true },
+                    select: positionSelect
+                },
+                employees: {
+                    select: {
+                        id: true,
+                        jobTitle: true,
+                        user: {
+                            select: {
+                                fullName: true,
+                                email: true
+                            }
+                        }
+                    }
+                }
             }
         })
 
@@ -37,13 +87,18 @@ export const getAllPositions = async (req: Request, res: Response) => {
     try {
         const positions = await prisma.position.findMany({
             where: { isActive: true },
-            include: {
-                company: { select: { name: true, logoUrl: true, hqCity: true } },
-                tags: { select: { name: true } }
+            select: {
+                ...positionSelect,
+                company: {
+                    select: {
+                        name: true,
+                        logoUrl: true,
+                        hqCity: true
+                    }
+                }
             },
             orderBy: { deadline: 'asc' }
-
-        })
+        });
         res.json(positions);
     } catch (error) {
         res.status(500).json({ message: "Hiba a pozíciók lekérésekor." });
@@ -55,11 +110,13 @@ export const getPositionById = async (req: Request, res: Response) => {
     try {
         const position = await prisma.position.findUnique({
             where: { id },
-            include: {
-                company: true,
-                tags: true
+            select: {
+                ...positionSelect,
+                company: {
+                    select: companySelect
+                }
             }
-        })
+        });
         if (!position) return res.status(404).json({ message: "Pozíció nem található." });
         res.json(position);
     } catch (error) {
@@ -99,17 +156,13 @@ export const createCompany = async (
 
         const newCompany = await prisma.company.create({
             data: {
-                name: data.name,
-                taxId: data.taxId,
-                hqCountry: data.hqCountry,
-                hqZipCode: String(data.hqZipCode) || "",
+                ...data,
+                hqZipCode: String(data.hqZipCode),
                 hqCity: data.hqCity || "",
                 hqAddress: data.hqAddress || "",
-                contactName: data.contactName,
-                contactEmail: data.contactEmail,
-                website: data.website,
-                logoUrl: data.logoUrl,
+                hqCountry: data.hqCountry || "Magyarország"
             },
+            select: companySelect
         });
 
         res
@@ -129,16 +182,6 @@ export const createPosition = async (
 ) => {
     const data = req.body;
     try {
-        // 1. Cég ellenőrzése
-        const company = await prisma.company.findUnique({
-            where: { id: data.companyId },
-        });
-
-        if (!company) {
-            return res.status(404).json({ message: "A megadott cég nem található." });
-        }
-
-        // 2. Pozíció létrehozása
         const newPosition = await prisma.position.create({
             data: {
                 title: data.title,
@@ -147,27 +190,15 @@ export const createPosition = async (
                 city: data.city,
                 address: data.address,
                 deadline: data.deadline,
-                // Reláció a céghez (companyId helyett így biztosabb a típuskezelés)
-                company: {
-                    connect: { id: data.companyId }
-                },
-                // Címkék (kategóriák) kezelése
-                tags: data.tags && data.tags.length > 0
-                    ? {
-                        connectOrCreate: data.tags.map((tag) => ({
-                            where: { name: tag.name },
-                            create: {
-                                name: tag.name,
-                                category: tag.category
-                            },
-                        })),
-                    }
-                    : undefined,
+                company: { connect: { id: data.companyId } },
+                tags: data.tags && data.tags.length > 0 ? {
+                    connectOrCreate: data.tags.map((tag) => ({
+                        where: { name: tag.name },
+                        create: { name: tag.name, category: tag.category },
+                    })),
+                } : undefined,
             },
-            include: {
-                tags: true,
-                company: true // Opcionális: a válaszban a cég adatai is benne lesznek
-            },
+            select: positionSelect
         });
 
         res.status(201).json({
@@ -188,6 +219,7 @@ export const updateCompany = async (req: Request, res: Response) => {
         const updatedCompany = await prisma.company.update({
             where: { id },
             data: data,
+            select: companySelect
         })
         res.json({ message: "Cég adatai frissítve", company: updatedCompany });
     } catch (error) {
@@ -204,16 +236,24 @@ export const updatePosition = async (req: Request, res: Response) => {
             where: { id },
             data: {
                 ...data,
+                // Ha érkeztek címkék, frissítjük a kapcsolatokat
                 tags: tagNames ? {
+                    // Először leválasztunk minden régi címkét
                     set: [],
+                    // Majd hozzákötjük vagy létrehozzuk az újakat
                     connectOrCreate: tagNames.map((name: string) => ({
                         where: { name },
-                        create: { name }
+                        create: { name, category: "Technology" } // Alapértelmezett kategória
                     }))
                 } : undefined
             },
-            include: { tags: true }
-        })
+            select: positionSelect
+        });
+
+        res.json({
+            message: "Pozíció adatai sikeresen frissítve",
+            position: updatedPosition
+        });
         res.json({ message: "Pozíció frissítve", position: updatedPosition });
     } catch (error) {
         res.status(500).json({ message: "Hiba a pozíció frissítésekor." });
