@@ -181,6 +181,8 @@ model Position {
   deadline DateTime?
 
   isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?  @updatedAt
   deletedAt DateTime?
 
   applications Application[]

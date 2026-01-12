@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { CompanyInput, PositionInput, TagInput } from "../schemas/jobSchema";
+import { create } from "node:domain";
 
 // 1. Központi SELECT definíciók
 const companySelect = {
@@ -16,6 +17,7 @@ const companySelect = {
     website: true,
     logoUrl: true,
     isActive: true,
+    createdAt: true,
 };
 
 const positionSelect = {
@@ -27,6 +29,8 @@ const positionSelect = {
     address: true,
     deadline: true,
     isActive: true,
+    createdAt: true,
+    updatedAt: true,
     tags: {
         select: {
             name: true,
