@@ -214,6 +214,7 @@ export const createPosition = async (
     }
 };
 
+
 export const updateCompany = async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = req.body;
@@ -223,10 +224,10 @@ export const updateCompany = async (req: Request, res: Response) => {
             where: { id },
             data: data,
             select: companySelect
-        })
-        res.json({ message: "Cég adatai frissítve", company: updatedCompany });
+        });
+        return res.json({ message: "Cég adatai frissítve", company: updatedCompany });
     } catch (error) {
-        res.status(500).json({ message: "Hiba a cég frissítésekor. Lehet, hogy az ID nem létezik." });
+        return res.status(500).json({ message: "Hiba a cég frissítésekor. Lehet, hogy az ID nem létezik." });
     }
 }
 
@@ -239,26 +240,24 @@ export const updatePosition = async (req: Request, res: Response) => {
             where: { id },
             data: {
                 ...data,
-                // Ha érkeztek címkék, frissítjük a kapcsolatokat
                 tags: tagNames ? {
-                    // Először leválasztunk minden régi címkét
                     set: [],
-                    // Majd hozzákötjük vagy létrehozzuk az újakat
                     connectOrCreate: tagNames.map((name: string) => ({
                         where: { name },
-                        create: { name, category: "Technology" } // Alapértelmezett kategória
+                        create: { name, category: "Technology" }
                     }))
                 } : undefined
             },
             select: positionSelect
         });
 
-        res.json({
+        return res.json({
             message: "Pozíció adatai sikeresen frissítve",
             position: updatedPosition
-        });
+        })
+
     } catch (error) {
-        res.status(500).json({ message: "Hiba a pozíció frissítésekor." });
+        return res.status(500).json({ message: "Hiba a pozíció frissítésekor." });
     }
 }
 
