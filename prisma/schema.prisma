@@ -8,13 +8,14 @@ generator client {
 datasource db {
   provider = "postgresql"
   url       = env("DIRECT_URL")  
+  directUrl = env("DIRECT_URL")
 }
 // migrációhoz szükséges beállítások
 // datasource db {
 //  provider = "postgresql"
 //  directUrl = env("DIRECT_URL")
 //  url       = env("DATABASE_URL")    
-// }*/
+// }
 
 // ---------------------------------------------------------
 // ENUMS
@@ -155,6 +156,8 @@ model Company {
   logoUrl      String?
 
   isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?  @updatedAt
   deletedAt DateTime?
 
   employees CompanyEmployee[]
