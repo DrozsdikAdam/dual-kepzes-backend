@@ -257,7 +257,6 @@ export const updatePosition = async (req: Request, res: Response) => {
             message: "Pozíció adatai sikeresen frissítve",
             position: updatedPosition
         });
-        res.json({ message: "Pozíció frissítve", position: updatedPosition });
     } catch (error) {
         res.status(500).json({ message: "Hiba a pozíció frissítésekor." });
     }

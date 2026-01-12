@@ -40,7 +40,7 @@ router.post(
     createCompany
 );
 
-router.put(
+router.patch(
     "/companies/:id",
     authenticateToken,
     validate(CompanyUpdateSchema),
@@ -70,7 +70,7 @@ router.post(
     createPosition
 );
 
-router.put(
+router.patch(
     "/positions/:id",
     authenticateToken,
     validate(PositionUpdateSchema),
