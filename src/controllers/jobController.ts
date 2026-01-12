@@ -251,38 +251,34 @@ export const updatePosition = async (req: Request, res: Response) => {
             select: positionSelect
         });
 
+        // JAVÍTÁS: Csak EGY res.json maradjon, és legyen előtte return!
         return res.json({
             message: "Pozíció adatai sikeresen frissítve",
             position: updatedPosition
-        })
+        });
+
+        // TÖRÖLD EZT A SORT: res.json({ message: "Pozíció frissítve", position: updatedPosition });
 
     } catch (error) {
         return res.status(500).json({ message: "Hiba a pozíció frissítésekor." });
     }
 }
 
+// JAVÍTÁS: A törlési metódusokhoz is kell a return, hogy megállítsa a folyamatot!
 export const deleteCompany = async (req: Request, res: Response) => {
     const { id } = req.params;
-
     try {
-
         await prisma.company.update({
             where: { id },
-            data: {
-                isActive: false,
-                deletedAt: new Date()
-            }
+            data: { isActive: false, deletedAt: new Date() }
         })
-
-        // A céghez tartozó összes pozíció deaktiválása is
         await prisma.position.updateMany({
             where: { companyId: id },
             data: { isActive: false, deletedAt: new Date() }
         });
-
-        res.json({ message: "Cég és kapcsolódó pozíciói törölve." });
+        return res.json({ message: "Cég és kapcsolódó pozíciói törölve." }); // return hozzáadva
     } catch (error) {
-        res.status(500).json({ message: "Hiba a cég törlésekor." });
+        return res.status(500).json({ message: "Hiba a cég törlésekor." }); // return hozzáadva
     }
 }
 
