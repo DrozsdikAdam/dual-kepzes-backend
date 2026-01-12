@@ -242,6 +242,8 @@ model DualPartnership {
   endDate   DateTime?
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   logbookEntries LogbookEntry[]
 }
