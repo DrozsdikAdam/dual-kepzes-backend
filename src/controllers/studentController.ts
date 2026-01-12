@@ -55,12 +55,15 @@ export const getStudentById = async (req: Request, res: Response) => {
         const student = await prisma.user.findUnique({
             where: { id, role: 'STUDENT' },
             select: studentSelect
-        })
+        });
 
-        if (!student) {
-            return res.status(404).json({ message: "Hallgató nem található." });
-        }
-        res.status(200).json(student);
+        if (!student) return res.status(404).json({ message: "Hallgató nem található." });
+
+        // Biztonsági mentőöv: ha a select valamiért csődöt mondana
+        const safeStudent = JSON.parse(JSON.stringify(student));
+        delete safeStudent.password;
+
+        res.status(200).json(safeStudent);
     } catch (error) {
         res.status(500).json({ message: "Hiba a hallgató lekérésekor." });
     }

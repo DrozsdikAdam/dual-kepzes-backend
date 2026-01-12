@@ -16,7 +16,6 @@ const companySelect = {
     website: true,
     logoUrl: true,
     isActive: true,
-    createdAt: true
 };
 
 const positionSelect = {
