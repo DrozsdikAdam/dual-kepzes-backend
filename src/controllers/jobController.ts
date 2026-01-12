@@ -216,18 +216,18 @@ export const createPosition = async (
 
 
 export const updateCompany = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const { companyId } = req.params;
     const data = req.body;
 
     try {
         const updatedCompany = await prisma.company.update({
-            where: { id },
+            where: { id: companyId },
             data: data,
             select: companySelect
         });
         return res.json({ message: "Cég adatai frissítve", company: updatedCompany });
     } catch (error) {
-        return res.status(500).json({ message: "Hiba a cég frissítésekor. Lehet, hogy az ID nem létezik." });
+        return res.status(500).json({ message: "Hiba a cég frissítésekor." });
     }
 }
 

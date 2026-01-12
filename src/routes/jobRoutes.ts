@@ -41,7 +41,7 @@ router.post(
 );
 
 router.patch(
-    "/companies/:id",
+    "/companies/:companyId",
     authenticateToken,
     validate(CompanyUpdateSchema),
     updateCompany
