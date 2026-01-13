@@ -9,9 +9,9 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
     try {
         const existingUser = await prisma.user.findUnique({
             where: { email: data.email }
-        })
+        });
         if (existingUser) {
-            return res.status(400).json({ message: "A megadott email címmel már létezik felhasználó." })
+            return res.status(400).json({ message: "A megadott email címmel már létezik felhasználó." });
         }
 
         const hashedPassword = await hashPassword(data.password);
@@ -38,12 +38,14 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
 
                             // Cím adatok (Adatbázis sémához igazítva)
                             country: data.country || "Magyarország",
-                            zipCode: String(data.zipCode), // FONTOS: Szám -> String konverzió!
+                            // FONTOS: Csak akkor konvertáljuk stringgé, ha létezik, különben undefined
+                            zipCode: data.zipCode ? String(data.zipCode) : undefined,
                             city: data.city,
                             streetAddress: data.streetAddress,
 
                             highSchool: data.highSchool,
-                            graduationYear: Number(data.graduationYear), // String -> Number
+                            // Csak akkor konvertáljuk számmá, ha létezik (bár a séma szerint itt kötelező lehet, de a biztonság kedvéért)
+                            graduationYear: Number(data.graduationYear),
                             neptunCode: data.neptunCode,
                             currentMajor: data.currentMajor,
                             studyMode: data.studyMode,
@@ -59,7 +61,7 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
                             companyId: data.companyId,
                             jobTitle: data.jobTitle
                         }
-                    })
+                    });
 
                     break;
                 case "UNIVERSITY_USER":
@@ -72,7 +74,7 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
                             companyId: data.companyId,
                             jobTitle: data.jobTitle
                         }
-                    })
+                    });
                     break;
                 case "SYSTEM_ADMIN":
                     // Jelenleg nincs további adat a SYSTEM_ADMIN számára
@@ -84,16 +86,16 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
             return user;
         });
 
-        res.status(201).json({ message: "Sikeres regisztráció", userId: newUser.id, role: newUser.role })
+        res.status(201).json({ message: "Sikeres regisztráció", userId: newUser.id, role: newUser.role });
 
     } catch (error) {
         console.error("Register Error:", error);
         res.status(500).json({
             message: "Hiba történt a regisztráció során",
             error: error instanceof Error ? error.message : error
-        })
+        });
     }
-}
+};
 
 export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => {
     const { email, password } = req.body;
@@ -101,17 +103,17 @@ export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => 
     try {
         const user = await prisma.user.findUnique({
             where: { email }
-        })
+        });
         if (!user) {
-            return res.status(400).json({ message: "Hibás email vagy jelszó." })
+            return res.status(400).json({ message: "Hibás email vagy jelszó." });
         }
 
-        const isValid = await comparePassword(password, user.password)
+        const isValid = await comparePassword(password, user.password);
         if (!isValid) {
-            return res.status(400).json({ message: "Hibás email vagy jelszó." })
+            return res.status(400).json({ message: "Hibás email vagy jelszó." });
         }
 
-        const token = generateToken(user.id, user.role)
+        const token = generateToken(user.id, user.role);
 
         res.json({
             message: "Sikeres bejelentkezés",
@@ -121,14 +123,14 @@ export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => 
                 email: user.email,
                 role: user.role
             }
-        })
+        });
 
     } catch (error) {
         console.error("Login Error:", error);
         res.status(500).json({
             message: "Hiba történt a bejelentkezés során",
             error: error instanceof Error ? error.message : error
-        })
+        });
     }
 
-}
+};
