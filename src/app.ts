@@ -12,7 +12,8 @@ import authRoutes from "./routes/authRoutes";
 import jobRoutes from "./routes/jobRoutes";
 import studentRoutes from "./routes/studentRoutes";
 import statsRoutes from "./routes/statsRoutes";
-
+import systemAdminRoutes from "./routes/systemAdminRoutes";
+import universityUserRoutes from "./routes/universityUserRoutes";
 
 const app: Application = express();
 app.set("trust proxy", 1);
@@ -26,7 +27,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/stats", statsRoutes);
-
+app.use("/api/system-admins", systemAdminRoutes);
+app.use("/api/university-users", universityUserRoutes);
 
 // Test Route
 app.get("/", (req: Request, res: Response) => {
