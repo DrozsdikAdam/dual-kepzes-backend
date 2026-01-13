@@ -24,61 +24,61 @@ const router = Router();
 
 // Cég végpontok
 router.get("/companies",
-    authenticateToken,
+    /*authenticateToken,*/
     getAllCompanies
 );
 
 router.get("/companies/:id",
-    authenticateToken,
+    /*authenticateToken,*/
     getCompanyById
 );
 
 router.post(
     "/companies",
-    authenticateToken,
+    /*authenticateToken,*/
     validate(CompanyCreateSchema),
     createCompany
 );
 
 router.patch(
     "/companies/:companyId",
-    authenticateToken,
+    /*authenticateToken,*/
     validate(CompanyUpdateSchema),
     updateCompany
 );
 
 router.delete("/companies/:id",
-    authenticateToken,
+    /*authenticateToken,*/
     deleteCompany
 );
 
 // Pozíció végpontok
 router.get("/positions",
-    authenticateToken,
+    /*authenticateToken,*/
     getAllPositions
 );
 
 router.get("/positions/:id",
-    authenticateToken,
+    /*authenticateToken,*/
     getPositionById
 );
 
 router.post(
     "/positions",
-    authenticateToken,
+    /*authenticateToken,*/
     validate(PositionCreateSchema),
     createPosition
 );
 
 router.patch(
     "/positions/:id",
-    authenticateToken,
+    /*authenticateToken,*/
     validate(PositionUpdateSchema),
     updatePosition
 );
 
 router.delete("/positions/:id",
-    authenticateToken,
+    /*authenticateToken,*/
     deletePosition
 );
 
