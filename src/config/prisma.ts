@@ -15,23 +15,35 @@ const basePrisma =
 const prisma = basePrisma.$extends({
     query: {
         $allModels: {
-            // A "model" paraméter tartalmazza a modell nevét (pl. "User", "Position")
-            async findMany({ model, args, query }) {
-                args.where = { ...args.where, deletedAt: null };
+            async findMany({ args, query }) {
+                if (args.where && (args.where as any).deletedAt === undefined) {
+                    args.where = { ...args.where, deletedAt: null } as any;
+                }
                 return query(args);
             },
-            async findFirst({ model, args, query }) {
-                args.where = { ...args.where, deletedAt: null };
+
+            async findFirst({ args, query }) {
+                if (args.where && (args.where as any).deletedAt === undefined) {
+                    args.where = { ...args.where, deletedAt: null } as any;
+                }
                 return query(args);
             },
-            async count({ model, args, query }) {
-                args.where = { ...args.where, deletedAt: null };
+
+            async count({ args, query }) {
+                if (args.where && (args.where as any).deletedAt === undefined) {
+                    args.where = { ...args.where, deletedAt: null } as any;
+                }
                 return query(args);
             },
+
+
             async findUnique({ model, args, query }) {
-                return (basePrisma as any)[model].findFirst({
-                    where: { ...args.where, deletedAt: null }
-                });
+                if (args.where && (args.where as any).deletedAt === undefined) {
+                    return (basePrisma as any)[model].findFirst({
+                        where: { ...args.where, deletedAt: null }
+                    });
+                }
+                return query(args);
             }
         }
     }
