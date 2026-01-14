@@ -47,7 +47,7 @@ export const getUniversityUserById = async (req: Request, res: Response) => {
           });
 
           if (!user) {
-               res.status(404).json({ message: "A keresett dolgozó nem található." });
+               return res.status(404).json({ message: "A keresett dolgozó nem található." });
           }
 
 
