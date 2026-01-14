@@ -105,69 +105,99 @@ A hallgatók kezelése, profilmódosítás és törlés.
 | `PUT` | `/:id` | Hallgató módosítása ID alapján. | Staff |
 | `DELETE` | `/:id` | Hallgató törlése ID alapján (Soft Delete). | Staff |
 
-**Kiemelt logikák:**
-
-*   **Nested Update:** A `PUT` kérések egyszerre frissítik a `User` táblát (név, telefon) és a kapcsolódó `StudentProfile` táblát (cím, iskola, stb.) egy tranzakcióban.
-*   **Soft Delete:** A törlés nem távolítja el fizikailag az adatot, hanem beállítja a `deletedAt` dátumot és az `isActive: false` flaget. A lekérdezések (pl. `findUnique`, `findMany`) automatikusan szűrik a törölt elemeket (`deletedAt: null`).
-
 ### 2. Állásportál Modul (`/api/jobs`)
 
 Cégek és álláshirdetések (pozíciók) kezelése.
 
 #### Cégek (`/api/jobs/companies`)
 
-| Metódus | Végpont | Leírás | Validáció |
+| Metódus | Végpont | Leírás | Jogosultság |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/` | Cégek listázása + nyitott pozíciók száma (`_count`). | Authenticated |
+| `GET` | `/` | Cégek listázása. | Authenticated |
 | `GET` | `/:id` | Cég részletei, pozíciók és kapcsolattartók. | Authenticated |
-| `POST` | `/` | Új cég létrehozása. | `CompanyCreateSchema` |
-| `PUT` | `/:id` | Cég adatainak frissítése. | `CompanyUpdateSchema` |
+| `POST` | `/` | Új cég létrehozása. | Authenticated |
+| `PUT` | `/:id` | Cég adatainak frissítése. | Authenticated |
 | `DELETE` | `/:id` | Cég törlése (Soft Delete). | Authenticated |
-
-**Különleges logika:**
-
-*   **Adószám ellenőrzés:** Létrehozáskor a rendszer ellenőrzi, hogy létezik-e már cég a megadott adószámmal (`taxId`).
-*   **Kaszkádolt törlés (Logikai):** Ha egy céget törölnek (`deleteCompany`), a rendszer automatikusan inaktiválja (`isActive: false`) és töröltnek jelöli (`deletedAt: new Date()`) a hozzá tartozó összes pozíciót is.
 
 #### Pozíciók (`/api/jobs/positions`)
 
-| Metódus | Végpont | Leírás | Validáció |
+| Metódus | Végpont | Leírás | Jogosultság |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/` | Aktív pozíciók listázása (határidő szerint rendezve). | Authenticated |
-| `GET` | `/:id` | Pozíció részletei + Címkék (Tags). | Authenticated |
-| `POST` | `/` | Új pozíció meghirdetése. | `PositionCreateSchema` |
-| `PUT` | `/:id` | Pozíció frissítése. | `PositionUpdateSchema` |
-| `DELETE` | `/:id` | Pozíció törlése. | Authenticated |
+| `GET` | `/` | Aktív pozíciók listázása. | Authenticated |
+| `GET` | `/:id` | Pozíció részletei. | Authenticated |
+| `POST` | `/` | Új pozíció meghirdetése. | Authenticated |
+| `PUT` | `/:id` | Pozíció frissítése. | Authenticated |
+| `DELETE` | `/:id` | Pozíció törlése (Soft Delete). | Authenticated |
+| `PATCH` | `/:id/deactivate` | Pozíció inaktiválása (isActive=false, nem törlés). | Authenticated |
 
-**Címke (Tag) Kezelés:**
+### 3. Adminisztrációs Modulok
 
-*   **Automatikus formázás:** A Zod séma a beérkező címkéket automatikusan formázza (pl. "javaScript" -> "Javascript").
-*   **ConnectOrCreate:** A Prisma `connectOrCreate` funkcióját használjuk. Ha a címke (pl. "React") már létezik az adatbázisban, hozzákapcsolja a pozícióhoz. Ha nem, akkor létrehozza az új címkét és úgy kapcsolja hozzá.
+A rendszer három fő adminisztrációs szintet különböztet meg, mindegyik saját végpontokkal és jogosultságokkal rendelkezik.
+
+#### Rendszer Adminisztrátorok (`/api/system-admins`)
+
+A legmagasabb szintű jogosultság. A rendszeradminok felelnek a teljes platform karbantartásáért, felhasználók kezeléséért és a rendszer szintű beállításokért. Képesek bármely felhasználó adatait módosítani vagy törölni.
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Összes rendszeradmin listázása. | Authenticated |
+| `GET` | `/me` | Saját admin profil lekérése. | Authenticated |
+| `GET` | `/:id` | Rendszeradmin lekérése ID alapján. | Authenticated |
+| `PATCH` | `/:id` | Adatok frissítése. | Authenticated |
+| `DELETE` | `/:id` | Admin törlése. | Authenticated |
+
+#### Cég Adminisztrátorok (`/api/company-admins`)
+
+A cégek képviselői, akik jogosultak a saját cégük adatainak szerkesztésére, új pozíciók létrehozására és a hozzájuk jelentkező hallgatók kezelésére. Ők felelnek a cégük munkavállalóinak (Mentorok) adminisztrációjáért is.
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Összes cégadmin listázása. | Authenticated |
+| `GET` | `/me` | Saját profil lekérése. | Authenticated |
+| `GET` | `/:id` | Cégadmin lekérése ID alapján. | Authenticated |
+| `PATCH` | `/:id` | Adatok frissítése. | Authenticated |
+| `DELETE` | `/:id` | Cégadmin törlése. | Authenticated |
+
+#### Egyetemi Felhasználók (`/api/university-users`)
+
+Az egyetem adminisztratív munkatársai. Feladatuk a hallgatók és a duális képzési folyamatok felügyelete, valamint az egyetem és a partnerek közötti kapcsolattartás támogatása.
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Összes egyetemi felhasználó listázása. | Authenticated |
+| `GET` | `/:id` | Egyetemi felhasználó lekérése ID alapján. | Authenticated |
+| `PATCH` | `/:id` | Adatok frissítése. | Authenticated |
+| `DELETE` | `/:id` | Törlés. | Authenticated |
+
+### 4. Általános és Inaktív Kezelés (User / Company)
+
+Speciális végpontok az inaktív, de nem törölt státuszú elemek kezelésére.
+
+#### Felhasználók (`/api/users`)
+
+Ez a modul általános felhasználói műveleteket tesz lehetővé, amelyek nem kötődnek specifikusan egy szerepkörhöz. Kiemelt funkciója az inaktív felhasználók kezelése: lehetőséget biztosít olyan fiókok listázására és újraaktiválására, amelyek `isActive: false` státuszúak, de még nem kerültek törlésre (`deletedAt: null`).
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/inactive` | Inaktív (`isActive: false`, `deletedAt: null`) felhasználók listázása. | Authenticated |
+| `PATCH` | `/:id/reactivate` | Felhasználó újraaktiválása (`isActive: true`). | Authenticated |
+| `PATCH` | `/:id/deactivate` | Felhasználó inaktiválása (`isActive: false`). | Authenticated |
+
+#### Cégek (`/api/companies`)
+
+Hasonlóan a felhasználókhoz, ez a modul a cégek adminisztrációját segíti. Lehetővé teszi a cégek státuszának módosítását (deaktiválás/aktiválás) anélkül, hogy véglegesen törölni kellene az adatokat. Ez hasznos lehet például, ha egy cég ideiglenesen felfüggeszti a duális képzést.
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/inactive` | Inaktív (`isActive: false`, `deletedAt: null`) cégek listázása. | Authenticated |
+| `PATCH` | `/:id/reactivate` | Cég újraaktiválása (`isActive: true`). | Authenticated |
+| `PATCH` | `/:id/deactivate` | Cég inaktiválása (`isActive: false`). | Authenticated |
 
 ## Validáció (Zod)
 
 A beérkező adatok szigorú típus- és formátumellenőrzésen esnek át a `validate` middleware segítségével.
 
-*   **Adószám:** Fix karakterhosszúság és formátum.
-*   **Dátumok:** Automatikus konverzió stringből Date objektummá (`z.coerce.date()`).
-*   **Email:** Szabványos email formátum validáció.
-*   **Címkék:** Üres szóközök levágása (trim), tömbkezelés.
-*   **Update Sémák:** A `partial()` metódus használatával a frissítésnél nem kötelező minden mezőt elküldeni, csak azt, ami változik.
-
 ## Hibakezelés
 
 Az alkalmazás központosított hibakezelést használ (`errorMiddleware.ts`).
-Minden hiba (legyen az adatbázis, validációs vagy egyéb szerverhiba) egységes JSON formátumban tér vissza a klienshez:
-
-```json
-{
-  "status": "error",
-  "message": "Validációs hiba",
-  "errors": [
-    {
-      "field": "email",
-      "message": "Érvénytelen email cím formátum"
-    }
-  ],
-  "stack": "..." // Csak development módban
-}
+Minden hiba egységes JSON formátumban tér vissza.
