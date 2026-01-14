@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
-import prisma from '../config/prisma';
-import { logAction } from '../utils/logger';
+import { Request, Response } from "express";
+import prisma from "../config/prisma";
+import { logAction } from "../utils/logger";
 
 const studentSelect = {
     id: true,

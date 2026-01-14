@@ -101,7 +101,7 @@ export const updateUniversityUserById = async (req: Request, res: Response) => {
                entityId: id,
                details: {
                     updatedBy: currentUser.userId,
-                    fields: { fullName, phoneNumber, isActive: isSystemAdmin ? isActive : 'unchanged' }
+                    fields: { fullName, phoneNumber, isActive: isSystemAdmin ? isActive : "unchanged" }
                }
           });
 

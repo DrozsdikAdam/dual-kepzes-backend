@@ -318,10 +318,19 @@ export const deleteCompany = async (req: Request, res: Response) => {
             where: { companyId: id },
             data: { deletedAt: new Date() }
         });
-        await prisma.user.updateMany({
-            where: { companyEmployee: { companyId: id } },
-            data: { deletedAt: new Date() }
+        const employees = await prisma.companyEmployee.findMany({
+            where: { companyId: id },
+            select: { userId: true }
         });
+
+        const employeeUserIds = employees.map(e => e.userId);
+
+        if (employeeUserIds.length > 0) {
+            await prisma.user.updateMany({
+                where: { id: { in: employeeUserIds } },
+                data: { deletedAt: new Date() }
+            });
+        }
 
         await logAction(req, {
             action: "DELETE_COMPANY",
@@ -330,9 +339,9 @@ export const deleteCompany = async (req: Request, res: Response) => {
             details: { name: id, deletedById: req.user?.userId }
         });
 
-        return res.json({ message: "Cég és kapcsolódó pozíciói törölve." }); // return hozzáadva
+        return res.json({ message: "Cég és kapcsolódó pozíciói törölve." });
     } catch (error) {
-        return res.status(500).json({ message: "Hiba a cég törlésekor." }); // return hozzáadva
+        return res.status(500).json({ message: "Hiba a cég törlésekor." });
     }
 }
 

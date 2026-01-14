@@ -34,5 +34,5 @@ export const MyProfileUpdateSchema = z.object({
 });
 
 
-export type StudentUpdateInput = z.infer<typeof StudentUpdateSchema>['body'];
-export type MyProfileUpdateInput = z.infer<typeof MyProfileUpdateSchema>['body'];
+export type StudentUpdateInput = z.infer<typeof StudentUpdateSchema>["body"];
+export type MyProfileUpdateInput = z.infer<typeof MyProfileUpdateSchema>["body"];

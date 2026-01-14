@@ -24,9 +24,9 @@ app.set("trust proxy", 1);
 app.use(securityMiddleware);
 app.use(cors());
 app.use(express.json());
-//authratelimiter
+// Auth Rate Limiter
 app.use("/api/auth", authRoutes);
-//app.use("/api", apiRateLimiter);
+// app.use("/api", apiRateLimiter);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/stats", statsRoutes);

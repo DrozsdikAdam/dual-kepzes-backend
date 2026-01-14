@@ -1,5 +1,5 @@
-import { Request, Response } from 'express'
-import prisma from '../config/prisma'
+import { Request, Response } from "express"
+import prisma from "../config/prisma"
 
 export const getSystemStats = async (req: Request, res: Response) => {
 
