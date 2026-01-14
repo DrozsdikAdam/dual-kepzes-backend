@@ -3,6 +3,7 @@ import prisma from "../config/prisma"
 import { Role } from "@prisma/client"
 import { logAction } from "../utils/logger"
 
+// 1. Központi SELECT definíció
 const companyAdminSelect = {
      id: true,
      email: true,
@@ -24,33 +25,28 @@ const companyAdminSelect = {
      }
 }
 
+// Saját profil lekérése
 export const getMeCompanyAdmin = async (req: Request, res: Response) => {
      const userId = req.user?.userId
-
-     if (!userId) {
-          return res.status(401).json({ message: "Nincs azonosított felhasználó." })
-     }
+     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." })
 
      try {
-          const user = await prisma.user.findFirst({
-               where: {
-                    id: userId,
-                    role: Role.COMPANY_ADMIN
-               },
+          const user = await prisma.user.findUnique({
+               where: { id: userId },
                select: companyAdminSelect
           })
 
-          if (!user) {
+          if (!user || user.role !== Role.COMPANY_ADMIN) {
                return res.status(404).json({ message: "Nem található a cégadmin profil." })
           }
 
-          return res.json(user)
-
+          return res.json(user) // return használata kötelező!
      } catch (error) {
           return res.status(500).json({ message: "Hiba az adatok lekérésekor." })
      }
 }
 
+// Összes cégadmin listázása (pl. System Admin számára)
 export const getCompanyAdmins = async (req: Request, res: Response) => {
      try {
           const admins = await prisma.user.findMany({
@@ -60,89 +56,81 @@ export const getCompanyAdmins = async (req: Request, res: Response) => {
           })
 
           await logAction(req, {
-               action: "GET_COMPANY_ADMINS",
+               action: "LIST_COMPANY_ADMINS",
                entity: "User",
-               details: { listById: req.user?.userId, count: admins.length }
+               details: { count: admins.length }
           })
-
           return res.json(admins)
      } catch (error) {
           return res.status(500).json({ message: "Hiba az adminok lekérésekor." })
      }
 }
 
+// Egyedi cégadmin lekérése ID alapján
 export const getCompanyAdminById = async (req: Request, res: Response) => {
      const { id } = req.params
-
      try {
-          const admin = await prisma.user.findFirst({
-               where: {
-                    id,
-                    role: Role.COMPANY_ADMIN
-               },
+          const admin = await prisma.user.findUnique({
+               where: { id },
                select: companyAdminSelect
           })
 
-          if (!admin) {
+          // Ellenőrizzük, hogy létezik és valóban cégadmin-e
+          if (!admin || admin.role !== Role.COMPANY_ADMIN) {
                return res.status(404).json({ message: "A céges adminisztrátor nem található." })
           }
 
-          // Adott profil megtekintésének naplózása
           await logAction(req, {
                action: "VIEW_ADMIN_DETAILS",
                entity: "User",
                entityId: id,
-               details: { viewedById: req.user?.userId, viewedEmail: admin.email }
+               details: { viewedEmail: admin.email }
           })
-
           return res.json(admin)
      } catch (error) {
           return res.status(500).json({ message: "Hiba a lekérdezés során." })
      }
 }
 
+// Cégadmin frissítése
 export const updateCompanyAdminById = async (req: Request, res: Response) => {
      const { id } = req.params
      const { fullName, phoneNumber, isActive, jobTitle } = req.body
+     const currentUser = req.user!
 
      try {
-          const target = await prisma.user.findFirst({
-               where: {
-                    id,
-                    role: Role.COMPANY_ADMIN
-               },
-               include: {
-                    companyEmployee: true
-               }
-          })
-
-          if (!target) {
+          // 1. Ellenőrizzük, hogy létezik-e a célpont
+          const target = await prisma.user.findUnique({ where: { id } })
+          if (!target || target.role !== Role.COMPANY_ADMIN) {
                return res.status(404).json({ message: "Nem található a profil." })
           }
 
-          // Transaction to update both User and CompanyEmployee if needed
+          // 2. Jogosultság: Saját magát vagy System Admin
+          const isSystemAdmin = currentUser.role === Role.SYSTEM_ADMIN;
+          const isSelf = id === currentUser.userId;
+
+          if (!isSelf && !isSystemAdmin) {
+               return res.status(403).json({ message: "Nincs jogosultságod a módosításhoz." })
+          }
+
+          // 3. Tranzakciós frissítés
           const updated = await prisma.$transaction(async (tx) => {
-               // Update User fields
                await tx.user.update({
                     where: { id },
                     data: {
                          fullName,
                          phoneNumber,
-                         isActive
+                         isActive: isSystemAdmin ? isActive : undefined
                     }
                })
 
-               // Update CompanyEmployee fields if jobTitle is provided and employee record exists
-               if (jobTitle !== undefined && target.companyEmployee) {
+               if (jobTitle !== undefined) {
                     await tx.companyEmployee.update({
-                         where: { id: target.companyEmployee.id },
-                         data: {
-                              jobTitle
-                         }
+                         where: { userId: id },
+                         data: { jobTitle }
                     })
                }
 
-               // Return the fresh data
                return tx.user.findUnique({
                     where: { id },
                     select: companyAdminSelect
@@ -153,57 +141,36 @@ export const updateCompanyAdminById = async (req: Request, res: Response) => {
                action: "UPDATE_COMPANY_ADMIN",
                entity: "User",
                entityId: id,
-               details: {
-                    updatedById: req.user?.userId,
-                    changes: { fullName, phoneNumber, isActive, jobTitle },
-                    previousState: {
-                         fullName: target.fullName,
-                         jobTitle: target.companyEmployee?.jobTitle
-                    }
-               }
+               details: { changes: { fullName, jobTitle } }
           })
 
-          return res.json({ message: "Cégadmin adatai sikeresen frissítve.", updated })
+          return res.json({ message: "Cégadmin adatok frissítve.", user: updated })
      } catch (error) {
-          console.error(error)
-          return res.status(500).json({ message: "Hiba történt a frissítéskor." })
+          return res.status(500).json({ message: "Hiba a frissítés során." })
      }
 }
 
+// Cégadmin törlése (Soft Delete)
 export const deleteCompanyAdmin = async (req: Request, res: Response) => {
      const { id } = req.params
-
      try {
-          // Soft delete
+          // Tranzakcióban töröljük a felhasználót és a kapcsolódó munkavállalói profilt is
           await prisma.$transaction(async (tx) => {
-               const user = await tx.user.update({
+               await tx.user.update({
                     where: { id },
-                    data: {
-                         isActive: false,
-                         deletedAt: new Date()
-                    },
-                    include: { companyEmployee: true }
+                    data: { isActive: false, deletedAt: new Date() }
                })
-
-               if (user.companyEmployee) {
-                    await tx.companyEmployee.update({
-                         where: { id: user.companyEmployee.id },
-                         data: {
-                              deletedAt: new Date()
-                         }
-                    })
-               }
+               await tx.companyEmployee.update({
+                    where: { userId: id },
+                    data: { deletedAt: new Date() }
+               })
           })
 
           await logAction(req, {
                action: "DELETE_COMPANY_ADMIN",
                entity: "User",
-               entityId: id,
-               details: {
-                    deletedBy: req.user?.userId
-               }
+               entityId: id
           })
-
           return res.json({ message: "A rekord sikeresen törölve." })
      } catch (error) {
           return res.status(500).json({ message: "Hiba történt a törlés során." })
