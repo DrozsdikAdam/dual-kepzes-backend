@@ -89,7 +89,7 @@ export const getAllStudents = async (req: Request, res: Response) => {
         await logAction(req, {
             action: "LIST_STUDENTS",
             entity: "User",
-            details: { count: students.length }
+            details: { listById: req.user?.userId, count: students.length }
         });
 
         res.status(200).json(students);
@@ -122,7 +122,7 @@ export const updateMyProfile = async (req: Request, res: Response) => {
             action: "UPDATE_OWN_PROFILE",
             entity: "User",
             entityId: userId,
-            details: { updatedFields: Object.keys(req.body) }
+            details: { updatedById: req.user?.userId, updatedFields: Object.keys(req.body) }
         });
 
         res.json({ message: "Profilod sikeresen frissítve!", user: updated });

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { CompanyInput, PositionInput, TagInput } from "../schemas/jobSchema";
-import { create } from "node:domain";
+import { logAction } from "../utils/logger";
 
 // 1. Központi SELECT definíciók
 const companySelect = {
@@ -80,6 +80,14 @@ export const getCompanyById = async (req: Request, res: Response) => {
         })
 
         if (!company) return res.status(404).json({ message: "Cég nem található." });
+
+        await logAction(req, {
+            action: "VIEW_COMPANY",
+            entity: "Company",
+            entityId: id,
+            details: { viewById: req.user?.userId, name: company.name }
+        });
+
         res.json(company);
     } catch (error) {
         res.status(500).json({ message: "Hiba a cég lekérésekor." });
@@ -168,6 +176,13 @@ export const createCompany = async (
             select: companySelect
         });
 
+        await logAction(req, {
+            action: "CREATE_COMPANY",
+            entity: "Company",
+            entityId: newCompany.id,
+            details: { createdById: req.user?.userId, name: newCompany.name, taxId: newCompany.taxId }
+        });
+
         res
             .status(201)
             .json({ message: "Sikeres cég létrehozás", company: newCompany });
@@ -204,6 +219,13 @@ export const createPosition = async (
             select: positionSelect
         });
 
+        await logAction(req, {
+            action: "CREATE_POSITION",
+            entity: "Position",
+            entityId: newPosition.id,
+            details: { createdById: req.user?.userId, title: newPosition.title, companyId: data.companyId }
+        });
+
         res.status(201).json({
             message: "Pozíció sikeresen meghirdetve",
             position: newPosition,
@@ -228,6 +250,14 @@ export const updateCompany = async (req: Request, res: Response) => {
             data: data,
             select: companySelect
         });
+
+        await logAction(req, {
+            action: "UPDATE_COMPANY",
+            entity: "Company",
+            entityId: companyId,
+            details: { updatedById: req.user?.userId, updatedFields: Object.keys(data) }
+        });
+
         return res.json({ message: "Cég adatai frissítve", company: updatedCompany });
     } catch (error) {
         // Fontos: Logold a konkrét hibát a Railway konzolra!
@@ -256,13 +286,17 @@ export const updatePosition = async (req: Request, res: Response) => {
             select: positionSelect
         });
 
-        // JAVÍTÁS: Csak EGY res.json maradjon, és legyen előtte return!
+        await logAction(req, {
+            action: "UPDATE_POSITION",
+            entity: "Position",
+            entityId: id,
+            details: { updatedById: req.user?.userId, title: updatedPosition.title, changedFields: Object.keys(data) }
+        });
+
         return res.json({
             message: "Pozíció adatai sikeresen frissítve",
             position: updatedPosition
         });
-
-        // TÖRÖLD EZT A SORT: res.json({ message: "Pozíció frissítve", position: updatedPosition });
 
     } catch (error) {
         return res.status(500).json({ message: "Hiba a pozíció frissítésekor." });
@@ -280,6 +314,22 @@ export const deleteCompany = async (req: Request, res: Response) => {
             where: { companyId: id },
             data: { isActive: false, deletedAt: new Date() }
         });
+        await prisma.companyEmployee.updateMany({
+            where: { companyId: id },
+            data: { deletedAt: new Date() }
+        });
+        await prisma.user.updateMany({
+            where: { companyEmployee: { companyId: id } },
+            data: { deletedAt: new Date() }
+        });
+
+        await logAction(req, {
+            action: "DELETE_COMPANY",
+            entity: "Company",
+            entityId: id,
+            details: { name: id, deletedById: req.user?.userId }
+        });
+
         return res.json({ message: "Cég és kapcsolódó pozíciói törölve." }); // return hozzáadva
     } catch (error) {
         return res.status(500).json({ message: "Hiba a cég törlésekor." }); // return hozzáadva
@@ -293,6 +343,14 @@ export const deletePosition = async (req: Request, res: Response) => {
             where: { id },
             data: { isActive: false, deletedAt: new Date() }
         });
+
+        await logAction(req, {
+            action: "DELETE_POSITION",
+            entity: "Position",
+            entityId: id,
+            details: { deletedById: req.user?.userId }
+        });
+
         return res.json({ message: "Pozíció sikeresen törölve." }); // JAVÍTVA: return hozzáadva
     } catch (error) {
         return res.status(500).json({ message: "Hiba a pozíció törlésekor." });

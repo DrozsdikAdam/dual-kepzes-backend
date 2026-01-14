@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { hashPassword, comparePassword, generateToken } from "../utils/auth";
 import { RegisterInput, LoginInput } from "../schemas/authSchema";
+import { logAction } from "../utils/logger";
 
 export const register = async (req: Request<{}, {}, RegisterInput>, res: Response) => {
     const data = req.body;
@@ -86,6 +87,17 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
             return user;
         });
 
+        await logAction(req, {
+            action: "USER_REGISTERED",
+            entity: "User",
+            entityId: newUser.id,
+            details: {
+                email: newUser.email,
+                role: newUser.role,
+                fullName: newUser.fullName
+            }
+        });
+
         res.status(201).json({ message: "Sikeres regisztráció", userId: newUser.id, role: newUser.role });
 
     } catch (error) {
@@ -114,6 +126,13 @@ export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => 
         }
 
         const token = generateToken(user.id, user.role);
+
+        await logAction(req, {
+            action: "USER_LOGIN",
+            entity: "User",
+            entityId: user.id,
+            details: { email: user.email, role: user.role }
+        });
 
         res.json({
             message: "Sikeres bejelentkezés",

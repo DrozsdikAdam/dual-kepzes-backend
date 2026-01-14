@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { Role } from "@prisma/client";
+import { logAction } from "../utils/logger";
 
 const universityUserSelect = {
      id: true,
@@ -14,12 +15,18 @@ const universityUserSelect = {
 
 export const getUniversityUsers = async (req: Request, res: Response) => {
      try {
-          const users = prisma.user.findMany({
+          const users = await prisma.user.findMany({
                where: {
                     role: Role.UNIVERSITY_USER
                },
                select: universityUserSelect,
                orderBy: { fullName: "asc" }
+          });
+
+          await logAction(req, {
+               action: "LIST_UNIVERSITY_USERS",
+               entity: "User",
+               details: { listById: req.user?.userId, count: users.length }
           });
           return res.json(users);
      } catch (error) {
@@ -43,6 +50,14 @@ export const getUniversityUserById = async (req: Request, res: Response) => {
                res.status(404).json({ message: "A keresett dolgozó nem található." });
           }
 
+
+          await logAction(req, {
+               action: "VIEW_UNIVERSITY_USER_DETAILS",
+               entity: "User",
+               entityId: id,
+               details: { viewedById: req.user?.userId }
+          })
+
           return res.json(user);
      } catch (error) {
           return res.status(500).json({ message: "Hiba történt a lekérdezés közben." });
@@ -51,7 +66,7 @@ export const getUniversityUserById = async (req: Request, res: Response) => {
 
 export const updateUniversityUserById = async (req: Request, res: Response) => {
      const { id } = req.params;
-     const { fullName, phoneNumber } = req.body;
+     const { fullName, phoneNumber, isActive } = req.body;
      const currentUser = req.user!;
 
      try {
@@ -80,6 +95,16 @@ export const updateUniversityUserById = async (req: Request, res: Response) => {
                select: universityUserSelect
           });
 
+          await logAction(req, {
+               action: "UPDATE_UNIVERSITY_USER",
+               entity: "User",
+               entityId: id,
+               details: {
+                    updatedBy: currentUser.userId,
+                    fields: { fullName, phoneNumber, isActive: isSystemAdmin ? isActive : 'unchanged' }
+               }
+          });
+
           return res.json({ message: "Adatok sikeresen frissítve.", user: updatedUser });
 
      } catch (error) {
@@ -100,6 +125,14 @@ export const deleteUniversityUser = async (req: Request, res: Response) => {
                }
           });
 
+          await logAction(req, {
+               action: "DELETE_UNIVERSITY_USER",
+               entity: "User",
+               entityId: id,
+               details: { deletedById: req.user?.userId }
+          });
+
+          return res.json({ message: "A rekord sikeresen törölve." });
      } catch (error) {
           return res.status(500).json({ message: "Hiba történt a törlés során." });
      }

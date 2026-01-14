@@ -62,7 +62,7 @@ export const getCompanyAdmins = async (req: Request, res: Response) => {
           await logAction(req, {
                action: "GET_COMPANY_ADMINS",
                entity: "User",
-               details: { count: admins.length }
+               details: { listById: req.user?.userId, count: admins.length }
           })
 
           return res.json(admins)
@@ -92,7 +92,7 @@ export const getCompanyAdminById = async (req: Request, res: Response) => {
                action: "VIEW_ADMIN_DETAILS",
                entity: "User",
                entityId: id,
-               details: { viewedEmail: admin.email }
+               details: { viewedById: req.user?.userId, viewedEmail: admin.email }
           })
 
           return res.json(admin)
@@ -154,6 +154,7 @@ export const updateCompanyAdminById = async (req: Request, res: Response) => {
                entity: "User",
                entityId: id,
                details: {
+                    updatedById: req.user?.userId,
                     changes: { fullName, phoneNumber, isActive, jobTitle },
                     previousState: {
                          fullName: target.fullName,

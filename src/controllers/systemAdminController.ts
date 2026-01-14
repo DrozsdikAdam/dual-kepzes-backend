@@ -1,6 +1,7 @@
 import { Request, Response } from "express"
 import prisma from "../config/prisma"
 import { Role } from "@prisma/client"
+import { logAction } from "../utils/logger"
 
 const systemAdminSelect = {
      id: true,
@@ -47,6 +48,13 @@ export const getSystemAdmins = async (req: Request, res: Response) => {
                select: systemAdminSelect,
                orderBy: { fullName: "asc" }
           })
+
+          await logAction(req, {
+               action: "LIST_SYSTEM_ADMINS",
+               entity: "User",
+               details: { listById: req.user?.userId, count: admins.length }
+          })
+
           return res.json(admins)
      } catch (error) {
           return res.status(500).json({ message: "Hiba az adminok lekérésekor." })
@@ -68,6 +76,14 @@ export const getSystemAdminById = async (req: Request, res: Response) => {
           if (!admin) {
                return res.status(404).json({ message: "A rendszeradminisztrátor nem található." })
           }
+
+          // EGYEDI ADMIN MEGTEKINTÉSÉNEK NAPLÓZÁSA
+          await logAction(req, {
+               action: "VIEW_SYSTEM_ADMIN_DETAILS",
+               entity: "User",
+               entityId: id,
+               details: { viewedById: req.user?.userId, viewedEmail: admin.email }
+          })
 
           return res.json(admin)
      } catch (error) {
@@ -100,6 +116,16 @@ export const updateSystemAdminById = async (req: Request, res: Response) => {
                select: systemAdminSelect
           })
 
+          await logAction(req, {
+               action: "UPDATE_SYSTEM_ADMIN",
+               entity: "User",
+               entityId: id,
+               details: {
+                    updatedBy: req.user?.userId,
+                    changes: { fullName, phoneNumber, isActive }
+               }
+          })
+
           return res.json({ message: "Rendszeradmin adatai sikeresen frissítve.", updated })
      } catch (error) {
           return res.status(500).json({ message: "Hiba történt a frissítéskor." })
@@ -115,6 +141,15 @@ export const deleteSystemAdmin = async (req: Request, res: Response) => {
                data: {
                     isActive: false,
                     deletedAt: new Date()
+               }
+          })
+
+          await logAction(req, {
+               action: "DELETE_SYSTEM_ADMIN",
+               entity: "User",
+               entityId: id,
+               details: {
+                    deletedBy: req.user?.userId,
                }
           })
 
