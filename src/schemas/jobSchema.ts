@@ -23,6 +23,7 @@ export const CompanyCreateSchema = z.object({
             .string()
             .trim()
             .email({ message: "Érvénytelen email cím formátum" }),
+        description: z.string().optional(),
         logoUrl: z.string().trim().url("Érvénytelen logó URL").optional(),
         website: z.string().trim().url("Érvénytelen weboldal URL").optional(),
     }),
@@ -35,6 +36,7 @@ export const PositionCreateSchema = z.object({
         description: z.string().optional(),
         zipCode: z.string(),
         city: z.string(),
+        isDual: z.boolean().default(false),
         address: z.string(),
         deadline: z.coerce.date().optional().nullable(),
         tags: z.array(
