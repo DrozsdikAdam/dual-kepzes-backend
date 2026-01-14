@@ -90,7 +90,7 @@ export const updateUniversityUserById = async (req: Request, res: Response) => {
                data: {
                     fullName,
                     phoneNumber,
-                    isActive: isSystemAdmin ? target.isActive : undefined
+                    isActive: isSystemAdmin ? isActive : undefined
                },
                select: universityUserSelect
           });
