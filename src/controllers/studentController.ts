@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
+import { logAction } from '../utils/logger';
 
 const studentSelect = {
     id: true,
@@ -59,11 +60,17 @@ export const getStudentById = async (req: Request, res: Response) => {
 
         if (!student) return res.status(404).json({ message: "Hallgató nem található." });
 
-        // Biztonsági mentőöv: ha a select valamiért csődöt mondana
-        const safeStudent = JSON.parse(JSON.stringify(student));
-        delete safeStudent.password;
+        await logAction(req, {
+            action: "VIEW_STUDENT",
+            entity: "User",
+            entityId: id,
+            details: {
+                viewerId: req.user?.userId,
+            }
 
-        res.status(200).json(safeStudent);
+        })
+
+        res.status(200).json(student);
     } catch (error) {
         res.status(500).json({ message: "Hiba a hallgató lekérésekor." });
     }
@@ -76,6 +83,15 @@ export const getAllStudents = async (req: Request, res: Response) => {
             select: studentSelect,
             orderBy: { createdAt: "desc" }
         })
+
+
+        // LISTÁZÁS NAPLÓZÁSA
+        await logAction(req, {
+            action: "LIST_STUDENTS",
+            entity: "User",
+            details: { count: students.length }
+        });
+
         res.status(200).json(students);
     } catch (error) {
         console.error("GetAllStudents Error:", error);
@@ -101,6 +117,14 @@ export const updateMyProfile = async (req: Request, res: Response) => {
             },
             select: studentSelect
         })
+
+        await logAction(req, {
+            action: "UPDATE_OWN_PROFILE",
+            entity: "User",
+            entityId: userId,
+            details: { updatedFields: Object.keys(req.body) }
+        });
+
         res.json({ message: "Profilod sikeresen frissítve!", user: updated });
     } catch (error) {
         res.status(500).json({ message: "Hiba a profil frissítése során." });
@@ -124,6 +148,16 @@ export const updateStudentById = async (req: Request, res: Response) => {
                 }
             },
             select: studentSelect
+        });
+
+        await logAction(req, {
+            action: "UPDATE_STUDENT_BY_ADMIN",
+            entity: "User",
+            entityId: id,
+            details: {
+                updatedBy: req.user?.userId,
+                updatedFields: Object.keys(data)
+            }
         });
 
         res.status(200).json({
@@ -155,6 +189,14 @@ export const deleteMyProfile = async (req: Request, res: Response) => {
                 }
             }
         });
+
+        await logAction(req, {
+            action: "DELETE_OWN_PROFILE",
+            entity: "User",
+            entityId: userId,
+            details: { reason: "User self-deletion" }
+        });
+
         res.json({ message: "Profilod sikeresen törölve." })
     } catch (error) {
         res.status(500).json({ message: "Hiba a törlés során." });
@@ -174,6 +216,14 @@ export const deleteStudentById = async (req: Request, res: Response) => {
                 }
             }
         })
+
+        await logAction(req, {
+            action: "DELETE_STUDENT_BY_ADMIN",
+            entity: "User",
+            entityId: id,
+            details: { deletedBy: req.user?.userId }
+        });
+
         res.json({ message: "A hallgatói profil sikeresen törölve." });
     } catch (error) {
         res.status(404).json({ message: "A hallgató nem található vagy már törölték." });

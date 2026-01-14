@@ -315,7 +315,6 @@ model AuditLog {
   entityId String?
   details  Json?
 
-  ipAddress String?
   timestamp DateTime @default(now())
 }
 

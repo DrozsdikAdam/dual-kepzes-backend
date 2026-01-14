@@ -1,6 +1,7 @@
 import { Request, Response } from "express"
 import prisma from "../config/prisma"
 import { Role } from "@prisma/client"
+import { logAction } from "../utils/logger"
 
 const companyAdminSelect = {
      id: true,
@@ -57,6 +58,13 @@ export const getCompanyAdmins = async (req: Request, res: Response) => {
                select: companyAdminSelect,
                orderBy: { fullName: "asc" }
           })
+
+          await logAction(req, {
+               action: "GET_COMPANY_ADMINS",
+               entity: "User",
+               details: { count: admins.length }
+          })
+
           return res.json(admins)
      } catch (error) {
           return res.status(500).json({ message: "Hiba az adminok lekérésekor." })
@@ -78,6 +86,14 @@ export const getCompanyAdminById = async (req: Request, res: Response) => {
           if (!admin) {
                return res.status(404).json({ message: "A céges adminisztrátor nem található." })
           }
+
+          // Adott profil megtekintésének naplózása
+          await logAction(req, {
+               action: "VIEW_ADMIN_DETAILS",
+               entity: "User",
+               entityId: id,
+               details: { viewedEmail: admin.email }
+          })
 
           return res.json(admin)
      } catch (error) {
@@ -133,6 +149,19 @@ export const updateCompanyAdminById = async (req: Request, res: Response) => {
                })
           })
 
+          await logAction(req, {
+               action: "UPDATE_COMPANY_ADMIN",
+               entity: "User",
+               entityId: id,
+               details: {
+                    changes: { fullName, phoneNumber, isActive, jobTitle },
+                    previousState: {
+                         fullName: target.fullName,
+                         jobTitle: target.companyEmployee?.jobTitle
+                    }
+               }
+          })
+
           return res.json({ message: "Cégadmin adatai sikeresen frissítve.", updated })
      } catch (error) {
           console.error(error)
@@ -162,6 +191,15 @@ export const deleteCompanyAdmin = async (req: Request, res: Response) => {
                               deletedAt: new Date()
                          }
                     })
+               }
+          })
+
+          await logAction(req, {
+               action: "DELETE_COMPANY_ADMIN",
+               entity: "User",
+               entityId: id,
+               details: {
+                    deletedBy: req.user?.userId
                }
           })
 

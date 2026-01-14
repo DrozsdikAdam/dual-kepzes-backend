@@ -1,7 +1,7 @@
 import { Request } from "express"
 import prisma from "../config/prisma"
 
-export const auditLogger = async (req: Request, params: {
+export const logAction = async (req: Request, params: {
      action: string,
      entity: string,
      entityId?: string,

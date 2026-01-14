@@ -2,6 +2,7 @@ import { Request, Response } from "express"
 import prisma from "../config/prisma"
 import { UpdateEmployeeInput } from "../schemas/employeeSchema"
 import { Role } from "@prisma/client"
+import { logAction } from "../utils/logger";
 
 // 1. SELECT definíciók a konzisztencia érdekében
 // Amikor User-t kérünk le dolgozói adatokkal
@@ -67,6 +68,15 @@ export const getEmployeeById = async (req: Request, res: Response) => {
             return res.status(403).json({ message: "Nincs jogosultságod a dolgozó adatainak megtekintéséhez." });
         }
 
+        await logAction(req, {
+            action: "VIEW_EMPLOYEE",
+            entity: "User",
+            entityId: userToFind,
+            details: {
+                viewerId: currentUser.userId
+            }
+        })
+
         res.json(target);
     } catch (error) {
         res.status(500).json({ message: "Hiba a dolgozó lekérésekor." });
@@ -90,6 +100,14 @@ export const getCompanyEmployees = async (req: Request, res: Response) => {
             select: userEmployeeSelect,
             orderBy: { fullName: "asc" }
         });
+
+        await logAction(req, {
+            action: "VIEW_EMPLOYEES",
+            entity: "User",
+            details: {
+                viewerId: req.user.userId
+            }
+        })
 
         res.json(employees);
     } catch (error) {
@@ -139,6 +157,17 @@ export const updateEmployeeById = async (req: Request<{ id: string }, {}, Update
             select: userEmployeeSelect
         });
 
+
+        await logAction(req, {
+            action: "UPDATE_EMPLOYEE",
+            entity: "User",
+            entityId: userIdToUpdate,
+            details: {
+                updatedFields: { fullName, phoneNumber, jobTitle, isActive },
+                updatedBy: currentUser.userId
+            }
+        })
+
         res.status(200).json({
             message: "Adatok sikeresen frissítve.",
             user: updatedUser
@@ -174,6 +203,15 @@ export const deleteEmployeeById = async (req: Request, res: Response) => {
                 companyEmployee: { update: { deletedAt: new Date() } }
             }
         });
+
+        await logAction(req, {
+            action: "DELETE_EMPLOYEE",
+            entity: "User",
+            entityId: userIdToDelete,
+            details: {
+                deletedBy: req.user!.userId
+            }
+        })
 
         res.json({ message: "Munkavállaló sikeresen eltávolítva." });
     } catch (error) {
