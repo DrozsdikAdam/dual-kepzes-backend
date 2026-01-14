@@ -7,7 +7,7 @@ import {
      deleteUniversityUser
 } from "../controllers/universityUserController";
 import { validate } from "../middlewares/validateMiddleware";
-import { universityUserSchema } from "../schemas/authSchema";
+import { UniversityUserUpdateSchema } from "../schemas/universityUserSchema";
 
 const router = Router();
 
@@ -17,7 +17,7 @@ router.get("/", getUniversityUsers);
 
 router.get("/:id", getUniversityUserById)
 
-router.patch("/:id", validate(universityUserSchema), updateUniversityUserById)
+router.patch("/:id", validate(UniversityUserUpdateSchema), updateUniversityUserById)
 
 router.delete("/:id", deleteUniversityUser)
 

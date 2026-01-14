@@ -136,5 +136,4 @@ export const deleteUniversityUser = async (req: Request, res: Response) => {
      } catch (error) {
           return res.status(500).json({ message: "Hiba történt a törlés során." });
      }
-
 };
