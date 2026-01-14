@@ -38,7 +38,7 @@ export const getUniversityUserById = async (req: Request, res: Response) => {
      const { id } = req.params;
 
      try {
-          const user = prisma.user.findFirst({
+          const user = await prisma.user.findFirst({
                where: {
                     id: id,
                     role: Role.UNIVERSITY_USER
