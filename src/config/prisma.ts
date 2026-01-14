@@ -2,43 +2,33 @@ import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-const basePrisma =
-    globalForPrisma.prisma ||
-    new PrismaClient({
-        datasources: {
-            db: {
-                url: process.env.DATABASE_URL,
-            },
-        },
-    });
+const basePrisma = globalForPrisma.prisma || new PrismaClient();
+
+// Azok a modellek, amelyek rendelkeznek deletedAt mezővel a schema.prisma-ban
+const softDeleteModels = [
+    "User", "StudentProfile", "CompanyEmployee", "Company",
+    "Position", "Tag", "Application", "DualPartnership",
+    "Document", "LogbookEntry"
+];
 
 const prisma = basePrisma.$extends({
     query: {
         $allModels: {
-            async findMany({ args, query }) {
-                if (args.where && (args.where as any).deletedAt === undefined) {
-                    args.where = { ...args.where, deletedAt: null } as any;
+            async findMany({ model, args, query }) {
+                if (softDeleteModels.includes(model) && args.where && (args.where as any).deletedAt === undefined) {
+                    args.where = { ...args.where, deletedAt: null };
                 }
                 return query(args);
             },
-
-            async findFirst({ args, query }) {
-                if (args.where && (args.where as any).deletedAt === undefined) {
-                    args.where = { ...args.where, deletedAt: null } as any;
+            async findFirst({ model, args, query }) {
+                if (softDeleteModels.includes(model) && args.where && (args.where as any).deletedAt === undefined) {
+                    args.where = { ...args.where, deletedAt: null };
                 }
                 return query(args);
             },
-
-            async count({ args, query }) {
-                if (args.where && (args.where as any).deletedAt === undefined) {
-                    args.where = { ...args.where, deletedAt: null } as any;
-                }
-                return query(args);
-            },
-
-
             async findUnique({ model, args, query }) {
-                if (args.where && (args.where as any).deletedAt === undefined) {
+                if (softDeleteModels.includes(model) && args.where && (args.where as any).deletedAt === undefined) {
+                    // findUnique-nál findFirst-re váltunk a soft-delete miatt
                     return (basePrisma as any)[model].findFirst({
                         where: { ...args.where, deletedAt: null }
                     });
@@ -50,5 +40,4 @@ const prisma = basePrisma.$extends({
 });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = basePrisma;
-
 export default prisma;
