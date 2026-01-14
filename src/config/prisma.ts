@@ -4,7 +4,6 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
 const basePrisma = globalForPrisma.prisma || new PrismaClient();
 
-// Azok a modellek, amelyek rendelkeznek deletedAt mezővel a schema.prisma-ban
 const softDeleteModels = [
     "User", "StudentProfile", "CompanyEmployee", "Company",
     "Position", "Tag", "Application", "DualPartnership",
@@ -16,20 +15,21 @@ const prisma = basePrisma.$extends({
         $allModels: {
             async findMany({ model, args, query }) {
                 if (softDeleteModels.includes(model) && args.where && (args.where as any).deletedAt === undefined) {
-                    args.where = { ...args.where, deletedAt: null };
+                    args.where = { ...args.where, deletedAt: null } as any;
                 }
                 return query(args);
             },
             async findFirst({ model, args, query }) {
                 if (softDeleteModels.includes(model) && args.where && (args.where as any).deletedAt === undefined) {
-                    args.where = { ...args.where, deletedAt: null };
+                    args.where = { ...args.where, deletedAt: null } as any;
                 }
                 return query(args);
             },
             async findUnique({ model, args, query }) {
                 if (softDeleteModels.includes(model) && args.where && (args.where as any).deletedAt === undefined) {
-                    // findUnique-nál findFirst-re váltunk a soft-delete miatt
-                    return (basePrisma as any)[model].findFirst({
+                    // JAVÍTVA: Modellnév camelCase-re alakítása az eléréshez
+                    const modelName = model.charAt(0).toLowerCase() + model.slice(1);
+                    return (basePrisma as any)[modelName].findFirst({
                         where: { ...args.where, deletedAt: null }
                     });
                 }
