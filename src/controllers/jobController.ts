@@ -356,3 +356,36 @@ export const deletePosition = async (req: Request, res: Response) => {
         return res.status(500).json({ message: "Hiba a pozíció törlésekor." });
     }
 }
+
+export const deactivatePosition = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+        const position = await prisma.position.findFirst({
+            where: { id, deletedAt: null }
+        });
+
+        if (!position) {
+            return res.status(404).json({ message: "Nem található aktív pozíció ezzel az ID-val." });
+        }
+
+        const updatedPosition = await prisma.position.update({
+            where: { id },
+            data: { isActive: false },
+            select: positionSelect
+        });
+
+        await logAction(req, {
+            action: "DEACTIVATE_POSITION",
+            entity: "Position",
+            entityId: id,
+            details: {
+                deactivatedBy: req.user?.userId
+            }
+        });
+
+        return res.json({ message: "Pozíció sikeresen deaktiválva.", position: updatedPosition });
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba a pozíció deaktiválásakor." });
+    }
+}

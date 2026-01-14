@@ -9,7 +9,8 @@ import {
     getCompanyById,
     getPositionById,
     updateCompany,
-    updatePosition
+    updatePosition,
+    deactivatePosition
 } from "../controllers/jobController";
 import { validate } from "../middlewares/validateMiddleware";
 import {
@@ -78,6 +79,11 @@ router.patch(
 router.delete("/positions/:id",
     authenticateToken,
     deletePosition
+);
+
+router.patch("/positions/:id/deactivate",
+    authenticateToken,
+    deactivatePosition
 );
 
 export default router;

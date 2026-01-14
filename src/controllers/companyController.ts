@@ -61,3 +61,36 @@ export const reactivateCompany = async (req: Request, res: Response) => {
           return res.status(500).json({ message: "Hiba a cég újraaktiválásakor." });
      }
 };
+
+export const deactivateCompany = async (req: Request, res: Response) => {
+     const { id } = req.params;
+
+     try {
+          const company = await prisma.company.findFirst({
+               where: { id, deletedAt: null }
+          });
+
+          if (!company) {
+               return res.status(404).json({ message: "Nem található aktív cég ezzel az ID-val." });
+          }
+
+          const updatedCompany = await prisma.company.update({
+               where: { id },
+               data: { isActive: false },
+               select: companySelect
+          });
+
+          await logAction(req, {
+               action: "DEACTIVATE_COMPANY",
+               entity: "Company",
+               entityId: id,
+               details: {
+                    deactivatedBy: req.user?.userId
+               }
+          });
+
+          return res.json({ message: "Cég sikeresen deaktiválva.", company: updatedCompany });
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba a cég deaktiválásakor." });
+     }
+};

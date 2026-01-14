@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticateToken } from "../middlewares/authMiddleware";
-import { getInactiveCompanies, reactivateCompany } from "../controllers/companyController";
+import { getInactiveCompanies, reactivateCompany, deactivateCompany } from "../controllers/companyController";
 
 const router = Router();
 
@@ -9,5 +9,6 @@ router.use(authenticateToken);
 
 router.get("/inactive", getInactiveCompanies);
 router.patch("/:id/reactivate", reactivateCompany);
+router.patch("/:id/deactivate", deactivateCompany);
 
 export default router;

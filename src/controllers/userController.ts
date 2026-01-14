@@ -61,3 +61,36 @@ export const reactivateUser = async (req: Request, res: Response) => {
           return res.status(500).json({ message: "Hiba a felhasználó újraaktiválásakor." });
      }
 };
+
+export const deactivateUser = async (req: Request, res: Response) => {
+     const { id } = req.params;
+
+     try {
+          const user = await prisma.user.findFirst({
+               where: { id, deletedAt: null }
+          });
+
+          if (!user) {
+               return res.status(404).json({ message: "Nem található aktív felhasználó ezzel az ID-val." });
+          }
+
+          const updatedUser = await prisma.user.update({
+               where: { id },
+               data: { isActive: false },
+               select: userSelect
+          });
+
+          await logAction(req, {
+               action: "DEACTIVATE_USER",
+               entity: "User",
+               entityId: id,
+               details: {
+                    deactivatedBy: req.user?.userId
+               }
+          });
+
+          return res.json({ message: "Felhasználó sikeresen deaktiválva.", user: updatedUser });
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba a felhasználó deaktiválásakor." });
+     }
+};
