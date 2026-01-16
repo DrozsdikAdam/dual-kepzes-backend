@@ -44,7 +44,13 @@ export const getAllCompanies = async (req: Request, res: Response) => {
         const companies = await prisma.company.findMany({
             select: {
                 ...companySelect,
-                _count: { select: { positions: true } }
+                _count: {
+                    select: {
+                        positions: {
+                            where: { deletedAt: null }
+                        }
+                    }
+                }
             }
         })
         res.json(companies);
@@ -61,10 +67,16 @@ export const getCompanyById = async (req: Request, res: Response) => {
             select: {
                 ...companySelect,
                 positions: {
-                    where: { isActive: true },
+                    where: {
+                        isActive: true,
+                        deletedAt: null
+                    },
                     select: positionSelect
                 },
                 employees: {
+                    where: {
+                        deletedAt: null
+                    },
                     select: {
                         id: true,
                         jobTitle: true,
