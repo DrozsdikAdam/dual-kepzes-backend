@@ -130,6 +130,20 @@ Cégek és álláshirdetések (pozíciók) kezelése.
 | `DELETE` | `/:id` | Pozíció törlése (Soft Delete). | Authenticated |
 | `PATCH` | `/:id/deactivate` | Pozíció inaktiválása (isActive=false, nem törlés). | Authenticated |
 
+#### Munkavállalók (`/api/employees`)
+
+A cégek munkavállalóinak kezelése. A cégadminisztrátorok kezelhetik a cégükhöz tartozó munkavállalókat.
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Céghez tartozó munkavállalók listázása. | Company Admin |
+| `GET` | `/me` | Saját profil lekérése. | Authenticated |
+| `PUT` | `/me` | Saját profil frissítése. | Authenticated |
+| `DELETE` | `/me` | Saját profil törlése. | Authenticated |
+| `GET` | `/:id` | Munkavállaló lekérése ID alapján. | Authenticated |
+| `PUT` | `/:id` | Munkavállaló frissítése. | Admin / Self |
+| `DELETE` | `/:id` | Munkavállaló törlése. | Admin |
+
 ### 3. Adminisztrációs Modulok
 
 A rendszer három fő adminisztrációs szintet különböztet meg, mindegyik saját végpontokkal és jogosultságokkal rendelkezik.
@@ -142,6 +156,8 @@ A legmagasabb szintű jogosultság. A rendszeradminok felelnek a teljes platform
 | :--- | :--- | :--- | :--- |
 | `GET` | `/` | Összes rendszeradmin listázása. | Authenticated |
 | `GET` | `/me` | Saját admin profil lekérése. | Authenticated |
+| `PATCH` | `/me` | Saját admin profil frissítése. | Authenticated |
+| `DELETE` | `/me` | Saját admin profil törlése. | Authenticated |
 | `GET` | `/:id` | Rendszeradmin lekérése ID alapján. | Authenticated |
 | `PATCH` | `/:id` | Adatok frissítése. | Authenticated |
 | `DELETE` | `/:id` | Admin törlése. | Authenticated |
@@ -154,6 +170,8 @@ A cégek képviselői, akik jogosultak a saját cégük adatainak szerkesztésé
 | :--- | :--- | :--- | :--- |
 | `GET` | `/` | Összes cégadmin listázása. | Authenticated |
 | `GET` | `/me` | Saját profil lekérése. | Authenticated |
+| `PATCH` | `/me` | Saját profil frissítése. | Authenticated |
+| `DELETE` | `/me` | Saját profil törlése. | Authenticated |
 | `GET` | `/:id` | Cégadmin lekérése ID alapján. | Authenticated |
 | `PATCH` | `/:id` | Adatok frissítése. | Authenticated |
 | `DELETE` | `/:id` | Cégadmin törlése. | Authenticated |
@@ -165,6 +183,9 @@ Az egyetem adminisztratív munkatársai. Feladatuk a hallgatók és a duális k�
 | Metódus | Végpont | Leírás | Jogosultság |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/` | Összes egyetemi felhasználó listázása. | Authenticated |
+| `GET` | `/me` | Saját profil lekérése. | Authenticated |
+| `PATCH` | `/me` | Saját profil frissítése. | Authenticated |
+| `DELETE` | `/me` | Saját profil törlése. | Authenticated |
 | `GET` | `/:id` | Egyetemi felhasználó lekérése ID alapján. | Authenticated |
 | `PATCH` | `/:id` | Adatok frissítése. | Authenticated |
 | `DELETE` | `/:id` | Törlés. | Authenticated |

@@ -4,7 +4,10 @@ import {
      getUniversityUserById,
      getUniversityUsers,
      updateUniversityUserById,
-     deleteUniversityUser
+     deleteUniversityUser,
+     getMeUniversityUser,
+     updateMeUniversityUser,
+     deleteMeUniversityUser
 } from "../controllers/universityUserController";
 import { validate } from "../middlewares/validateMiddleware";
 import { UniversityUserUpdateSchema } from "../schemas/universityUserSchema";
@@ -12,6 +15,10 @@ import { UniversityUserUpdateSchema } from "../schemas/universityUserSchema";
 const router = Router();
 
 router.use(authenticateToken)
+
+router.get("/me", getMeUniversityUser);
+router.patch("/me", validate(UniversityUserUpdateSchema), updateMeUniversityUser);
+router.delete("/me", deleteMeUniversityUser);
 
 router.get("/", getUniversityUsers);
 

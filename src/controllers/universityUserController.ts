@@ -13,6 +13,88 @@ const universityUserSelect = {
      createdAt: true
 };
 
+
+export const getMeUniversityUser = async (req: Request, res: Response) => {
+     const userId = req.user?.userId;
+     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+
+     try {
+          const user = await prisma.user.findFirst({
+               where: {
+                    id: userId,
+                    role: Role.UNIVERSITY_USER
+               },
+               select: universityUserSelect
+          });
+
+          if (!user) {
+               return res.status(404).json({ message: "Nem található az egyetemi felhasználó profil." });
+          }
+
+          return res.json(user);
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba a profil lekérésekor." });
+     }
+}
+
+export const updateMeUniversityUser = async (req: Request, res: Response) => {
+     const userId = req.user?.userId;
+     const { fullName, phoneNumber } = req.body;
+
+     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+
+     try {
+          const updatedUser = await prisma.user.update({
+               where: { id: userId },
+               data: {
+                    fullName,
+                    phoneNumber
+               },
+               select: universityUserSelect
+          });
+
+          await logAction(req, {
+               action: "UPDATE_MY_PROFILE",
+               entity: "User",
+               entityId: userId,
+               details: {
+                    updatedBy: userId,
+                    changes: { fullName, phoneNumber }
+               }
+          })
+
+          return res.json({ message: "Profil sikeresen frissítve.", user: updatedUser });
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba a profil frissítésekor." });
+     }
+}
+
+export const deleteMeUniversityUser = async (req: Request, res: Response) => {
+     const userId = req.user?.userId;
+     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+
+     try {
+          await prisma.user.update({
+               where: { id: userId },
+               data: {
+                    isActive: false,
+                    deletedAt: new Date()
+               }
+          });
+
+          await logAction(req, {
+               action: "DELETE_MY_PROFILE",
+               entity: "User",
+               entityId: userId,
+               details: { deletedById: userId }
+          });
+
+          return res.json({ message: "A profil sikeresen törölve." });
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba a törlés során." });
+     }
+}
+
 export const getUniversityUsers = async (req: Request, res: Response) => {
      try {
           const users = await prisma.user.findMany({

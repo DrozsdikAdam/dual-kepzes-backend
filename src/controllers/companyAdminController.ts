@@ -46,6 +46,81 @@ export const getMeCompanyAdmin = async (req: Request, res: Response) => {
      }
 }
 
+export const updateMeCompanyAdmin = async (req: Request, res: Response) => {
+     const userId = req.user?.userId
+     const { fullName, phoneNumber, jobTitle } = req.body
+
+     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." })
+
+     try {
+          const target = await prisma.user.findUnique({ where: { id: userId } })
+          if (!target || target.role !== Role.COMPANY_ADMIN) {
+               return res.status(404).json({ message: "Nem található a profil." })
+          }
+
+          const updated = await prisma.$transaction(async (tx) => {
+               await tx.user.update({
+                    where: { id: userId },
+                    data: {
+                         fullName,
+                         phoneNumber
+                    }
+               })
+
+               if (jobTitle !== undefined) {
+                    await tx.companyEmployee.update({
+                         where: { userId: userId },
+                         data: { jobTitle }
+                    })
+               }
+
+               return tx.user.findUnique({
+                    where: { id: userId },
+                    select: companyAdminSelect
+               })
+          })
+
+          await logAction(req, {
+               action: "UPDATE_MY_PROFILE",
+               entity: "User",
+               entityId: userId,
+               details: { changes: { fullName, jobTitle } }
+          })
+
+          return res.json({ message: "Saját adatok frissítve.", user: updated })
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba a frissítés során." })
+     }
+}
+
+export const deleteMeCompanyAdmin = async (req: Request, res: Response) => {
+     const userId = req.user?.userId
+     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." })
+
+     try {
+          await prisma.$transaction(async (tx) => {
+               await tx.user.update({
+                    where: { id: userId },
+                    data: { isActive: false, deletedAt: new Date() }
+               })
+               await tx.companyEmployee.update({
+                    where: { userId: userId },
+                    data: { deletedAt: new Date() }
+               })
+          })
+
+          await logAction(req, {
+               action: "DELETE_MY_PROFILE",
+               entity: "User",
+               entityId: userId
+          })
+          return res.json({ message: "A profil sikeresen törölve." })
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba történt a törlés során." })
+     }
+}
+
+
 // Összes cégadmin listázása (pl. System Admin számára)
 export const getCompanyAdmins = async (req: Request, res: Response) => {
      try {

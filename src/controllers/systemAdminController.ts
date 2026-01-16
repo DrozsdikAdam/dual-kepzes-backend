@@ -40,6 +40,68 @@ export const getMeSystemAdmin = async (req: Request, res: Response) => {
      }
 }
 
+export const updateMeSystemAdmin = async (req: Request, res: Response) => {
+     const userId = req.user?.userId
+     const { fullName, phoneNumber } = req.body
+
+     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." })
+
+     try {
+          const updated = await prisma.user.update({
+               where: { id: userId },
+               data: {
+                    fullName,
+                    phoneNumber
+               },
+               select: systemAdminSelect
+          })
+
+          await logAction(req, {
+               action: "UPDATE_MY_PROFILE",
+               entity: "User",
+               entityId: userId,
+               details: {
+                    updatedBy: userId,
+                    changes: { fullName, phoneNumber }
+               }
+          })
+
+          return res.json({ message: "Profil sikeresen frissítve.", user: updated })
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba az admin profil frissítésekor." })
+     }
+}
+
+export const deleteMeSystemAdmin = async (req: Request, res: Response) => {
+     const userId = req.user?.userId
+
+     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." })
+
+     try {
+          await prisma.user.update({
+               where: { id: userId },
+               data: {
+                    isActive: false,
+                    deletedAt: new Date()
+               }
+          })
+
+          await logAction(req, {
+               action: "DELETE_MY_PROFILE",
+               entity: "User",
+               entityId: userId,
+               details: {
+                    deletedBy: userId,
+               }
+          })
+
+          return res.json({ message: "A profil sikeresen törölve." })
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba történt a törlés során." })
+     }
+}
+
+
 
 export const getSystemAdmins = async (req: Request, res: Response) => {
      try {

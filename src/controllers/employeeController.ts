@@ -45,6 +45,95 @@ const employeeProfileSelect = {
     }
 };
 
+
+export const getMeEmployee = async (req: Request, res: Response) => {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+        return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+    }
+
+    try {
+        const employee = await prisma.companyEmployee.findUnique({
+            where: { userId },
+            select: employeeProfileSelect
+        });
+
+        if (!employee) {
+            return res.status(404).json({ message: "A dolgozó profil nem található." });
+        }
+
+        res.json(employee);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a profil lekérésekor." });
+    }
+}
+
+export const updateMeEmployee = async (req: Request<{}, {}, UpdateEmployeeInput>, res: Response) => {
+    const userId = req.user?.userId;
+    const { fullName, phoneNumber } = req.body;
+
+    if (!userId) {
+        return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+    }
+
+    try {
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                fullName,
+                phoneNumber
+            },
+            select: userEmployeeSelect
+        });
+
+        await logAction(req, {
+            action: "UPDATE_MY_PROFILE",
+            entity: "User",
+            entityId: userId,
+            details: {
+                updatedFields: { fullName, phoneNumber }
+            }
+        })
+
+        res.json({
+            message: "Profil sikeresen frissítve.",
+            user: updatedUser
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a profil frissítésekor." });
+    }
+}
+
+export const deleteMeEmployee = async (req: Request, res: Response) => {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+        return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+    }
+
+    try {
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                isActive: false,
+                deletedAt: new Date(),
+                companyEmployee: { update: { deletedAt: new Date() } }
+            }
+        });
+
+        await logAction(req, {
+            action: "DELETE_MY_PROFILE",
+            entity: "User",
+            entityId: userId
+        })
+
+        res.json({ message: "Profil sikeresen törölve." });
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a profil törlésekor." });
+    }
+}
+
 export const getEmployeeById = async (req: Request, res: Response) => {
     const userToFind = req.params.id;
     const currentUser = req.user!;

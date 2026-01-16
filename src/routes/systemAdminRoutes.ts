@@ -5,7 +5,9 @@ import {
      getSystemAdmins,
      updateSystemAdminById,
      deleteSystemAdmin,
-     getMeSystemAdmin
+     getMeSystemAdmin,
+     updateMeSystemAdmin,
+     deleteMeSystemAdmin
 } from "../controllers/systemAdminController"
 import { systemAdminUpdateSchema } from "../schemas/systemAdminSchema"
 import { authenticateToken } from "../middlewares/authMiddleware"
@@ -15,6 +17,8 @@ const router = Router()
 router.use(authenticateToken)
 
 router.get("/me", getMeSystemAdmin)
+router.patch("/me", validate(systemAdminUpdateSchema), updateMeSystemAdmin)
+router.delete("/me", deleteMeSystemAdmin)
 
 router.get("/", getSystemAdmins)
 
