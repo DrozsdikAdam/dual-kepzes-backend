@@ -18,6 +18,7 @@ import companyAdminRoutes from "./routes/companyAdminRoutes";
 import genericUserRoutes from "./routes/userRoutes";
 import companyRoutes from "./routes/companyRoutes";
 import employeeRoutes from "./routes/employeeRoutes";
+import applicationRoutes from "./routes/applicationRoutes";
 
 const app: Application = express();
 app.set("trust proxy", 1);
@@ -37,6 +38,7 @@ app.use("/api/university-users", universityUserRoutes);
 app.use("/api/users", genericUserRoutes);
 app.use("/api/companies", companyRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api/applications", applicationRoutes);
 
 // Test Route
 app.get("/", (req: Request, res: Response) => {
