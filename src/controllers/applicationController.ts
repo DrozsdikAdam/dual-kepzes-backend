@@ -89,11 +89,15 @@ export const applyToPosition = async (req: Request, res: Response) => {
 
         const position = await prisma.position.findFirst({
             where: { id: positionId },
-            select: { id: true, title: true, isActive: true, company: { select: { id: true, name: true } } }
+            select: { id: true, title: true, isActive: true, deadline: true, company: { select: { id: true, name: true } } }
         })
 
         if (!position || !position.isActive) {
             return res.status(404).json({ message: "A pozíció nem elérhető." })
+        }
+
+        if (position.deadline && new Date() > position.deadline) {
+            return res.status(400).json({ message: "A jelentkezési határidő lejárt." })
         }
 
         const application = await prisma.application.create({
@@ -145,6 +149,47 @@ export const getMyApplications = async (req: Request, res: Response) => {
 
     } catch (error) {
         return res.status(500).json({ message: "Hiba a lekérdezés során." })
+    }
+}
+
+export const retractApplication = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+        const application = await prisma.application.findFirst({
+            where: { id },
+            select: applicationSelect
+        })
+
+        if (!application) return res.status(404).json({ message: "Nem található jelentkezés." })
+
+        if (application.status !== ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Csak beadott jelentkezéseket lehet visszavonni." })
+
+        if (application.position.deadline && new Date() > application.position.deadline) {
+            return res.status(400).json({ message: "A jelentkezési határidő lejárt, már nem vonható vissza." })
+        }
+
+        const retractedApplication = await prisma.application.update({
+            where: { id },
+            data: {
+                status: ApplicationStatus.RETRACTED
+            }
+        })
+
+        await logAction(req, {
+            action: "RETRACTED_APPLICATION",
+            entity: "Application",
+            entityId: application.id,
+            details: {
+                position: application.position.title,
+                company: application.position.company.name,
+                studentId: req.user!.userId
+            }
+        })
+
+        return res.json(retractedApplication)
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba a visszavonás során." })
     }
 }
 
@@ -226,7 +271,7 @@ export const getMyCompanyApplications = async (req: Request, res: Response) => {
     }
 }
 
-export const updateApplication = async (req: Request, res: Response) => {
+export const updateEvaluation = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { status, companyNote } = req.body;
 
@@ -247,7 +292,7 @@ export const updateApplication = async (req: Request, res: Response) => {
         })
 
         await logAction(req, {
-            action: "UPDATE_APPLICATION",
+            action: "UPDATE_EVALUATION",
             entity: "Application",
             entityId: application.id,
             details: {
@@ -262,5 +307,4 @@ export const updateApplication = async (req: Request, res: Response) => {
     } catch (error) {
         return res.status(500).json({ message: "Hiba a módosítás során." })
     }
-
 }
