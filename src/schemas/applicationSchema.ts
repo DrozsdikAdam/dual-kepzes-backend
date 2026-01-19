@@ -7,7 +7,7 @@ export const CreateApplicationSchema = z.object({
     })
 })
 
-export const UpdateApplicationSchema = z.object({
+export const HandInApplicationSchema = z.object({
     params: z.object({
         id: z.string().uuid()
     }),
@@ -17,7 +17,7 @@ export const UpdateApplicationSchema = z.object({
     })
 })
 
-const EvaluateApplicationSchema = z.object({
+export const EvaluateApplicationSchema = z.object({
     params: z.object({
         id: z.string().uuid()
     }),

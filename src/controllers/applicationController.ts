@@ -221,9 +221,46 @@ export const getMyCompanyApplications = async (req: Request, res: Response) => {
         })
 
         return res.json(applications)
-
     } catch (error) {
         return res.status(500).json({ message: "Hiba a lekérdezés során." })
+    }
+}
+
+export const updateApplication = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { status, companyNote } = req.body;
+
+    try {
+        const application = await prisma.application.findFirst({
+            where: { id },
+            select: companyApplicationSelect
+        })
+
+        if (!application) return res.status(404).json({ message: "Nem található jelentkezés." })
+
+        const updatedApplication = await prisma.application.update({
+            where: { id },
+            data: {
+                status,
+                companyNote
+            }
+        })
+
+        await logAction(req, {
+            action: "UPDATE_APPLICATION",
+            entity: "Application",
+            entityId: application.id,
+            details: {
+                updatedBy: req.user!.userId,
+                position: application.position.title,
+                company: application.position.company.name,
+                studentId: application.student.id
+            }
+        })
+
+        return res.json(updatedApplication)
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba a módosítás során." })
     }
 
 }
