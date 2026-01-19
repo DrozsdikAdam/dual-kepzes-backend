@@ -297,6 +297,6 @@ export const getMyCompanyPositions = async (req: Request, res: Response) => {
         return res.json(positions);
     } catch (error) {
         console.error("Error fetching company positions:", error);
-        return res.status(500).json({ message: "Hiba a saját cégek pozíciók lekérésekor." });
+        return res.status(500).json({ message: "Hiba a saját cég pozícióinak lekérésekor." });
     }
 }

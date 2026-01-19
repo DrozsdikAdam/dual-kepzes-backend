@@ -55,7 +55,9 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
                     });
                     break;
                 case "MENTOR":
-
+                    if (!data.companyId) {
+                        throw new Error("Cég azonosító kötelező a mentor regisztrációhoz.");
+                    }
                     await tx.companyEmployee.create({
                         data: {
                             userId: user.id,
@@ -63,12 +65,14 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
                             jobTitle: data.jobTitle
                         }
                     });
-
                     break;
                 case "UNIVERSITY_USER":
                     // Jelenleg nincs további adat a UNIVERSITY_USER számára
                     break;
                 case "COMPANY_ADMIN":
+                    if (!data.companyId) {
+                        throw new Error("Cég azonosító kötelező a cégadmin regisztrációhoz.");
+                    }
                     await tx.companyEmployee.create({
                         data: {
                             userId: user.id,
