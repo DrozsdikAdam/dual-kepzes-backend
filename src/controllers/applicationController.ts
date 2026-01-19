@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { logAction } from "../utils/logger";
+import { ApplicationStatus } from "@prisma/client";
 
 const applicationSelect = {
     id: true,
@@ -96,5 +97,53 @@ export const getMyApplications = async (req: Request, res: Response) => {
 
     } catch (error) {
         return res.status(500).json({ message: "Hiba a lekérdezés során." })
+    }
+}
+
+export const evaluateApplication = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { status, companyNote } = req.body;
+
+    try {
+        const application = await prisma.application.findFirst({
+            where: { id },
+            select: applicationSelect
+        })
+
+        const studentId = await prisma.application.findFirst({
+            where: { id },
+            select: { studentId: true }
+        })
+
+        if (!application) return res.status(404).json({ message: "Nem található jelentkezés." })
+
+        if (application.status !== ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Csak beadott jelentkezéseket lehet elbírálni." })
+
+        if (status === ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Nem lehet beadottra állítani a jelentkezést." })
+
+        const evaluateApplication = await prisma.application.update({
+            where: { id },
+            data: {
+                status,
+                companyNote,
+            }
+        })
+
+        var message = status + "_APPLICATION"
+
+        await logAction(req, {
+            action: message,
+            entity: "Application",
+            entityId: application.id,
+            details: {
+                position: application.position.title,
+                company: application.position.company.name,
+                studentId: studentId
+            }
+        })
+
+        return res.json(evaluateApplication)
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba az elbírálás során." })
     }
 }

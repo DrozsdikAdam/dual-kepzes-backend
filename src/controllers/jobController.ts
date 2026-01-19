@@ -29,6 +29,7 @@ const positionSelect = {
     address: true,
     deadline: true,
     isActive: true,
+    isDual: true,
     createdAt: true,
     updatedAt: true,
     tags: {

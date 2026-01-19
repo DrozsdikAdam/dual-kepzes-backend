@@ -175,7 +175,7 @@ model Position {
   title       String
   description String?
 
-  isDual Boolean @default(false)
+  isDual Boolean @default(true)
 
   zipCode String
   city    String
