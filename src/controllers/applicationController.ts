@@ -156,14 +156,24 @@ export const getMyApplications = async (req: Request, res: Response) => {
 
 export const retractApplication = async (req: Request, res: Response) => {
     const { id } = req.params;
+    const userId = req.user!.userId;
 
     try {
+        const studentProfile = await prisma.studentProfile.findFirst({
+            where: { userId },
+            select: { id: true }
+        })
+
+        if (!studentProfile) {
+            return res.status(403).json({ message: "Csak hallgatói profillal vonható vissza jelentkezés." })
+        }
+
         const application = await prisma.application.findFirst({
-            where: { id },
+            where: { id, studentId: studentProfile.id },
             select: applicationSelect
         })
 
-        if (!application) return res.status(404).json({ message: "Nem található jelentkezés." })
+        if (!application) return res.status(404).json({ message: "Nem található jelentkezés vagy nincs jogosultsága." })
 
         if (application.status !== ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Csak beadott jelentkezéseket lehet visszavonni." })
 
@@ -185,7 +195,7 @@ export const retractApplication = async (req: Request, res: Response) => {
             details: {
                 position: application.position.title,
                 company: application.position.company.name,
-                studentId: req.user!.userId
+                studentId: studentProfile.id
             }
         })
 
@@ -251,14 +261,28 @@ export const updateApplication = async (req: Request, res: Response) => {
 export const evaluateApplication = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { status, companyNote } = req.body;
+    const userId = req.user!.userId;
 
     try {
+        const employee = await prisma.companyEmployee.findFirst({
+            where: { userId, deletedAt: null }
+        });
+
+        if (!employee) {
+            return res.status(403).json({ message: "Nincs céges jogosultsága." });
+        }
+
         const application = await prisma.application.findFirst({
-            where: { id },
+            where: {
+                id,
+                position: {
+                    companyId: employee.companyId
+                }
+            },
             select: companyApplicationSelect
         })
 
-        if (!application) return res.status(404).json({ message: "Nem található jelentkezés." })
+        if (!application) return res.status(404).json({ message: "Nem található jelentkezés vagy nincs jogosultsága." })
 
         if (application.status !== ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Csak beadott jelentkezéseket lehet elbírálni." })
 
@@ -281,7 +305,8 @@ export const evaluateApplication = async (req: Request, res: Response) => {
             details: {
                 position: application.position.title,
                 company: application.position.company.name,
-                studentId: application.student.id
+                studentId: application.student.id,
+                evaluatedBy: userId
             }
         })
 
@@ -329,14 +354,28 @@ export const getMyCompanyApplications = async (req: Request, res: Response) => {
 export const updateEvaluation = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { status, companyNote } = req.body;
+    const userId = req.user!.userId;
 
     try {
+        const employee = await prisma.companyEmployee.findFirst({
+            where: { userId, deletedAt: null }
+        });
+
+        if (!employee) {
+            return res.status(403).json({ message: "Nincs céges jogosultsága." });
+        }
+
         const application = await prisma.application.findFirst({
-            where: { id },
+            where: {
+                id,
+                position: {
+                    companyId: employee.companyId
+                }
+            },
             select: companyApplicationSelect
         })
 
-        if (!application) return res.status(404).json({ message: "Nem található jelentkezés." })
+        if (!application) return res.status(404).json({ message: "Nem található jelentkezés vagy nincs jogosultsága." })
 
         const updatedApplication = await prisma.application.update({
             where: { id },

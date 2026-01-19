@@ -189,7 +189,7 @@ export const deletePosition = async (req: Request, res: Response) => {
             details: { deletedById: req.user?.userId }
         });
 
-        return res.json({ message: "Pozíció sikeresen törölve." }); // JAVÍTVA: return hozzáadva
+        return res.json({ message: "Pozíció sikeresen törölve." });
     } catch (error) {
         return res.status(500).json({ message: "Hiba a pozíció törlésekor." });
     }

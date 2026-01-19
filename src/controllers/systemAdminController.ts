@@ -101,8 +101,6 @@ export const deleteMeSystemAdmin = async (req: Request, res: Response) => {
      }
 }
 
-
-
 export const getSystemAdmins = async (req: Request, res: Response) => {
      try {
           const admins = await prisma.user.findMany({
@@ -165,7 +163,7 @@ export const updateSystemAdminById = async (req: Request, res: Response) => {
           })
 
           if (!target) {
-               res.status(404).json({ message: "Nem található a profil." })
+               return res.status(404).json({ message: "Nem található a profil." })
           }
 
           const updated = await prisma.user.update({
@@ -198,6 +196,16 @@ export const deleteSystemAdmin = async (req: Request, res: Response) => {
      const { id } = req.params
 
      try {
+          const target = await prisma.user.findFirst({
+               where: {
+                    id, role: Role.SYSTEM_ADMIN
+               }
+          })
+
+          if (!target) {
+               return res.status(404).json({ message: "Nem található ilyen rendszeradminisztrátor." })
+          }
+
           await prisma.user.update({
                where: { id },
                data: {

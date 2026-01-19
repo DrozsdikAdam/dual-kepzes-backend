@@ -32,10 +32,9 @@ router.post(
 
 router.get("/:id", getCompanyById);
 
-// Fontos: a controllerben companyId-t vár, ezért itt is azt használunk a paraméterben,
-// vagy egységesíteni kellene (de most követem a controller logikáját)
+// Általános cég frissítés
 router.patch(
-     "/:companyId",
+     "/:id",
      validate(CompanyUpdateSchema),
      updateCompany
 );

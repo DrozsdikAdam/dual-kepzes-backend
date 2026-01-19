@@ -153,7 +153,7 @@ export const createCompany = async (
 };
 
 export const updateCompany = async (req: Request, res: Response) => {
-     const { companyId } = req.params;
+     const { id } = req.params;
      const data = req.body;
 
      if (data.hqZipCode) {
@@ -162,7 +162,7 @@ export const updateCompany = async (req: Request, res: Response) => {
 
      try {
           const updatedCompany = await prisma.company.update({
-               where: { id: companyId },
+               where: { id },
                data: data,
                select: companySelect
           });
@@ -170,13 +170,12 @@ export const updateCompany = async (req: Request, res: Response) => {
           await logAction(req, {
                action: "UPDATE_COMPANY",
                entity: "Company",
-               entityId: companyId,
+               entityId: id,
                details: { updatedById: req.user?.userId, updatedFields: Object.keys(data) }
           });
 
           return res.json({ message: "Cég adatai frissítve", company: updatedCompany });
      } catch (error) {
-          // Fontos: Logold a konkrét hibát a Railway konzolra!
           console.error("Prisma Update Error:", error);
           return res.status(500).json({ message: "Hiba a cég frissítésekor. Ellenőrizd az adatokat!" });
      }

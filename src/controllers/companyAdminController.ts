@@ -229,6 +229,15 @@ export const updateCompanyAdminById = async (req: Request, res: Response) => {
 export const deleteCompanyAdmin = async (req: Request, res: Response) => {
      const { id } = req.params
      try {
+          // 1. Ellenőrzés
+          const target = await prisma.user.findFirst({
+               where: { id: id, role: Role.COMPANY_ADMIN }
+          })
+
+          if (!target) {
+               return res.status(404).json({ message: "Nem található a cégadminisztrátor." })
+          }
+
           // Tranzakcióban töröljük a felhasználót és a kapcsolódó munkavállalói profilt is
           await prisma.$transaction(async (tx) => {
                await tx.user.update({
