@@ -29,15 +29,23 @@ app.use(express.json());
 // Auth Rate Limiter
 app.use("/api/auth", authRoutes);
 // app.use("/api", apiRateLimiter);
-app.use("/api/jobs", jobRoutes);
-app.use("/api/students", studentRoutes);
+
+
 app.use("/api/stats", statsRoutes);
+
+//user endpoints
+app.use("/api/students", studentRoutes);
+app.use("/api/employees", employeeRoutes);
 app.use("/api/system-admins", systemAdminRoutes);
 app.use("/api/company-admins", companyAdminRoutes);
 app.use("/api/university-users", universityUserRoutes);
 app.use("/api/users", genericUserRoutes);
+
+//company endpoints
 app.use("/api/companies", companyRoutes);
-app.use("/api/employees", employeeRoutes);
+app.use("/api/jobs", jobRoutes);
+
+//application endpoints
 app.use("/api/applications", applicationRoutes);
 
 // Test Route
