@@ -1,4 +1,4 @@
-﻿-- CreateEnum
+-- CreateEnum
 CREATE TYPE "Role" AS ENUM ('STUDENT', 'COMPANY_ADMIN', 'MENTOR', 'UNIVERSITY_USER', 'SYSTEM_ADMIN');
 
 -- CreateEnum
@@ -37,7 +37,7 @@ CREATE TABLE "StudentProfile" (
     "userId" TEXT NOT NULL,
     "mothersName" TEXT NOT NULL,
     "birthDate" TIMESTAMP(3) NOT NULL,
-    "country" TEXT DEFAULT 'Magyarorsz├íg',
+    "country" TEXT DEFAULT 'Magyarország',
     "zipCode" TEXT,
     "city" TEXT,
     "streetAddress" TEXT,
@@ -69,7 +69,7 @@ CREATE TABLE "Company" (
     "name" TEXT NOT NULL,
     "taxId" TEXT NOT NULL,
     "description" TEXT,
-    "hqCountry" TEXT NOT NULL DEFAULT 'Magyarorsz├íg',
+    "hqCountry" TEXT NOT NULL DEFAULT 'Magyarország',
     "hqZipCode" TEXT NOT NULL,
     "hqCity" TEXT NOT NULL,
     "hqAddress" TEXT NOT NULL,
