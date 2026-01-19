@@ -17,7 +17,7 @@ export const CompanyCreateSchema = z.object({
         contactName: z
             .string()
             .trim()
-            .includes(" ", { message: "Az név legalább egy szóközt tartalmaz" })
+            .includes(" ", { message: "A név legalább egy szóközt tartalmaz" })
             .min(1),
         contactEmail: z
             .string()
@@ -68,14 +68,14 @@ export const TagCreateSchema = z.object({
 
 export const CompanyUpdateSchema = z.object({
     params: z.object({
-        companyId: z.string().uuid("Érvénytelen cég azonosító"),
+        id: z.string().uuid("Érvénytelen cég azonosító"),
     }),
     body: CompanyCreateSchema.shape.body.partial()
 })
 
 export const PositionUpdateSchema = z.object({
     params: z.object({
-        id: z.string().uuid("Érvénytelen cég azonosító"),
+        id: z.string().uuid("Érvénytelen pozíció azonosító"),
     }),
     body: PositionCreateSchema.shape.body.omit({ companyId: true }).partial()
 })

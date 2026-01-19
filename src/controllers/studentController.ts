@@ -137,6 +137,15 @@ export const updateStudentById = async (req: Request, res: Response) => {
     const data = req.body;
     const { fullName, phoneNumber, ...profileData } = data;
     try {
+        // 1. Ellenőrizzük, hogy a felhasználó létezik és DIÁK
+        const target = await prisma.user.findFirst({
+            where: { id: id, role: "STUDENT" }
+        })
+
+        if (!target) {
+            return res.status(404).json({ message: "Nem található a módosítandó hallgató." });
+        }
+
         // 2. Frissítés egyetlen tranzakcióban (Nested Update)
         const updatedUser = await prisma.user.update({
             where: { id },
@@ -206,6 +215,14 @@ export const deleteMyProfile = async (req: Request, res: Response) => {
 export const deleteStudentById = async (req: Request, res: Response) => {
     const id = req.params.id;
     try {
+        const target = await prisma.user.findFirst({
+            where: { id: id, role: "STUDENT" }
+        })
+
+        if (!target) {
+            return res.status(404).json({ message: "Nem található a hallgató." });
+        }
+
         await prisma.user.update({
             where: { id },
             data: {

@@ -198,6 +198,13 @@ export const deleteUniversityUser = async (req: Request, res: Response) => {
      const { id } = req.params;
 
      try {
+          const target = await prisma.user.findFirst({
+               where: { id: id, role: Role.UNIVERSITY_USER }
+          })
+
+          if (!target) {
+               return res.status(404).json({ message: "Nem található az egyetemi dolgozó." })
+          }
 
           await prisma.user.update({
                where: { id },
