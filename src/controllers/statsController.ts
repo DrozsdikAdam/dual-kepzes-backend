@@ -9,6 +9,8 @@ export const getSystemStats = async (req: Request, res: Response) => {
             companyCount,
             positionCount,
             applicationCount,
+            newsCount,
+            archivedNewsCount,
             usersByRole,
             activePartnerships
         ] = await Promise.all([
@@ -16,6 +18,8 @@ export const getSystemStats = async (req: Request, res: Response) => {
             prisma.company.count({ where: { isActive: true, deletedAt: null } }),
             prisma.position.count({ where: { isActive: true, deletedAt: null } }),
             prisma.application.count({ where: { deletedAt: null } }),
+            prisma.news.count({ where: { deletedAt: null, isArchived: false } }),
+            prisma.news.count({ where: { deletedAt: null, isArchived: true } }),
             prisma.user.groupBy({
                 by: ["role"],
                 where: { isActive: true, deletedAt: null },
@@ -30,7 +34,9 @@ export const getSystemStats = async (req: Request, res: Response) => {
                 companies: companyCount,
                 positions: positionCount,
                 applications: applicationCount,
-                activePartnerships: activePartnerships
+                activePartnerships: activePartnerships,
+                news: newsCount,
+                archivedNews: archivedNewsCount
             },
             usersByRole: usersByRole.map(stat => ({
                 role: stat.role,
