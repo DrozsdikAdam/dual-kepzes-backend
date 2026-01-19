@@ -333,3 +333,17 @@ model Message {
   content String
   sentAt  DateTime @default(now())
 }
+
+model News {
+  id String @id @default(uuid())
+
+  title   String
+  content String
+
+  isImportant Boolean @default(false)
+  targetGroup String  @default("All")
+
+  tags      String[]
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+}

@@ -1,8 +1,8 @@
--- CreateEnum
+﻿-- CreateEnum
 CREATE TYPE "Role" AS ENUM ('STUDENT', 'COMPANY_ADMIN', 'MENTOR', 'UNIVERSITY_USER', 'SYSTEM_ADMIN');
 
 -- CreateEnum
-CREATE TYPE "ApplicationStatus" AS ENUM ('SUBMITTED', 'ACCEPTED', 'REJECTED', 'NO_RESPONSE');
+CREATE TYPE "ApplicationStatus" AS ENUM ('SUBMITTED', 'ACCEPTED', 'REJECTED', 'NO_RESPONSE', 'RETRACTED');
 
 -- CreateEnum
 CREATE TYPE "LogStatus" AS ENUM ('DRAFT', 'PENDING', 'APPROVED', 'REJECTED');
@@ -37,7 +37,7 @@ CREATE TABLE "StudentProfile" (
     "userId" TEXT NOT NULL,
     "mothersName" TEXT NOT NULL,
     "birthDate" TIMESTAMP(3) NOT NULL,
-    "country" TEXT DEFAULT 'Magyarország',
+    "country" TEXT DEFAULT 'Magyarorsz├íg',
     "zipCode" TEXT,
     "city" TEXT,
     "streetAddress" TEXT,
@@ -68,7 +68,8 @@ CREATE TABLE "Company" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "taxId" TEXT NOT NULL,
-    "hqCountry" TEXT NOT NULL DEFAULT 'Magyarország',
+    "description" TEXT,
+    "hqCountry" TEXT NOT NULL DEFAULT 'Magyarorsz├íg',
     "hqZipCode" TEXT NOT NULL,
     "hqCity" TEXT NOT NULL,
     "hqAddress" TEXT NOT NULL,
@@ -77,6 +78,8 @@ CREATE TABLE "Company" (
     "website" TEXT,
     "logoUrl" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
     "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "Company_pkey" PRIMARY KEY ("id")
@@ -88,11 +91,14 @@ CREATE TABLE "Position" (
     "companyId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
+    "isDual" BOOLEAN NOT NULL DEFAULT true,
     "zipCode" TEXT NOT NULL,
     "city" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "deadline" TIMESTAMP(3),
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
     "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "Position_pkey" PRIMARY KEY ("id")
@@ -102,6 +108,7 @@ CREATE TABLE "Position" (
 CREATE TABLE "Tag" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "category" TEXT NOT NULL DEFAULT 'Technology',
     "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "Tag_pkey" PRIMARY KEY ("id")
@@ -134,6 +141,8 @@ CREATE TABLE "DualPartnership" (
     "startDate" TIMESTAMP(3) NOT NULL,
     "endDate" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "DualPartnership_pkey" PRIMARY KEY ("id")
 );
@@ -187,7 +196,6 @@ CREATE TABLE "AuditLog" (
     "entity" TEXT NOT NULL,
     "entityId" TEXT,
     "details" JSONB,
-    "ipAddress" TEXT,
     "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
@@ -203,6 +211,20 @@ CREATE TABLE "Message" (
     "sentAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "News" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "isImportant" BOOLEAN NOT NULL DEFAULT false,
+    "targetGroup" TEXT NOT NULL DEFAULT 'All',
+    "tags" TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deletedAt" TIMESTAMP(3),
+
+    CONSTRAINT "News_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -222,6 +244,9 @@ CREATE UNIQUE INDEX "CompanyEmployee_userId_key" ON "CompanyEmployee"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Company_taxId_key" ON "Company"("taxId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Application_studentId_positionId_key" ON "Application"("studentId", "positionId");
@@ -282,3 +307,4 @@ ALTER TABLE "_PositionToTag" ADD CONSTRAINT "_PositionToTag_A_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "_PositionToTag" ADD CONSTRAINT "_PositionToTag_B_fkey" FOREIGN KEY ("B") REFERENCES "Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
