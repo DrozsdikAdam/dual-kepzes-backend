@@ -73,6 +73,8 @@ const companyApplicationSelect = {
     }
 }
 
+//hallgatói
+
 export const applyToPosition = async (req: Request, res: Response) => {
     const { positionId, studentNote } = req.body;
     const userId = req.user!.userId;
@@ -192,6 +194,59 @@ export const retractApplication = async (req: Request, res: Response) => {
         return res.status(500).json({ message: "Hiba a visszavonás során." })
     }
 }
+
+// System admin
+
+export const getApplications = async (req: Request, res: Response) => {
+    try {
+        const applications = await prisma.application.findMany({
+            select: companyApplicationSelect,
+            orderBy: { submittedAt: "desc" }
+        })
+
+        return res.json(applications)
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba a lekérdezés során." })
+    }
+}
+
+export const getApplication = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+        const application = await prisma.application.findFirst({
+            where: { id },
+            select: companyApplicationSelect
+        })
+
+        if (!application) return res.status(404).json({ message: "Nem található jelentkezés." })
+
+        return res.json(application)
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba a lekérdezés során." })
+    }
+}
+
+export const updateApplication = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { status, companyNote } = req.body;
+
+    try {
+        const application = await prisma.application.update({
+            where: { id },
+            data: {
+                status,
+                companyNote,
+            }
+        })
+
+        return res.json(application)
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba a módosítás során." })
+    }
+}
+
+//céges
 
 export const evaluateApplication = async (req: Request, res: Response) => {
     const { id } = req.params;
