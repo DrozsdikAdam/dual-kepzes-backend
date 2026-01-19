@@ -25,6 +25,54 @@ const applicationSelect = {
     }
 }
 
+const companyApplicationSelect = {
+    id: true,
+    status: true,
+    studentNote: true,
+    companyNote: true,
+    submittedAt: true,
+    position: {
+        select: {
+            id: true,
+            title: true,
+            deadline: true,
+            company: {
+                select: {
+                    id: true,
+                    name: true,
+                    logoUrl: true
+                }
+            }
+        }
+    },
+    student: {
+        select: {
+            id: true,
+            name: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+            studentProfile: {
+                select: {
+                    id: true,
+                    mothersName: true,
+                    birthDate: true,
+                    country: true,
+                    zipCode: true,
+                    city: true,
+                    streetAddress: true,
+                    highSchool: true,
+                    graduationYear: true,
+                    neptunCode: true,
+                    currentMajor: true,
+                    studyMode: true,
+                    hasLanguageCert: true
+                }
+            }
+        }
+    }
+}
+
 export const applyToPosition = async (req: Request, res: Response) => {
     const { positionId, studentNote } = req.body;
     const userId = req.user!.userId;
@@ -107,12 +155,7 @@ export const evaluateApplication = async (req: Request, res: Response) => {
     try {
         const application = await prisma.application.findFirst({
             where: { id },
-            select: applicationSelect
-        })
-
-        const studentId = await prisma.application.findFirst({
-            where: { id },
-            select: { studentId: true }
+            select: companyApplicationSelect
         })
 
         if (!application) return res.status(404).json({ message: "Nem található jelentkezés." })
@@ -138,7 +181,7 @@ export const evaluateApplication = async (req: Request, res: Response) => {
             details: {
                 position: application.position.title,
                 company: application.position.company.name,
-                studentId: studentId
+                studentId: application.student.id
             }
         })
 
@@ -146,4 +189,41 @@ export const evaluateApplication = async (req: Request, res: Response) => {
     } catch (error) {
         return res.status(500).json({ message: "Hiba az elbírálás során." })
     }
+}
+
+export const getMyCompanyApplications = async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    if (!userId) return res.status(401).json({ message: "Nem található felhasználói azonosító." })
+
+    try {
+
+        const company = await prisma.company.findFirst({
+            where: {
+                employees: {
+                    some: {
+                        userId
+                    }
+                }
+            },
+            select: { id: true }
+        })
+
+        if (!company) return res.status(404).json({ message: "Nem található cég." })
+
+        const applications = await prisma.application.findMany({
+            where: {
+                position: {
+                    companyId: company.id
+                }
+            },
+            select: companyApplicationSelect,
+            orderBy: { submittedAt: "desc" }
+        })
+
+        return res.json(applications)
+
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba a lekérdezés során." })
+    }
+
 }
