@@ -16,12 +16,36 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
         return res.status(500).json({ message: "Belső szerverhiba." });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err: any, user: any) => {
+    jwt.verify(token, process.env.JWT_SECRET, async (err: any, user: any) => {
         if (err) {
             return res.status(403).json({ message: "Érvénytelen token" });
         }
-        req.user = user;
-        next();
+
+        try {
+            // Verify user exists in database and is active
+            const dbUser = await import("../config/prisma").then(m => m.default.user.findUnique({
+                where: { id: user.userId }
+            }));
+
+            if (!dbUser) {
+                return res.status(401).json({ message: "A felhasználó nem található." });
+            }
+
+            if (!dbUser.isActive) {
+                return res.status(403).json({ message: "A felhasználói fiók inaktív." });
+            }
+
+            // Ha törölve van (bár a findUnique a prisma middleware miatt elvileg nem adja vissza, de biztos ami biztos)
+            if (dbUser.deletedAt) {
+                return res.status(401).json({ message: "A felhasználói fiók törölve lett." });
+            }
+
+            req.user = user;
+            next();
+        } catch (dbError) {
+            console.error("Auth middleware db error:", dbError);
+            return res.status(500).json({ message: "Belső szerverhiba a hitelesítés során." });
+        }
     });
 };
 

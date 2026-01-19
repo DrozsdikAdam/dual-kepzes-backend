@@ -38,7 +38,7 @@ export const reactivateUser = async (req: Request, res: Response) => {
           });
 
           if (!user) {
-               return res.status(404).json({ message: "Nem található inaktív (de nem törölt) felhasználó ezzel az ID-val." });
+               return res.status(404).json({ message: "Nem található inaktív felhasználó ezzel az ID-val." });
           }
 
           const updatedUser = await prisma.user.update({

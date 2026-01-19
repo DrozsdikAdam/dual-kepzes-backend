@@ -70,7 +70,7 @@ A `helmet` middleware gondoskodik a biztonsági HTTP fejlécek (pl. X-XSS-Protec
 
 Az `authMiddleware.ts` biztosítja a szerepkör alapú hozzáférést.
 
-*   `authenticateToken`: Ellenőrzi a JWT érvényességét.
+*   `authenticateToken`: Ellenőrzi a JWT érvényességét, valamint az adatbázisban ellenőrzi, hogy a felhasználó létezik-e, aktív-e (`isActive: true`) és nincs-e törölve (`deletedAt: null`).
 *   `requireRole`: Middleware gyár, amely ellenőrzi, hogy a felhasználó rendelkezik-e a szükséges szerepkörrel (pl. `isStudent`, `isMentor`, `isStaff`).
 
 ## Autentikáció
@@ -82,6 +82,7 @@ A rendszer robusztus regisztrációs és bejelentkezési folyamattal rendelkezik
 A regisztráció során a rendszer adatbázis tranzakciót használ. Ez biztosítja, hogy a `User` (alapadatok) és a szerepkör-specifikus profil (pl. `StudentProfile`, `CompanyEmployee`) egyszerre jöjjön létre.
 
 *   **Validáció:** Zod séma ellenőrzi a jelszó erősségét és a kötelező mezőket.
+*   **Szerepkör validáció:** Mentor és Cégadminisztrátor regisztrációjakor kötelező a `companyId` megadása.
 *   **Email ellenőrzés:** Egyedi email cím kényszerítése.
 *   **Jelszó:** Bcrypt hashelés.
 
@@ -173,7 +174,24 @@ Rendszerszintű statisztikák.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/` | Rendszer statisztikák lekérése. | Authenticated |
 
-### 7. Adminisztrációs Modulok
+### 7. Hírek Modul (`/api/news`)
+
+Hírek és közlemények kezelése. A felhasználók csak a rájuk vonatkozó aktív híreket látják.
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Aktív, releváns hírek listázása. | Authenticated |
+| `GET` | `/:id` | Hír részletei. | Authenticated |
+| `POST` | `/admin` | Új hír létrehozása. | System Admin |
+| `GET` | `/admin` | Összes hír listázása (admin nézet). | System Admin |
+| `GET` | `/admin/archived` | Archivált hírek listázása. | System Admin |
+| `GET` | `/admin/:id` | Hír részletei (admin nézet). | System Admin |
+| `PATCH` | `/admin/:id` | Hír módosítása. | System Admin |
+| `PATCH` | `/admin/:id/archive` | Hír archiválása. | System Admin |
+| `PATCH` | `/admin/:id/unarchive` | Hír visszavonása az archívumból. | System Admin |
+| `DELETE` | `/admin/:id` | Hír törlése (Soft Delete). | System Admin |
+
+### 8. Adminisztrációs Modulok
 
 A rendszer adminisztrátori szintjei.
 
@@ -213,7 +231,7 @@ A rendszer adminisztrátori szintjei.
 | `PATCH` | `/:id` | Adatok frissítése. | Authenticated |
 | `DELETE` | `/:id` | Törlés. | Authenticated |
 
-### 8. Egyéb Modulok
+### 9. Egyéb Modulok
 
 #### Felhasználók (`/api/users`)
 

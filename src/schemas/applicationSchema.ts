@@ -7,7 +7,7 @@ export const CreateApplicationSchema = z.object({
     })
 })
 
-export const HandInApplicationSchema = z.object({
+export const UpdateApplicationSchema = z.object({
     params: z.object({
         id: z.string().uuid()
     }),
