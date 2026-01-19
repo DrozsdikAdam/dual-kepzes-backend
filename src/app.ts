@@ -19,6 +19,7 @@ import genericUserRoutes from "./routes/userRoutes";
 import companyRoutes from "./routes/companyRoutes";
 import employeeRoutes from "./routes/employeeRoutes";
 import applicationRoutes from "./routes/applicationRoutes";
+import newsRoutes from "./routes/newsRoutes";
 
 const app: Application = express();
 app.set("trust proxy", 1);
@@ -44,6 +45,9 @@ app.use("/api/users", genericUserRoutes);
 //company endpoints
 app.use("/api/companies", companyRoutes);
 app.use("/api/jobs", jobRoutes);
+
+//news endpoints
+app.use("/api/news", newsRoutes);
 
 //application endpoints
 app.use("/api/applications", applicationRoutes);
