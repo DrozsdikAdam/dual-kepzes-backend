@@ -104,7 +104,7 @@ model StudentProfile {
   mothersName String
   birthDate   DateTime
 
-  locationId String?   @unique
+  locationId String?
   location   Location? @relation(fields: [locationId], references: [id])
 
   country       String? @default("Magyarország")
@@ -184,7 +184,7 @@ model Company {
 
   employees  CompanyEmployee[]
   positions  Position[]
-  locationId String?           @unique
+  locationId String?
   location   Location?         @relation(fields: [locationId], references: [id])
 }
 
@@ -212,7 +212,7 @@ model Position {
   deletedAt DateTime?
 
   applications Application[]
-  locationId   String?       @unique
+  locationId   String?
   location     Location?     @relation(fields: [locationId], references: [id])
 }
 
