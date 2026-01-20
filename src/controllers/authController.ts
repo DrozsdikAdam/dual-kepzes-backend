@@ -34,19 +34,21 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
                         data: {
                             userId: user.id,
                             mothersName: data.mothersName,
-                            // Dátum konvertálása stringből
-                            birthDate: new Date(data.dateOfBirth),
+                            birthDate: data.dateOfBirth,
 
-                            // Cím adatok (Adatbázis sémához igazítva)
-                            country: data.country || "Magyarország",
-                            // FONTOS: Csak akkor konvertáljuk stringgé, ha létezik, különben undefined
-                            zipCode: data.zipCode ? String(data.zipCode) : undefined,
-                            city: data.city,
-                            streetAddress: data.streetAddress,
+                            // Cím adatok - Location modellbe szervezve
+                            locations: {
+                                create: {
+                                    country: data.country || "Magyarország",
+                                    zipCode: data.zipCode ? String(data.zipCode) : "",
+                                    city: data.city || "",
+                                    address: data.streetAddress || ""
+                                }
+                            },
+
 
                             highSchool: data.highSchool,
-                            // Csak akkor konvertáljuk számmá, ha létezik (bár a séma szerint itt kötelező lehet, de a biztonság kedvéért)
-                            graduationYear: Number(data.graduationYear),
+                            graduationYear: data.graduationYear,
                             neptunCode: data.neptunCode,
                             currentMajor: data.currentMajor,
                             studyMode: data.studyMode,

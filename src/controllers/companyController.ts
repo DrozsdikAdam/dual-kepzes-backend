@@ -2,15 +2,20 @@ import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { logAction } from "../utils/logger";
 import { CompanyInput } from "../schemas/jobSchema";
+import { mapCompany, mapPosition } from "../utils/mappers";
 
 const companySelect = {
      id: true,
      name: true,
      taxId: true,
-     hqCountry: true,
-     hqZipCode: true,
-     hqCity: true,
-     hqAddress: true,
+     location: {
+          select: {
+               country: true,
+               zipCode: true,
+               city: true,
+               address: true
+          }
+     },
      contactName: true,
      contactEmail: true,
      website: true,
@@ -24,9 +29,13 @@ const positionSelect = {
      id: true,
      title: true,
      description: true,
-     zipCode: true,
-     city: true,
-     address: true,
+     location: {
+          select: {
+               zipCode: true,
+               city: true,
+               address: true
+          }
+     },
      deadline: true,
      isActive: true,
      isDual: true,
@@ -39,6 +48,8 @@ const positionSelect = {
           }
      }
 };
+
+
 
 export const getAllCompanies = async (req: Request, res: Response) => {
      try {
@@ -54,7 +65,7 @@ export const getAllCompanies = async (req: Request, res: Response) => {
                     }
                }
           })
-          res.json(companies);
+          res.json(companies.map(mapCompany));
      } catch (error) {
           res.status(500).json({ message: "Hiba a cégek lekérésekor." });
      }
@@ -101,7 +112,13 @@ export const getCompanyById = async (req: Request, res: Response) => {
                details: { viewById: req.user?.userId, name: company.name }
           });
 
-          res.json(company);
+          const mappedCompany = mapCompany(company);
+          // Map positions inside the company
+          if (mappedCompany.positions) {
+               mappedCompany.positions = mappedCompany.positions.map(mapPosition);
+          }
+
+          res.json(mappedCompany);
      } catch (error) {
           res.status(500).json({ message: "Hiba a cég lekérésekor." });
      }
@@ -123,13 +140,20 @@ export const createCompany = async (
                     .json({ message: "Már létezik cég a megadott adószámmal." });
           }
 
+          const { hqCountry, hqZipCode, hqCity, hqAddress, ...companyData } = data;
+
           const newCompany = await prisma.company.create({
                data: {
-                    ...data,
-                    hqZipCode: String(data.hqZipCode),
-                    hqCity: data.hqCity || "",
-                    hqAddress: data.hqAddress || "",
-                    hqCountry: data.hqCountry || "Magyarország"
+                    ...companyData,
+                    location: {
+                         create: {
+                              country: hqCountry || "Magyarország",
+                              zipCode: String(hqZipCode),
+                              city: hqCity || "",
+                              address: hqAddress || ""
+                         }
+                    },
+
                },
                select: companySelect
           });
@@ -143,7 +167,7 @@ export const createCompany = async (
 
           res
                .status(201)
-               .json({ message: "Sikeres cég létrehozás", company: newCompany });
+               .json({ message: "Sikeres cég létrehozás", company: mapCompany(newCompany) });
      } catch (error) {
           console.error("Company Creation Error:", error);
           return res
@@ -156,14 +180,49 @@ export const updateCompany = async (req: Request, res: Response) => {
      const { id } = req.params;
      const data = req.body;
 
-     if (data.hqZipCode) {
-          data.hqZipCode = String(data.hqZipCode);
-     }
+     // Extract location fields
+     const { hqCountry, hqZipCode, hqCity, hqAddress, ...companyRest } = data;
 
      try {
+          const currentCompany = await prisma.company.findUnique({
+               where: { id },
+               select: { location: { select: { id: true } } }
+          });
+
+          let locationUpdate = undefined;
+          if (hqCountry || hqZipCode || hqCity || hqAddress) {
+               if (currentCompany?.location && currentCompany.location.length > 0) {
+                    // Update existing
+                    locationUpdate = {
+                         update: {
+                              where: { id: currentCompany.location[0].id },
+                              data: {
+                                   country: hqCountry,
+                                   zipCode: hqZipCode ? String(hqZipCode) : undefined,
+                                   city: hqCity,
+                                   address: hqAddress
+                              }
+                         }
+                    };
+               } else {
+                    // Create new
+                    locationUpdate = {
+                         create: {
+                              country: hqCountry || "Magyarország",
+                              zipCode: hqZipCode ? String(hqZipCode) : "",
+                              city: hqCity || "",
+                              address: hqAddress || ""
+                         }
+                    };
+               }
+          }
+
           const updatedCompany = await prisma.company.update({
                where: { id },
-               data: data,
+               data: {
+                    ...companyRest,
+                    location: locationUpdate
+               },
                select: companySelect
           });
 
@@ -174,7 +233,7 @@ export const updateCompany = async (req: Request, res: Response) => {
                details: { updatedById: req.user?.userId, updatedFields: Object.keys(data) }
           });
 
-          return res.json({ message: "Cég adatai frissítve", company: updatedCompany });
+          return res.json({ message: "Cég adatai frissítve", company: mapCompany(updatedCompany) });
      } catch (error) {
           console.error("Prisma Update Error:", error);
           return res.status(500).json({ message: "Hiba a cég frissítésekor. Ellenőrizd az adatokat!" });
@@ -234,7 +293,7 @@ export const getInactiveCompanies = async (req: Request, res: Response) => {
                orderBy: { name: "asc" }
           });
 
-          return res.json(inactiveCompanies);
+          return res.json(inactiveCompanies.map(mapCompany));
      } catch (error) {
           return res.status(500).json({ message: "Hiba az inaktív cégek lekérésekor." });
      }
@@ -267,7 +326,7 @@ export const reactivateCompany = async (req: Request, res: Response) => {
                }
           });
 
-          return res.json({ message: "Cég sikeresen újraaktiválva.", company: updatedCompany });
+          return res.json({ message: "Cég sikeresen újraaktiválva.", company: mapCompany(updatedCompany) });
      } catch (error) {
           return res.status(500).json({ message: "Hiba a cég újraaktiválásakor." });
      }
@@ -300,7 +359,7 @@ export const deactivateCompany = async (req: Request, res: Response) => {
                }
           });
 
-          return res.json({ message: "Cég sikeresen deaktiválva.", company: updatedCompany });
+          return res.json({ message: "Cég sikeresen deaktiválva.", company: mapCompany(updatedCompany) });
      } catch (error) {
           return res.status(500).json({ message: "Hiba a cég deaktiválásakor." });
      }

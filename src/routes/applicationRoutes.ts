@@ -31,6 +31,6 @@ router.patch("/company/:id", validate(UpdateApplicationSchema), updateEvaluation
 // System Admin routes
 router.get("/admin", getApplications)
 router.get("/admin/:id", getApplication)
-router.patch("/admin/:id", validate(EvaluateApplicationSchema), updateApplication)
+router.patch("/admin/:id", validate(UpdateApplicationSchema), updateApplication)
 
 export default router;
