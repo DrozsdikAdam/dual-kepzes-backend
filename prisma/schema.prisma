@@ -104,6 +104,9 @@ model StudentProfile {
   mothersName String
   birthDate   DateTime
 
+  locationId String?   @unique
+  location   Location? @relation(fields: [locationId], references: [id])
+
   country       String? @default("Magyarország")
   zipCode       String?
   city          String?
@@ -137,6 +140,21 @@ model CompanyEmployee {
   mentoredPartnerships DualPartnership[]
 }
 
+model Location {
+  id      String @id @default(uuid())
+  country String @default("Magyarország")
+  zipCode String
+  city    String
+  address String
+
+  studentProfile StudentProfile[]
+  companies      Company[]
+  positions      Position[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // ---------------------------------------------------------
 // CÉGEK ÉS POZÍCIÓK
 // ---------------------------------------------------------
@@ -164,8 +182,10 @@ model Company {
   updatedAt DateTime? @updatedAt
   deletedAt DateTime?
 
-  employees CompanyEmployee[]
-  positions Position[]
+  employees  CompanyEmployee[]
+  positions  Position[]
+  locationId String?           @unique
+  location   Location?         @relation(fields: [locationId], references: [id])
 }
 
 model Position {
@@ -192,6 +212,8 @@ model Position {
   deletedAt DateTime?
 
   applications Application[]
+  locationId   String?       @unique
+  location     Location?     @relation(fields: [locationId], references: [id])
 }
 
 model Tag {
