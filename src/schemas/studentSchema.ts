@@ -12,14 +12,17 @@ export const StudentUpdateSchema = z.object({
 
         // Profil adatok (StudentProfile) - Ezeket hozzá kell adni!
         currentMajor: z.string().optional(),
-        city: z.string().optional(),
         neptunCode: z.string().optional(),
         mothersName: z.string().optional(),
-        zipCode: z.string().optional(),
-        streetAddress: z.string().optional(),
         highSchool: z.string().optional(),
         graduationYear: z.number().optional(),
         studyMode: z.string().optional(),
+        location: z.object({
+            country: z.string().optional(),
+            zipCode: z.string().optional(),
+            city: z.string().optional(),
+            address: z.string().optional(),
+        }).optional(),
     })
 });
 

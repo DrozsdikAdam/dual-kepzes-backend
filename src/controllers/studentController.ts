@@ -115,7 +115,7 @@ export const updateMyProfile = async (req: Request, res: Response) => {
     }
 
     try {
-        const { country, zipCode, city, streetAddress, ...otherProfileData } = profileData;
+        const { location, ...otherProfileData } = profileData;
 
         // Fetch current profile to get location ID
         const currentUser = await prisma.user.findUnique({
@@ -124,27 +124,27 @@ export const updateMyProfile = async (req: Request, res: Response) => {
         });
 
         let locationsUpdate = undefined;
-        if (country || zipCode || city || streetAddress) {
+        if (location) {
             const existingLocation = currentUser?.studentProfile?.locations?.[0];
             if (existingLocation) {
                 locationsUpdate = {
                     update: {
                         where: { id: existingLocation.id },
                         data: {
-                            country,
-                            zipCode,
-                            city,
-                            address: streetAddress
+                            country: location.country,
+                            zipCode: location.zipCode,
+                            city: location.city,
+                            address: location.address
                         }
                     }
                 };
             } else {
                 locationsUpdate = {
                     create: {
-                        country: country || "Magyarország",
-                        zipCode: zipCode || "",
-                        city: city || "",
-                        address: streetAddress || ""
+                        country: location.country || "Magyarország",
+                        zipCode: location.zipCode || "",
+                        city: location.city || "",
+                        address: location.address || ""
                     }
                 };
             }
@@ -195,31 +195,31 @@ export const updateStudentById = async (req: Request, res: Response) => {
             return res.status(404).json({ message: "Nem található a módosítandó hallgató." });
         }
 
-        const { country, zipCode, city, streetAddress, ...otherProfileData } = profileData;
+        const { location, ...otherProfileData } = profileData;
 
         // Prepare location update
         let locationsUpdate = undefined;
-        if (country || zipCode || city || streetAddress) {
+        if (location) {
             const existingLocation = target.studentProfile?.locations?.[0];
             if (existingLocation) {
                 locationsUpdate = {
                     update: {
                         where: { id: existingLocation.id },
                         data: {
-                            country,
-                            zipCode,
-                            city,
-                            address: streetAddress
+                            country: location.country,
+                            zipCode: location.zipCode,
+                            city: location.city,
+                            address: location.address
                         }
                     }
                 };
             } else {
                 locationsUpdate = {
                     create: {
-                        country: country || "Magyarország",
-                        zipCode: zipCode || "",
-                        city: city || "",
-                        address: streetAddress || ""
+                        country: location.country || "Magyarország",
+                        zipCode: location.zipCode || "",
+                        city: location.city || "",
+                        address: location.address || ""
                     }
                 };
             }

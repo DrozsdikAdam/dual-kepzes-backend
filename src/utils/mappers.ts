@@ -1,20 +1,22 @@
 
 export const mapCompany = (company: any) => {
      if (!company) return null;
-     const mainLocation = company.location && company.location.length > 0 ? company.location[0] : {};
+     const mainLocation = company.location && company.location.length > 0 ? company.location[0] : null;
      const { location, ...rest } = company;
      return {
           ...rest,
-          hqCountry: mainLocation.country || null,
-          hqZipCode: mainLocation.zipCode || null,
-          hqCity: mainLocation.city || null,
-          hqAddress: mainLocation.address || null,
+          location: mainLocation ? {
+               country: mainLocation.country,
+               zipCode: mainLocation.zipCode,
+               city: mainLocation.city,
+               address: mainLocation.address
+          } : null
      };
 };
 
 export const mapPosition = (position: any) => {
      if (!position) return null;
-     const loc = position.location || {};
+     const loc = position.location;
      const { location, company, ...rest } = position;
 
      // Map company if present
@@ -22,25 +24,30 @@ export const mapPosition = (position: any) => {
 
      return {
           ...rest,
-          zipCode: loc.zipCode || null,
-          city: loc.city || null,
-          address: loc.address || null,
-          company: mappedCompany
+          company: mappedCompany,
+          location: loc ? {
+               zipCode: loc.zipCode,
+               city: loc.city,
+               address: loc.address,
+               country: loc.country // Added country if available in position location
+          } : null
      };
 };
 
 export const mapStudentProfile = (profile: any) => {
      if (!profile) return null;
-     const mainLocation = profile.locations && profile.locations.length > 0 ? profile.locations[0] : {};
+     const mainLocation = profile.locations && profile.locations.length > 0 ? profile.locations[0] : null;
      // Extract locations and locationId to exclude them and flatten properties
      const { locations, ...rest } = profile;
 
      return {
           ...rest,
-          country: mainLocation.country || null,
-          zipCode: mainLocation.zipCode || null,
-          city: mainLocation.city || null,
-          streetAddress: mainLocation.address || null
+          location: mainLocation ? {
+               country: mainLocation.country,
+               zipCode: mainLocation.zipCode,
+               city: mainLocation.city,
+               address: mainLocation.address
+          } : null
      };
 };
 

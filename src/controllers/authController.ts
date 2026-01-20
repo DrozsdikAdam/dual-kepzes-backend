@@ -39,10 +39,10 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
                             // Cím adatok - Location modellbe szervezve
                             locations: {
                                 create: {
-                                    country: data.country || "Magyarország",
-                                    zipCode: data.zipCode ? String(data.zipCode) : "",
-                                    city: data.city || "",
-                                    address: data.streetAddress || ""
+                                    country: data.location?.country || "Magyarország",
+                                    zipCode: data.location?.zipCode ? String(data.location.zipCode) : "",
+                                    city: data.location?.city || "",
+                                    address: data.location?.address || ""
                                 }
                             },
 

@@ -140,17 +140,20 @@ export const createCompany = async (
                     .json({ message: "Már létezik cég a megadott adószámmal." });
           }
 
-          const { hqCountry, hqZipCode, hqCity, hqAddress, ...companyData } = data;
+          const { location, ...companyData } = data;
+
+          // Ensure location is present or create a default structure if needed, or handle as optional
+          const loc = location || {};
 
           const newCompany = await prisma.company.create({
                data: {
                     ...companyData,
                     location: {
                          create: {
-                              country: hqCountry || "Magyarország",
-                              zipCode: String(hqZipCode),
-                              city: hqCity || "",
-                              address: hqAddress || ""
+                              country: loc.country || "Magyarország",
+                              zipCode: loc.zipCode ? String(loc.zipCode) : "",
+                              city: loc.city || "",
+                              address: loc.address || ""
                          }
                     },
 
@@ -181,7 +184,7 @@ export const updateCompany = async (req: Request, res: Response) => {
      const data = req.body;
 
      // Extract location fields
-     const { hqCountry, hqZipCode, hqCity, hqAddress, ...companyRest } = data;
+     const { location, ...companyRest } = data;
 
      try {
           const currentCompany = await prisma.company.findUnique({
@@ -190,17 +193,17 @@ export const updateCompany = async (req: Request, res: Response) => {
           });
 
           let locationUpdate = undefined;
-          if (hqCountry || hqZipCode || hqCity || hqAddress) {
+          if (location) {
                if (currentCompany?.location && currentCompany.location.length > 0) {
                     // Update existing
                     locationUpdate = {
                          update: {
                               where: { id: currentCompany.location[0].id },
                               data: {
-                                   country: hqCountry,
-                                   zipCode: hqZipCode ? String(hqZipCode) : undefined,
-                                   city: hqCity,
-                                   address: hqAddress
+                                   country: location.country,
+                                   zipCode: location.zipCode ? String(location.zipCode) : undefined,
+                                   city: location.city,
+                                   address: location.address
                               }
                          }
                     };
@@ -208,10 +211,10 @@ export const updateCompany = async (req: Request, res: Response) => {
                     // Create new
                     locationUpdate = {
                          create: {
-                              country: hqCountry || "Magyarország",
-                              zipCode: hqZipCode ? String(hqZipCode) : "",
-                              city: hqCity || "",
-                              address: hqAddress || ""
+                              country: location.country || "Magyarország",
+                              zipCode: location.zipCode ? String(location.zipCode) : "",
+                              city: location.city || "",
+                              address: location.address || ""
                          }
                     };
                }

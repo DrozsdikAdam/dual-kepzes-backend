@@ -10,10 +10,12 @@ export const CompanyCreateSchema = z.object({
             .string()
             .min(1, "Az adószám megadása kötelező")
             .max(20, "Az adószám maximum 20 karakter lehet"),
-        hqCountry: z.string().trim().min(1).optional(),
-        hqZipCode: z.coerce.number().min(1000).max(9999).optional(),
-        hqCity: z.string().trim().min(1).optional(),
-        hqAddress: z.string().trim().includes(" ").optional(),
+        location: z.object({
+            country: z.string().trim().min(1).optional(),
+            zipCode: z.coerce.number().min(1000).max(9999).optional(),
+            city: z.string().trim().min(1).optional(),
+            address: z.string().trim().includes(" ").optional(),
+        }).optional(),
         contactName: z
             .string()
             .trim()
@@ -34,11 +36,13 @@ export const PositionCreateSchema = z.object({
         companyId: z.string().uuid(),
         title: z.string().min(3),
         description: z.string().optional(),
-        zipCode: z.string().regex(/^\d{4}$/, "Érvénytelen irányítószám"),
-        city: z.string(),
-        country: z.string().optional(),
+        location: z.object({
+            zipCode: z.string().regex(/^\d{4}$/, "Érvénytelen irányítószám"),
+            city: z.string(),
+            country: z.string().optional(),
+            address: z.string(),
+        }),
         isDual: z.boolean().default(false),
-        address: z.string(),
         deadline: z.coerce.date().optional().nullable(),
         tags: z.array(
             z.object({
