@@ -109,10 +109,6 @@ model StudentProfile {
 
   deletedAt DateTime?
 
-  tempZipCode String?
-  tempCity    String?
-  tempAddress String?
-
   documents    Document[]
   applications Application[]
   partnerships DualPartnership[]
@@ -174,10 +170,6 @@ model Company {
   contactEmail String
   website      String?
   logoUrl      String?
-
-  tempZipCode String?
-  tempCity    String?
-  tempAddress String?
 
   isActive  Boolean   @default(true)
   createdAt DateTime  @default(now())
