@@ -126,10 +126,10 @@ export const createPosition = async (
                 company: { connect: { id: data.companyId } },
                 location: {
                     create: {
-                        country: data.country || "Magyarország",
-                        zipCode: data.zipCode,
-                        city: data.city,
-                        address: data.address
+                        country: data.location?.country || "Magyarország",
+                        zipCode: data.location.zipCode,
+                        city: data.location.city,
+                        address: data.location.address
                     }
                 },
                 tags: data.tags && data.tags.length > 0 ? {
@@ -161,19 +161,19 @@ export const createPosition = async (
 
 export const updatePosition = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { tagNames, zipCode, city, address, country, ...data } = req.body;
+    const { tagNames, location, ...data } = req.body;
 
     try {
         const updatedPosition = await prisma.position.update({
             where: { id },
             data: {
                 ...data,
-                location: country || zipCode || city || address ? {
+                location: location ? {
                     update: {
-                        country: country,
-                        zipCode: zipCode,
-                        city: city,
-                        address: address
+                        country: location.country,
+                        zipCode: location.zipCode,
+                        city: location.city,
+                        address: location.address
                     }
                 } : undefined,
                 tags: tagNames ? {

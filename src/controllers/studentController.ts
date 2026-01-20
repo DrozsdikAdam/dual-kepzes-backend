@@ -115,36 +115,40 @@ export const updateMyProfile = async (req: Request, res: Response) => {
     }
 
     try {
-        const { country, zipCode, city, streetAddress, ...otherProfileData } = profileData;
+        const { location, ...otherProfileData } = profileData;
 
         // Fetch current profile to get location ID
         const currentUser = await prisma.user.findUnique({
             where: { id: userId },
-            select: { studentProfile: { select: { id: true, locations: { select: { id: true } } } } }
+            select: { studentProfile: { select: { id: true, locations: { select: { id: true, country: true, zipCode: true, city: true, address: true } } } } }
         });
 
         let locationsUpdate = undefined;
-        if (country || zipCode || city || streetAddress) {
+        if (location) {
+            // JAVÍTVA: Safe navigation és default értékek kezelése
             const existingLocation = currentUser?.studentProfile?.locations?.[0];
+
             if (existingLocation) {
+                // Ha van létező cím, azt frissítjük
                 locationsUpdate = {
                     update: {
                         where: { id: existingLocation.id },
                         data: {
-                            country,
-                            zipCode,
-                            city,
-                            address: streetAddress
+                            country: location.country || existingLocation.country, // Keep existing if not provided
+                            zipCode: location.zipCode ? String(location.zipCode) : existingLocation.zipCode,
+                            city: location.city || existingLocation.city,
+                            address: location.address || existingLocation.address
                         }
                     }
                 };
             } else {
+                // Ha nincs, újat hozunk létre
                 locationsUpdate = {
                     create: {
-                        country: country || "Magyarország",
-                        zipCode: zipCode || "",
-                        city: city || "",
-                        address: streetAddress || ""
+                        country: location.country || "Magyarország",
+                        zipCode: location.zipCode || "",
+                        city: location.city || "",
+                        address: location.address || ""
                     }
                 };
             }
@@ -188,38 +192,41 @@ export const updateStudentById = async (req: Request, res: Response) => {
         // 1. Ellenőrizzük, hogy a felhasználó létezik és DIÁK
         const target = await prisma.user.findFirst({
             where: { id: id, role: "STUDENT" },
-            select: { studentProfile: { select: { id: true, locations: { select: { id: true } } } } }
+            select: { studentProfile: { select: { id: true, locations: { select: { id: true, country: true, zipCode: true, city: true, address: true } } } } }
         })
 
         if (!target) {
             return res.status(404).json({ message: "Nem található a módosítandó hallgató." });
         }
 
-        const { country, zipCode, city, streetAddress, ...otherProfileData } = profileData;
+        const { location, ...otherProfileData } = profileData;
 
         // Prepare location update
         let locationsUpdate = undefined;
-        if (country || zipCode || city || streetAddress) {
+        if (location) {
             const existingLocation = target.studentProfile?.locations?.[0];
+
             if (existingLocation) {
+                // Ha van létező cím, azt frissítjük
                 locationsUpdate = {
                     update: {
                         where: { id: existingLocation.id },
                         data: {
-                            country,
-                            zipCode,
-                            city,
-                            address: streetAddress
+                            country: location.country || existingLocation.country,
+                            zipCode: location.zipCode ? String(location.zipCode) : existingLocation.zipCode,
+                            city: location.city || existingLocation.city,
+                            address: location.address || existingLocation.address
                         }
                     }
                 };
             } else {
+                // Ha nincs, újat hozunk létre
                 locationsUpdate = {
                     create: {
-                        country: country || "Magyarország",
-                        zipCode: zipCode || "",
-                        city: city || "",
-                        address: streetAddress || ""
+                        country: location.country || "Magyarország",
+                        zipCode: location.zipCode || "",
+                        city: location.city || "",
+                        address: location.address || ""
                     }
                 };
             }

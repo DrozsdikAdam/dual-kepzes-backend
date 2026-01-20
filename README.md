@@ -110,7 +110,7 @@ A hallgatók kezelése, profilmódosítás és törlés.
 
 ### 2. Cég Modul (`/api/companies`)
 
-Cégek teljes körű kezelése (CRUD) és státuszmenedzsment.
+Cégek teljes körű kezelése (CRUD), státuszmenedzsment és több telephely támogatása.
 
 | Metódus | Végpont | Leírás | Jogosultság |
 | :--- | :--- | :--- | :--- |

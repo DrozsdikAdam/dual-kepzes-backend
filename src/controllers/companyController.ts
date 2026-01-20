@@ -10,6 +10,7 @@ const companySelect = {
      taxId: true,
      location: {
           select: {
+               id: true, // Needed for update
                country: true,
                zipCode: true,
                city: true,
@@ -140,18 +141,18 @@ export const createCompany = async (
                     .json({ message: "Már létezik cég a megadott adószámmal." });
           }
 
-          const { hqCountry, hqZipCode, hqCity, hqAddress, ...companyData } = data;
+          const { locations, ...companyData } = data;
 
           const newCompany = await prisma.company.create({
                data: {
                     ...companyData,
                     location: {
-                         create: {
-                              country: hqCountry || "Magyarország",
-                              zipCode: String(hqZipCode),
-                              city: hqCity || "",
-                              address: hqAddress || ""
-                         }
+                         create: locations ? locations.map(loc => ({
+                              country: loc.country || "Magyarország",
+                              zipCode: loc.zipCode ? String(loc.zipCode) : "",
+                              city: loc.city || "",
+                              address: loc.address || ""
+                         })) : []
                     },
 
                },
@@ -181,39 +182,35 @@ export const updateCompany = async (req: Request, res: Response) => {
      const data = req.body;
 
      // Extract location fields
-     const { hqCountry, hqZipCode, hqCity, hqAddress, ...companyRest } = data;
+     const { locations, ...companyRest } = data;
 
      try {
-          const currentCompany = await prisma.company.findUnique({
-               where: { id },
-               select: { location: { select: { id: true } } }
-          });
+          // Prepare nested writes for Prisma
+          const locationOperations: any = {};
 
-          let locationUpdate = undefined;
-          if (hqCountry || hqZipCode || hqCity || hqAddress) {
-               if (currentCompany?.location && currentCompany.location.length > 0) {
-                    // Update existing
-                    locationUpdate = {
-                         update: {
-                              where: { id: currentCompany.location[0].id },
-                              data: {
-                                   country: hqCountry,
-                                   zipCode: hqZipCode ? String(hqZipCode) : undefined,
-                                   city: hqCity,
-                                   address: hqAddress
-                              }
+          if (locations && locations.length > 0) {
+               const startNew = locations.filter((l: any) => !l.id);
+               const toUpdate = locations.filter((l: any) => l.id);
+
+               if (startNew.length > 0) {
+                    locationOperations.create = startNew.map((loc: any) => ({
+                         country: loc.country || "Magyarország",
+                         zipCode: loc.zipCode ? String(loc.zipCode) : "",
+                         city: loc.city || "",
+                         address: loc.address || ""
+                    }));
+               }
+
+               if (toUpdate.length > 0) {
+                    locationOperations.update = toUpdate.map((loc: any) => ({
+                         where: { id: loc.id },
+                         data: {
+                              country: loc.country,
+                              zipCode: loc.zipCode ? String(loc.zipCode) : undefined,
+                              city: loc.city,
+                              address: loc.address
                          }
-                    };
-               } else {
-                    // Create new
-                    locationUpdate = {
-                         create: {
-                              country: hqCountry || "Magyarország",
-                              zipCode: hqZipCode ? String(hqZipCode) : "",
-                              city: hqCity || "",
-                              address: hqAddress || ""
-                         }
-                    };
+                    }));
                }
           }
 
@@ -221,7 +218,7 @@ export const updateCompany = async (req: Request, res: Response) => {
                where: { id },
                data: {
                     ...companyRest,
-                    location: locationUpdate
+                    location: locationOperations
                },
                select: companySelect
           });
@@ -255,6 +252,7 @@ export const deleteCompany = async (req: Request, res: Response) => {
                where: { companyId: id },
                data: { deletedAt: new Date() }
           });
+          /*
           const employees = await prisma.companyEmployee.findMany({
                where: { companyId: id },
                select: { userId: true }
@@ -268,6 +266,7 @@ export const deleteCompany = async (req: Request, res: Response) => {
                     data: { deletedAt: new Date() }
                });
           }
+          */
 
           await logAction(req, {
                action: "DELETE_COMPANY",
