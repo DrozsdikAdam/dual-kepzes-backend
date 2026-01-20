@@ -98,6 +98,21 @@ export const getPositionById = async (req: Request, res: Response) => {
     }
 }
 
+export const getPositionsByCompanyId = async (req: Request, res: Response) => {
+    const companyId = req.params.companyId;
+    try {
+        const positions = await prisma.position.findMany({
+            where: { companyId: companyId },
+            select: positionSelect,
+            orderBy: { deadline: "asc" }
+        })
+
+        res.json(positions.map(mapPosition));
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba a pozíciók lekérésekor." })
+    }
+}
+
 export const createTag = async (
     req: Request<{}, {}, TagInput>,
     res: Response

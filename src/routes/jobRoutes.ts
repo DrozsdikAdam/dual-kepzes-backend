@@ -5,7 +5,8 @@ import {
     getAllPositions,
     getPositionById,
     updatePosition,
-    deactivatePosition
+    deactivatePosition,
+    getPositionsByCompanyId
 } from "../controllers/jobController";
 import { validate } from "../middlewares/validateMiddleware";
 import {
@@ -23,6 +24,10 @@ router.get("/positions",
 
 router.get("/positions/:id",
     getPositionById
+);
+
+router.get("/positions/company/:companyId",
+    getPositionsByCompanyId
 );
 
 router.post(

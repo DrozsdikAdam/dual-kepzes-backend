@@ -130,6 +130,7 @@ Pozíciók (álláshirdetések) kezelése. A végpontok a `/positions` alútvona
 | Metódus | Végpont | Leírás | Jogosultság |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/positions` | Aktív pozíciók listázása. | Authenticated |
+| `GET` | `/positions/company/:companyId` | Adott cég pozícióinak listázása. | Authenticated |
 | `POST` | `/positions` | Új pozíció meghirdetése. | Authenticated |
 | `GET` | `/positions/:id` | Pozíció részletei. | Authenticated |
 | `PATCH` | `/positions/:id` | Pozíció frissítése. | Authenticated |
