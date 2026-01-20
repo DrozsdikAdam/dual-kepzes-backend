@@ -293,7 +293,7 @@ export const evaluateApplication = async (req: Request, res: Response) => {
 
         if (application.status !== ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Csak beadott jelentkezéseket lehet elbírálni." })
 
-        if (status === ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Nem lehet beadottra állítani a jelentkezést." })
+        if (status === ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Nem lehet BEADOTT státuszra állítani a jelentkezést." })
 
         const evaluateApplication = await prisma.application.update({
             where: { id },
@@ -303,7 +303,7 @@ export const evaluateApplication = async (req: Request, res: Response) => {
             }
         })
 
-        var message = status + "_APPLICATION"
+        const message = status + "_APPLICATION"
 
         await logAction(req, {
             action: message,
@@ -333,7 +333,8 @@ export const getMyCompanyApplications = async (req: Request, res: Response) => {
             where: {
                 employees: {
                     some: {
-                        userId
+                        userId,
+                        deletedAt: null
                     }
                 }
             },

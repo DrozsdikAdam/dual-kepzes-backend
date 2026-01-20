@@ -97,7 +97,7 @@ export const getUserNewsById = async (req: Request, res: Response) => {
 
           return res.status(200).json({ news })
      } catch (error) {
-          return res.json(500).json({ message: "Hiba a hír lekérdezésekor." })
+          return res.status(500).json({ message: "Hiba a hír lekérdezésekor." })
      }
 }
 
@@ -193,7 +193,7 @@ export const unarchiveNews = async (req: Request, res: Response) => {
                }
           })
 
-          return res.status(200).json({ message: "Hír sikeresen archiválva lett." })
+          return res.status(200).json({ message: "Hír sikeresen visszaállítva." })
      } catch (error) {
           return res.status(500).json({ message: "Hiba a hír archiválásának visszavonásakor." })
      }

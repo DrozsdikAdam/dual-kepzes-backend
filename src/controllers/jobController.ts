@@ -73,18 +73,7 @@ export const getAllPositions = async (req: Request, res: Response) => {
             orderBy: { deadline: "asc" }
         });
 
-        // Custom mapping for the list view which needs company.hqCity
-        const mappedPositions = positions.map((p: any) => {
-            const mapped = mapPosition(p);
-            // Manually handle company hqCity for the list view optimization if needed
-            // The frontend might expect company.hqCity.
-            if (mapped.company && p.company?.location?.[0]?.city) {
-                mapped.company.hqCity = p.company.location[0].city;
-            }
-            return mapped;
-        });
-
-        res.json(mappedPositions);
+        res.json(positions.map(mapPosition));
     } catch (error) {
         res.status(500).json({ message: "Hiba a pozíciók lekérésekor." });
     }
@@ -137,7 +126,7 @@ export const createPosition = async (
                 company: { connect: { id: data.companyId } },
                 location: {
                     create: {
-                        country: "Magyarország",
+                        country: data.country || "Magyarország",
                         zipCode: data.zipCode,
                         city: data.city,
                         address: data.address
@@ -172,15 +161,16 @@ export const createPosition = async (
 
 export const updatePosition = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { tagNames, zipCode, city, address, ...data } = req.body;
+    const { tagNames, zipCode, city, address, country, ...data } = req.body;
 
     try {
         const updatedPosition = await prisma.position.update({
             where: { id },
             data: {
                 ...data,
-                location: zipCode || city || address ? {
+                location: country || zipCode || city || address ? {
                     update: {
+                        country: country,
                         zipCode: zipCode,
                         city: city,
                         address: address
@@ -208,6 +198,7 @@ export const updatePosition = async (req: Request, res: Response) => {
             message: "Pozíció adatai sikeresen frissítve",
             position: mapPosition(updatedPosition)
         });
+
 
     } catch (error) {
         return res.status(500).json({ message: "Hiba a pozíció frissítésekor." });
