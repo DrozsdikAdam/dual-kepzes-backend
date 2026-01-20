@@ -120,25 +120,29 @@ export const updateMyProfile = async (req: Request, res: Response) => {
         // Fetch current profile to get location ID
         const currentUser = await prisma.user.findUnique({
             where: { id: userId },
-            select: { studentProfile: { select: { id: true, locations: { select: { id: true } } } } }
+            select: { studentProfile: { select: { id: true, locations: { select: { id: true, country: true, zipCode: true, city: true, address: true } } } } }
         });
 
         let locationsUpdate = undefined;
         if (location) {
+            // JAVÍTVA: Safe navigation és default értékek kezelése
             const existingLocation = currentUser?.studentProfile?.locations?.[0];
+
             if (existingLocation) {
+                // Ha van létező cím, azt frissítjük
                 locationsUpdate = {
                     update: {
                         where: { id: existingLocation.id },
                         data: {
-                            country: location.country,
-                            zipCode: location.zipCode,
-                            city: location.city,
-                            address: location.address
+                            country: location.country || existingLocation.country, // Keep existing if not provided
+                            zipCode: location.zipCode ? String(location.zipCode) : existingLocation.zipCode,
+                            city: location.city || existingLocation.city,
+                            address: location.address || existingLocation.address
                         }
                     }
                 };
             } else {
+                // Ha nincs, újat hozunk létre
                 locationsUpdate = {
                     create: {
                         country: location.country || "Magyarország",
@@ -188,7 +192,7 @@ export const updateStudentById = async (req: Request, res: Response) => {
         // 1. Ellenőrizzük, hogy a felhasználó létezik és DIÁK
         const target = await prisma.user.findFirst({
             where: { id: id, role: "STUDENT" },
-            select: { studentProfile: { select: { id: true, locations: { select: { id: true } } } } }
+            select: { studentProfile: { select: { id: true, locations: { select: { id: true, country: true, zipCode: true, city: true, address: true } } } } }
         })
 
         if (!target) {
@@ -201,19 +205,22 @@ export const updateStudentById = async (req: Request, res: Response) => {
         let locationsUpdate = undefined;
         if (location) {
             const existingLocation = target.studentProfile?.locations?.[0];
+
             if (existingLocation) {
+                // Ha van létező cím, azt frissítjük
                 locationsUpdate = {
                     update: {
                         where: { id: existingLocation.id },
                         data: {
-                            country: location.country,
-                            zipCode: location.zipCode,
-                            city: location.city,
-                            address: location.address
+                            country: location.country || existingLocation.country,
+                            zipCode: location.zipCode ? String(location.zipCode) : existingLocation.zipCode,
+                            city: location.city || existingLocation.city,
+                            address: location.address || existingLocation.address
                         }
                     }
                 };
             } else {
+                // Ha nincs, újat hozunk létre
                 locationsUpdate = {
                     create: {
                         country: location.country || "Magyarország",
