@@ -125,7 +125,7 @@ Cégek teljes körű kezelése (CRUD) és státuszmenedzsment.
 
 ### 3. Állásportál Modul (`/api/jobs`)
 
-Pozíciók (álláshirdetések) kezelése. A végpontok a `/positions` alútvonalon érhetőek el.
+Pozíciók (álláshirdetések) kezelése. A végpontok a `/positions` alútvonalon érhetőek el. A rendszer támogatja a nemzetközi munkavégzési helyszíneket is (opcionális ország mező).
 
 | Metódus | Végpont | Leírás | Jogosultság |
 | :--- | :--- | :--- | :--- |
@@ -246,6 +246,8 @@ A rendszer adminisztrátori szintjei.
 ## Validáció (Zod)
 
 A beérkező adatok szigorú típus- és formátumellenőrzésen esnek át a `validate` middleware segítségével.
+*   **Formátum:** Email címek, URL-ek, Dátumok és Irányítószámok (4 számjegyű magyar formátum) ellenőrzése.
+*   **Biztonság:** Jelszóerősség (min. 12 karakter, vegyes karaktertípusok) kikényszerítése.
 
 ## Hibakezelés
 
