@@ -98,7 +98,6 @@ model StudentProfile {
   mothersName String
   birthDate   DateTime
 
-  locationId      String
   // Egy felhasználónak több helyszíne is lehet (pl. otthoni, munkahelyi)
   locations       Location[]
   highSchool      String
@@ -179,10 +178,10 @@ model Company {
   updatedAt DateTime? @updatedAt
   deletedAt DateTime?
 
-  employees  CompanyEmployee[]
-  positions  Position[]
-  locationId String
-  location   Location[]
+  employees CompanyEmployee[]
+  positions Position[]
+
+  location Location[]
 }
 
 model Position {
@@ -205,8 +204,8 @@ model Position {
   deletedAt DateTime?
 
   applications Application[]
-  locationId   String
-  location     Location      @relation(fields: [locationId], references: [id])
+  location     Location?     @relation(fields: [locationId], references: [id])
+  locationId   String?
 }
 
 model Tag {

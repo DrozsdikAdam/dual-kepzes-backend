@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { logAction } from "../utils/logger";
+import { mapStudent } from "../utils/mappers";
 
 const studentSelect = {
     id: true,
@@ -13,10 +14,14 @@ const studentSelect = {
             id: true,
             mothersName: true,
             birthDate: true,
-            country: true,
-            zipCode: true,
-            city: true,
-            streetAddress: true,
+            locations: {
+                select: {
+                    country: true,
+                    zipCode: true,
+                    city: true,
+                    address: true
+                }
+            },
             highSchool: true,
             graduationYear: true,
             neptunCode: true,
@@ -26,6 +31,8 @@ const studentSelect = {
         }
     }
 };
+
+
 
 export const getMyProfile = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
@@ -44,7 +51,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
             return res.status(404).json({ message: "Profil nem található." });
         }
 
-        res.status(200).json(student);
+        res.status(200).json(mapStudent(student));
     } catch (error) {
         res.status(500).json({ message: "Hiba a profil lekérésekor." });
     }
@@ -70,7 +77,7 @@ export const getStudentById = async (req: Request, res: Response) => {
 
         })
 
-        res.status(200).json(student);
+        res.status(200).json(mapStudent(student));
     } catch (error) {
         res.status(500).json({ message: "Hiba a hallgató lekérésekor." });
     }
@@ -92,7 +99,7 @@ export const getAllStudents = async (req: Request, res: Response) => {
             details: { listById: req.user?.userId, count: students.length }
         });
 
-        res.status(200).json(students);
+        res.status(200).json(students.map(mapStudent));
     } catch (error) {
         console.error("GetAllStudents Error:", error);
         res.status(500).json({ message: "Hiba történt a hallgatók listázásakor." });
@@ -103,16 +110,56 @@ export const updateMyProfile = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
     const { fullName, phoneNumber, ...profileData } = req.body;
 
-    if (!userId) res.sendStatus(401);
+    if (!userId) {
+        return res.status(401).json({ message: "Nincs azonosítva." }); // Sent status should return json if expected
+    }
 
     try {
+        const { country, zipCode, city, streetAddress, ...otherProfileData } = profileData;
+
+        // Fetch current profile to get location ID
+        const currentUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { studentProfile: { select: { id: true, locations: { select: { id: true } } } } }
+        });
+
+        let locationsUpdate = undefined;
+        if (country || zipCode || city || streetAddress) {
+            const existingLocation = currentUser?.studentProfile?.locations?.[0];
+            if (existingLocation) {
+                locationsUpdate = {
+                    update: {
+                        where: { id: existingLocation.id },
+                        data: {
+                            country,
+                            zipCode,
+                            city,
+                            address: streetAddress
+                        }
+                    }
+                };
+            } else {
+                locationsUpdate = {
+                    create: {
+                        country: country || "Magyarország",
+                        zipCode: zipCode || "",
+                        city: city || "",
+                        address: streetAddress || ""
+                    }
+                };
+            }
+        }
+
         const updated = await prisma.user.update({
             where: { id: userId },
             data: {
                 fullName,
                 phoneNumber,
                 studentProfile: {
-                    update: profileData
+                    update: {
+                        ...otherProfileData,
+                        locations: locationsUpdate
+                    }
                 }
             },
             select: studentSelect
@@ -125,8 +172,9 @@ export const updateMyProfile = async (req: Request, res: Response) => {
             details: { updatedById: req.user?.userId, updatedFields: Object.keys(req.body) }
         });
 
-        res.json({ message: "Profilod sikeresen frissítve!", user: updated });
+        res.json({ message: "Profilod sikeresen frissítve!", user: mapStudent(updated) });
     } catch (error) {
+        console.error("Update Profile Error:", error);
         res.status(500).json({ message: "Hiba a profil frissítése során." });
     }
 
@@ -139,11 +187,42 @@ export const updateStudentById = async (req: Request, res: Response) => {
     try {
         // 1. Ellenőrizzük, hogy a felhasználó létezik és DIÁK
         const target = await prisma.user.findFirst({
-            where: { id: id, role: "STUDENT" }
+            where: { id: id, role: "STUDENT" },
+            select: { studentProfile: { select: { id: true, locations: { select: { id: true } } } } }
         })
 
         if (!target) {
             return res.status(404).json({ message: "Nem található a módosítandó hallgató." });
+        }
+
+        const { country, zipCode, city, streetAddress, ...otherProfileData } = profileData;
+
+        // Prepare location update
+        let locationsUpdate = undefined;
+        if (country || zipCode || city || streetAddress) {
+            const existingLocation = target.studentProfile?.locations?.[0];
+            if (existingLocation) {
+                locationsUpdate = {
+                    update: {
+                        where: { id: existingLocation.id },
+                        data: {
+                            country,
+                            zipCode,
+                            city,
+                            address: streetAddress
+                        }
+                    }
+                };
+            } else {
+                locationsUpdate = {
+                    create: {
+                        country: country || "Magyarország",
+                        zipCode: zipCode || "",
+                        city: city || "",
+                        address: streetAddress || ""
+                    }
+                };
+            }
         }
 
         // 2. Frissítés egyetlen tranzakcióban (Nested Update)
@@ -153,7 +232,10 @@ export const updateStudentById = async (req: Request, res: Response) => {
                 fullName: data.fullName,
                 phoneNumber: data.phoneNumber,
                 studentProfile: {
-                    update: profileData // A profil adatokat ide küldjük
+                    update: {
+                        ...otherProfileData,
+                        locations: locationsUpdate
+                    }
                 }
             },
             select: studentSelect
@@ -171,7 +253,7 @@ export const updateStudentById = async (req: Request, res: Response) => {
 
         res.status(200).json({
             message: "Hallgatói adatok sikeresen frissítve.",
-            user: updatedUser
+            user: mapStudent(updatedUser)
         });
 
     } catch (error: any) {

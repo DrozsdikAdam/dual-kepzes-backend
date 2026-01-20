@@ -2,16 +2,21 @@ import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { PositionInput, TagInput } from "../schemas/jobSchema";
 import { logAction } from "../utils/logger";
+import { mapCompany, mapPosition } from "../utils/mappers";
 
 // 1. Központi SELECT definíciók
 const companySelect = {
     id: true,
     name: true,
     taxId: true,
-    hqCountry: true,
-    hqZipCode: true,
-    hqCity: true,
-    hqAddress: true,
+    location: {
+        select: {
+            country: true,
+            zipCode: true,
+            city: true,
+            address: true
+        }
+    },
     contactName: true,
     contactEmail: true,
     website: true,
@@ -24,9 +29,13 @@ const positionSelect = {
     id: true,
     title: true,
     description: true,
-    zipCode: true,
-    city: true,
-    address: true,
+    location: {
+        select: {
+            zipCode: true,
+            city: true,
+            address: true
+        }
+    },
     deadline: true,
     isActive: true,
     isDual: true,
@@ -40,6 +49,9 @@ const positionSelect = {
     }
 };
 
+// Mappers
+
+
 export const getAllPositions = async (req: Request, res: Response) => {
     try {
         const positions = await prisma.position.findMany({
@@ -50,13 +62,29 @@ export const getAllPositions = async (req: Request, res: Response) => {
                     select: {
                         name: true,
                         logoUrl: true,
-                        hqCity: true
+                        location: {
+                            select: {
+                                city: true
+                            }
+                        }
                     }
                 }
             },
             orderBy: { deadline: "asc" }
         });
-        res.json(positions);
+
+        // Custom mapping for the list view which needs company.hqCity
+        const mappedPositions = positions.map((p: any) => {
+            const mapped = mapPosition(p);
+            // Manually handle company hqCity for the list view optimization if needed
+            // The frontend might expect company.hqCity.
+            if (mapped.company && p.company?.location?.[0]?.city) {
+                mapped.company.hqCity = p.company.location[0].city;
+            }
+            return mapped;
+        });
+
+        res.json(mappedPositions);
     } catch (error) {
         res.status(500).json({ message: "Hiba a pozíciók lekérésekor." });
     }
@@ -75,7 +103,7 @@ export const getPositionById = async (req: Request, res: Response) => {
             }
         });
         if (!position) return res.status(404).json({ message: "Pozíció nem található." });
-        res.json(position);
+        res.json(mapPosition(position));
     } catch (error) {
         res.status(500).json({ message: "Hiba a pozíció lekérésekor." });
     }
@@ -105,11 +133,16 @@ export const createPosition = async (
             data: {
                 title: data.title,
                 description: data.description,
-                zipCode: data.zipCode,
-                city: data.city,
-                address: data.address,
                 deadline: data.deadline,
                 company: { connect: { id: data.companyId } },
+                location: {
+                    create: {
+                        country: "Magyarország",
+                        zipCode: data.zipCode,
+                        city: data.city,
+                        address: data.address
+                    }
+                },
                 tags: data.tags && data.tags.length > 0 ? {
                     connectOrCreate: data.tags.map((tag) => ({
                         where: { name: tag.name },
@@ -129,7 +162,7 @@ export const createPosition = async (
 
         res.status(201).json({
             message: "Pozíció sikeresen meghirdetve",
-            position: newPosition,
+            position: mapPosition(newPosition),
         });
     } catch (error) {
         console.error("Position Creation Error:", error);
@@ -139,13 +172,20 @@ export const createPosition = async (
 
 export const updatePosition = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { tagNames, ...data } = req.body;
+    const { tagNames, zipCode, city, address, ...data } = req.body;
 
     try {
         const updatedPosition = await prisma.position.update({
             where: { id },
             data: {
                 ...data,
+                location: zipCode || city || address ? {
+                    update: {
+                        zipCode: zipCode,
+                        city: city,
+                        address: address
+                    }
+                } : undefined,
                 tags: tagNames ? {
                     set: [],
                     connectOrCreate: tagNames.map((name: string) => ({
@@ -166,7 +206,7 @@ export const updatePosition = async (req: Request, res: Response) => {
 
         return res.json({
             message: "Pozíció adatai sikeresen frissítve",
-            position: updatedPosition
+            position: mapPosition(updatedPosition)
         });
 
     } catch (error) {
@@ -222,7 +262,7 @@ export const deactivatePosition = async (req: Request, res: Response) => {
             }
         });
 
-        return res.json({ message: "Pozíció sikeresen deaktiválva.", position: updatedPosition });
+        return res.json({ message: "Pozíció sikeresen deaktiválva.", position: mapPosition(updatedPosition) });
     } catch (error) {
         return res.status(500).json({ message: "Hiba a pozíció deaktiválásakor." });
     }
@@ -255,7 +295,7 @@ export const reactivatePosition = async (req: Request, res: Response) => {
             }
         });
 
-        return res.json({ message: "Pozíció sikeresen reaktiválva.", position: updatedPosition });
+        return res.json({ message: "Pozíció sikeresen reaktiválva.", position: mapPosition(updatedPosition) });
     } catch (error) {
         return res.status(500).json({ message: "Hiba a pozíció reaktiválásakor." });
     }
@@ -267,7 +307,7 @@ export const getInactivePositions = async (req: Request, res: Response) => {
             where: { isActive: false, deletedAt: null },
             select: positionSelect
         });
-        return res.json(positions);
+        return res.json(positions.map(mapPosition));
     } catch (error) {
         return res.status(500).json({ message: "Hiba a deaktivált pozíciók lekérésekor." });
     }
@@ -294,7 +334,7 @@ export const getMyCompanyPositions = async (req: Request, res: Response) => {
             where: { companyId: employee.companyId, deletedAt: null },
             select: positionSelect
         });
-        return res.json(positions);
+        return res.json(positions.map(mapPosition));
     } catch (error) {
         console.error("Error fetching company positions:", error);
         return res.status(500).json({ message: "Hiba a saját cég pozícióinak lekérésekor." });

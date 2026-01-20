@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { logAction } from "../utils/logger";
 import { ApplicationStatus } from "@prisma/client";
+import { mapApplication } from "../utils/mappers";
 
 const applicationSelect = {
     id: true,
@@ -57,10 +58,14 @@ const companyApplicationSelect = {
                     id: true,
                     mothersName: true,
                     birthDate: true,
-                    country: true,
-                    zipCode: true,
-                    city: true,
-                    streetAddress: true,
+                    locations: {
+                        select: {
+                            country: true,
+                            zipCode: true,
+                            city: true,
+                            address: true
+                        }
+                    },
                     highSchool: true,
                     graduationYear: true,
                     neptunCode: true,
@@ -72,6 +77,8 @@ const companyApplicationSelect = {
         }
     }
 }
+
+
 
 //hallgatói
 
@@ -214,7 +221,7 @@ export const getApplications = async (req: Request, res: Response) => {
             orderBy: { submittedAt: "desc" }
         })
 
-        return res.json(applications)
+        return res.json(applications.map(mapApplication))
     } catch (error) {
         return res.status(500).json({ message: "Hiba a lekérdezés során." })
     }
@@ -231,7 +238,7 @@ export const getApplication = async (req: Request, res: Response) => {
 
         if (!application) return res.status(404).json({ message: "Nem található jelentkezés." })
 
-        return res.json(application)
+        return res.json(mapApplication(application))
     } catch (error) {
         return res.status(500).json({ message: "Hiba a lekérdezés során." })
     }
@@ -345,7 +352,7 @@ export const getMyCompanyApplications = async (req: Request, res: Response) => {
             orderBy: { submittedAt: "desc" }
         })
 
-        return res.json(applications)
+        return res.json(applications.map(mapApplication))
     } catch (error) {
         return res.status(500).json({ message: "Hiba a lekérdezés során." })
     }
