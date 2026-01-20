@@ -1,16 +1,17 @@
 
 export const mapCompany = (company: any) => {
      if (!company) return null;
-     const mainLocation = company.location && company.location.length > 0 ? company.location[0] : null;
      const { location, ...rest } = company;
+     // Return locations array, mapping each to only include relevant fields
      return {
           ...rest,
-          location: mainLocation ? {
-               country: mainLocation.country,
-               zipCode: mainLocation.zipCode,
-               city: mainLocation.city,
-               address: mainLocation.address
-          } : null
+          locations: location ? location.map((loc: any) => ({
+               id: loc.id,
+               country: loc.country,
+               zipCode: loc.zipCode,
+               city: loc.city,
+               address: loc.address
+          })) : []
      };
 };
 

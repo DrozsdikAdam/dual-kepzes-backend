@@ -10,12 +10,14 @@ export const CompanyCreateSchema = z.object({
             .string()
             .min(1, "Az adószám megadása kötelező")
             .max(20, "Az adószám maximum 20 karakter lehet"),
-        location: z.object({
+        // Módosítva: locations tömb támogatása location objektum helyett
+        locations: z.array(z.object({
+            id: z.string().uuid().optional(), // Opcionális ID frissítéshez
             country: z.string().trim().min(1).optional(),
             zipCode: z.coerce.number().min(1000).max(9999).optional(),
             city: z.string().trim().min(1).optional(),
             address: z.string().trim().includes(" ").optional(),
-        }).optional(),
+        })).optional().default([]),
         contactName: z
             .string()
             .trim()

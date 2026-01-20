@@ -10,6 +10,7 @@ const companySelect = {
      taxId: true,
      location: {
           select: {
+               id: true, // Needed for update
                country: true,
                zipCode: true,
                city: true,
@@ -140,21 +141,18 @@ export const createCompany = async (
                     .json({ message: "Már létezik cég a megadott adószámmal." });
           }
 
-          const { location, ...companyData } = data;
-
-          // Ensure location is present or create a default structure if needed, or handle as optional
-          const loc = location || {};
+          const { locations, ...companyData } = data;
 
           const newCompany = await prisma.company.create({
                data: {
                     ...companyData,
                     location: {
-                         create: {
+                         create: locations ? locations.map(loc => ({
                               country: loc.country || "Magyarország",
                               zipCode: loc.zipCode ? String(loc.zipCode) : "",
                               city: loc.city || "",
                               address: loc.address || ""
-                         }
+                         })) : []
                     },
 
                },
@@ -184,39 +182,35 @@ export const updateCompany = async (req: Request, res: Response) => {
      const data = req.body;
 
      // Extract location fields
-     const { location, ...companyRest } = data;
+     const { locations, ...companyRest } = data;
 
      try {
-          const currentCompany = await prisma.company.findUnique({
-               where: { id },
-               select: { location: { select: { id: true } } }
-          });
+          // Prepare nested writes for Prisma
+          const locationOperations: any = {};
 
-          let locationUpdate = undefined;
-          if (location) {
-               if (currentCompany?.location && currentCompany.location.length > 0) {
-                    // Update existing
-                    locationUpdate = {
-                         update: {
-                              where: { id: currentCompany.location[0].id },
-                              data: {
-                                   country: location.country,
-                                   zipCode: location.zipCode ? String(location.zipCode) : undefined,
-                                   city: location.city,
-                                   address: location.address
-                              }
+          if (locations && locations.length > 0) {
+               const startNew = locations.filter((l: any) => !l.id);
+               const toUpdate = locations.filter((l: any) => l.id);
+
+               if (startNew.length > 0) {
+                    locationOperations.create = startNew.map((loc: any) => ({
+                         country: loc.country || "Magyarország",
+                         zipCode: loc.zipCode ? String(loc.zipCode) : "",
+                         city: loc.city || "",
+                         address: loc.address || ""
+                    }));
+               }
+
+               if (toUpdate.length > 0) {
+                    locationOperations.update = toUpdate.map((loc: any) => ({
+                         where: { id: loc.id },
+                         data: {
+                              country: loc.country,
+                              zipCode: loc.zipCode ? String(loc.zipCode) : undefined,
+                              city: loc.city,
+                              address: loc.address
                          }
-                    };
-               } else {
-                    // Create new
-                    locationUpdate = {
-                         create: {
-                              country: location.country || "Magyarország",
-                              zipCode: location.zipCode ? String(location.zipCode) : "",
-                              city: location.city || "",
-                              address: location.address || ""
-                         }
-                    };
+                    }));
                }
           }
 
@@ -224,7 +218,7 @@ export const updateCompany = async (req: Request, res: Response) => {
                where: { id },
                data: {
                     ...companyRest,
-                    location: locationUpdate
+                    location: locationOperations
                },
                select: companySelect
           });
