@@ -10,7 +10,6 @@ const newsSelector = {
      targetGroup: true,
      tags: true,
      createdAt: true,
-     updatedAt: true,
      isArchived: true
 }
 
