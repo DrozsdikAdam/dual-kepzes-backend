@@ -84,9 +84,6 @@ model User {
 
   notifications Notification[]
   auditLogs     AuditLog[]
-
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 model StudentProfile {
@@ -313,6 +310,8 @@ model Notification {
   message String
   type    String
 
+  isRead Boolean @default(false)
+
   status String    @default("PENDING") // PENDING, SENT, FAILED
   error  String? // Hibaüzenet tárolása, ha nem sikerült
   sentAt DateTime?
@@ -331,21 +330,6 @@ model AuditLog {
   details  Json?
 
   timestamp DateTime @default(now())
-}
-
-model Message {
-  id String @id @default(uuid())
-
-  // JAVÍTVA: Kapcsolatok a User táblával (Sender/Receiver)
-  senderId String
-  sender   User   @relation("SentMessages", fields: [senderId], references: [id])
-
-  receiverId String
-  receiver   User   @relation("ReceivedMessages", fields: [receiverId], references: [id])
-
-  subject String?
-  content String
-  sentAt  DateTime @default(now())
 }
 
 model News {
