@@ -3,6 +3,7 @@ import prisma from "../config/prisma";
 import { logAction } from "../utils/logger";
 import { ApplicationStatus } from "@prisma/client";
 import { mapApplication } from "../utils/mappers";
+import { addEmailToQueue } from "../services/emailQueue";
 
 const applicationSelect = {
     id: true,
@@ -49,29 +50,32 @@ const companyApplicationSelect = {
     student: {
         select: {
             id: true,
-            name: true,
-            lastName: true,
-            email: true,
-            phoneNumber: true,
-            studentProfile: {
+            userId: true,
+
+            // StudentProfile fields
+            mothersName: true,
+            birthDate: true,
+            locations: {
                 select: {
-                    id: true,
-                    mothersName: true,
-                    birthDate: true,
-                    locations: {
-                        select: {
-                            country: true,
-                            zipCode: true,
-                            city: true,
-                            address: true
-                        }
-                    },
-                    highSchool: true,
-                    graduationYear: true,
-                    neptunCode: true,
-                    currentMajor: true,
-                    studyMode: true,
-                    hasLanguageCert: true
+                    country: true,
+                    zipCode: true,
+                    city: true,
+                    address: true
+                }
+            },
+            highSchool: true,
+            graduationYear: true,
+            neptunCode: true,
+            currentMajor: true,
+            studyMode: true,
+            hasLanguageCert: true,
+
+            // Associated User fields
+            user: {
+                select: {
+                    email: true,
+                    fullName: true,
+                    phoneNumber: true
                 }
             }
         }
@@ -317,6 +321,21 @@ export const evaluateApplication = async (req: Request, res: Response) => {
             }
         })
 
+        const notification = await prisma.notification.create({
+            data: {
+                userId: application.student.userId,
+                type: "APPLICATION",
+                title: "A jelentkezésed állapota megváltozott",
+                message: `A jelentkezésed a(z) ${application.position.title} pozícióra a(z) ${application.position.company.name} cégnél ${status} státuszba került.`
+            }
+        })
+
+        /*await addEmailToQueue({
+            notificationId: notification.id,
+            email: application.student.user.email,
+            subject: notification.title,
+            body: notification.message
+        })*/
         return res.json(evaluateApplication)
     } catch (error) {
         return res.status(500).json({ message: "Hiba az elbírálás során." })

@@ -67,8 +67,26 @@ export const mapApplication = (application: any) => {
 
      const mapped = { ...application };
 
-     if (mapped.student && mapped.student.studentProfile) {
-          mapped.student.studentProfile = mapStudentProfile(mapped.student.studentProfile);
+     if (mapped.student) {
+          // application.student is the StudentProfile (from the new select)
+          // We want to format it as a User object with a proper studentProfile inside
+          const profile = mapped.student;
+          const user = profile.user || {};
+
+          // Construct the student object (simulating a User)
+          mapped.student = {
+               id: profile.userId, // The generic user ID
+               email: user.email,
+               fullName: user.fullName,
+               phoneNumber: user.phoneNumber,
+
+               // The profile data itself
+               studentProfile: mapStudentProfile({
+                    ...profile,
+                    userId: undefined, // remove redundancy if desired
+                    user: undefined
+               })
+          };
      }
 
      return mapped;
