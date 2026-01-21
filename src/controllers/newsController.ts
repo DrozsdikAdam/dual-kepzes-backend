@@ -21,6 +21,7 @@ const userNewsSelector = {
      targetGroup: true,
      tags: true,
      createdAt: true,
+     isArchived: true
 }
 
 export const createNews = async (req: Request, res: Response) => {
