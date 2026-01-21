@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { Role } from "@prisma/client";
+import prisma from "../config/prisma";
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers["authorization"];
@@ -23,9 +24,9 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
 
         try {
             // Verify user exists in database and is active
-            const dbUser = await import("../config/prisma").then(m => m.default.user.findUnique({
+            const dbUser = await prisma.user.findUnique({
                 where: { id: user.userId }
-            }));
+            });
 
             if (!dbUser) {
                 return res.status(401).json({ message: "A felhasználó nem található." });

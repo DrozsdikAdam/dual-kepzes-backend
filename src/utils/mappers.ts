@@ -1,4 +1,3 @@
-
 export const mapCompany = (company: any) => {
      if (!company) return null;
      const { location, ...rest } = company;

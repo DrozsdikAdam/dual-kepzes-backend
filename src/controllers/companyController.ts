@@ -252,21 +252,7 @@ export const deleteCompany = async (req: Request, res: Response) => {
                where: { companyId: id },
                data: { deletedAt: new Date() }
           });
-          /*
-          const employees = await prisma.companyEmployee.findMany({
-               where: { companyId: id },
-               select: { userId: true }
-          });
 
-          const employeeUserIds = employees.map(e => e.userId);
-
-          if (employeeUserIds.length > 0) {
-               await prisma.user.updateMany({
-                    where: { id: { in: employeeUserIds } },
-                    data: { deletedAt: new Date() }
-               });
-          }
-          */
 
           await logAction(req, {
                action: "DELETE_COMPANY",

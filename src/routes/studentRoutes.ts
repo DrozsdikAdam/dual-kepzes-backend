@@ -18,7 +18,7 @@ router.get("/", authenticateToken, getAllStudents);
 
 router.get("/me", authenticateToken, getMyProfile);
 
-router.put("/me", authenticateToken, validate(MyProfileUpdateSchema), updateMyProfile);
+router.patch("/me", authenticateToken, validate(MyProfileUpdateSchema), updateMyProfile);
 
 router.delete("/me", authenticateToken, deleteMyProfile)
 
@@ -26,6 +26,6 @@ router.get("/:id", authenticateToken, getStudentById)
 
 router.delete("/:id", authenticateToken, deleteStudentById)
 
-router.put("/:id", authenticateToken, validate(StudentUpdateSchema), updateStudentById);
+router.patch("/:id", authenticateToken, validate(StudentUpdateSchema), updateStudentById);
 
 export default router;

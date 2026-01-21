@@ -7,14 +7,15 @@ import { authenticateToken } from "../middlewares/authMiddleware";
 const router = Router();
 
 router.get("/me", authenticateToken, getMeEmployee);
-router.put("/me", authenticateToken, validate(UpdateEmployeeSchema), updateMeEmployee);
+router.patch("/me", authenticateToken, validate(UpdateEmployeeSchema), updateMeEmployee);
+
 router.delete("/me", authenticateToken, deleteMeEmployee);
 
 router.get("/", authenticateToken, getCompanyEmployees)
 
 router.get("/:id", authenticateToken, getEmployeeById)
 
-router.put("/:id", authenticateToken, validate(UpdateEmployeeSchema), updateEmployeeById);
+router.patch("/:id", authenticateToken, validate(UpdateEmployeeSchema), updateEmployeeById);
 
 router.delete("/:id", authenticateToken, deleteEmployeeById)
 

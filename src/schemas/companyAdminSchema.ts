@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const companyAdminUpdateSchema = z.object({
+export const CompanyAdminUpdateSchema = z.object({
      params: z.object({
           id: z.string().uuid("Érvénytelen admin azonosító")
      }),
