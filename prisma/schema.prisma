@@ -316,7 +316,9 @@ model Notification {
   error  String? // Hibaüzenet tárolása, ha nem sikerült
   sentAt DateTime?
 
-  createdAt DateTime @default(now())
+  isArchived Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
 }
 
 model AuditLog {
