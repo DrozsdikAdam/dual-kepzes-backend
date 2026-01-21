@@ -105,6 +105,7 @@ export const getUserNewsById = async (req: Request, res: Response) => {
 export const getAdminNews = async (req: Request, res: Response) => {
      try {
           const news = await prisma.news.findMany({
+               where: { isArchived: false },
                orderBy: {
                     createdAt: "desc"
                },

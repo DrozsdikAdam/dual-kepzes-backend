@@ -7,7 +7,7 @@ const basePrisma = globalForPrisma.prisma || new PrismaClient();
 const softDeleteModels = [
     "User", "StudentProfile", "CompanyEmployee", "Company",
     "Position", "Tag", "Application", "DualPartnership",
-    "Document", "LogbookEntry"
+    "Document", "LogbookEntry", "News"
 ];
 
 const prisma = basePrisma.$extends({
