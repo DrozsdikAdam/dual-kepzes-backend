@@ -127,7 +127,7 @@ export const deleteNotification = async (req: Request, res: Response) => {
 
           return res.status(200).json({ message: "Értesítés törölve." })
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az értesítás törlésekor." })
+          return res.status(500).json({ message: "Hiba az értesítés törlésekor." })
      }
 }
 
@@ -156,7 +156,7 @@ export const archiveNotification = async (req: Request, res: Response) => {
 
           return res.status(200).json({ message: "Értesítés archiválva." })
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az archibált értesítések lekérésekor." })
+          return res.status(500).json({ message: "Hiba az archivált értesítések lekérésekor." })
      }
 }
 
@@ -175,7 +175,7 @@ export const getArchivedNotifications = async (req: Request, res: Response) => {
 
           return res.status(200).json(notifications)
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az archivált értesítések lekérdezésekor." })
+          return res.status(500).json({ message: "Hiba az archivált értesítések lekérésekor." })
      }
 }
 
