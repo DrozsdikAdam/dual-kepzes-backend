@@ -9,7 +9,7 @@ import {
      updateMeCompanyAdmin,
      deleteMeCompanyAdmin
 } from "../controllers/companyAdminController"
-import { companyAdminUpdateSchema } from "../schemas/companyAdminSchema"
+import { CompanyAdminUpdateSchema } from "../schemas/companyAdminSchema"
 import { authenticateToken } from "../middlewares/authMiddleware"
 
 const router = Router()
@@ -17,14 +17,14 @@ const router = Router()
 router.use(authenticateToken)
 
 router.get("/me", getMeCompanyAdmin)
-router.patch("/me", validate(companyAdminUpdateSchema), updateMeCompanyAdmin)
+router.patch("/me", validate(CompanyAdminUpdateSchema), updateMeCompanyAdmin)
 router.delete("/me", deleteMeCompanyAdmin)
 
 router.get("/", getCompanyAdmins)
 
 router.get("/:id", getCompanyAdminById)
 
-router.patch("/:id", validate(companyAdminUpdateSchema), updateCompanyAdminById)
+router.patch("/:id", validate(CompanyAdminUpdateSchema), updateCompanyAdminById)
 
 router.delete("/:id", deleteCompanyAdmin)
 

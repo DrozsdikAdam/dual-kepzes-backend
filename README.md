@@ -2,16 +2,41 @@
 
 Ez a repository tartalmazza a Duális Képzés rendszer backend API-ját. Az alkalmazás Node.js környezetben, Express keretrendszerrel, TypeScript nyelven íródott, PostgreSQL adatbázist használ Prisma ORM-mel, és Zod könyvtárat a validációhoz.
 
-## Technológiai Stack
+## Technológia Stack
 
-*   **Runtime:** Node.js
-*   **Nyelv:** TypeScript
-*   **Keretrendszer:** Express.js
-*   **Adatbázis:** PostgreSQL
-*   **ORM:** Prisma
-*   **Validáció:** Zod
-*   **Autentikáció:** JWT (JSON Web Token) + bcryptjs
-*   **Biztonság:** Helmet, Cors, Rate Limiting
+- **Backend Keretrendszer**: [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/)
+- **Nyelv**: [TypeScript](https://www.typescriptlang.org/)
+- **Adatbázis**: [PostgreSQL](https://www.postgresql.org/)
+- **ORM**: [Prisma](https://www.prisma.io/)
+- **Validáció**: [Zod](https://zod.dev/)
+- **Autentikáció**: [JWT](https://jwt.io/) + [Bcrypt](https://www.npmjs.com/package/bcryptjs)
+- **Email Küldés**: [Nodemailer](https://nodemailer.com/) (Fejlesztéshez: [Mailtrap](https://mailtrap.io/))
+- **Egyéb**:
+    - [BullMQ](https://docs.bullmq.io/) (Háttérfolyamatok)
+    - [Helmet](https://helmetjs.github.io/) (Biztonság)
+    - [Morgan](https://www.npmjs.com/package/morgan) / Custom Logger (Naplózás)
+
+## Projekt Struktúra
+
+A projekt a következő struktúrát követi:
+
+- `src/config`: Konfigurációs fájlok (Adatbázis, Redis, Email).
+- `src/controllers`: Üzleti logika és kérés kezelés.
+- `src/middlewares`: Express middleware-ek (Auth, Validáció, Error handling).
+- `src/routes`: API végpontok definíciói.
+- `src/schemas`: Zod validációs sémák.
+- `src/utils`: Segédfüggvények (Logger, Auth, Mappers).
+- `prisma`: Adatbázis séma és migrációk.
+
+## Legutóbbi Változtatások (Refactoring)
+
+- **Egységes Csomagolás**: A `src/utils/mappers.ts` és `src/utils/auth.ts` refaktorálva lett a szigorúbb típusosság érdekében.
+- **API Végpontok**: 
+    - Az entitás frissítések egységesen `PATCH` metódust használnak (korábban vegyes `PUT`/`PATCH` volt).
+    - A route fájlok nevei és importjai egységesítve lettek.
+- **Sémák**: A validációs sémák elnevezései PascalCase konvencióra lettek átállítva (pl. `companyAdminUpdateSchema` -> `CompanyAdminUpdateSchema`), igazodva a többi sémához.
+- **Hibakezelés**: A `newsController`-ben és más helyeken javítottuk a hibák naplózását (`console.error`), hogy a szerver oldali hibák könnyebben nyomon követhetőek legyenek.
+- **Middleware**: Az `authMiddleware.ts` mostantól statikus importot használ a Prisma klienshez a jobb teljesítmény és kódminőség érdekében.
 
 ## Telepítés és Konfiguráció
 
@@ -250,7 +275,16 @@ A beérkező adatok szigorú típus- és formátumellenőrzésen esnek át a `va
 *   **Formátum:** Email címek, URL-ek, Dátumok és Irányítószámok (4 számjegyű magyar formátum) ellenőrzése.
 *   **Biztonság:** Jelszóerősség (min. 12 karakter, vegyes karaktertípusok) kikényszerítése.
 
-## Hibakezelés
+## Email Szolgáltatás
 
+A rendszer **Nodemailer**-t használ az email küldéshez. Fejlesztői környezetben a **Mailtrap** szolgáltatást használjuk a kimenő levelek tesztelésére, így azok nem kerülnek kiküldésre valós email címekre.
+
+- **Konfiguráció**: `src/config/mailer.ts`
+- **Beállítások**: A kapcsolat adatai (host, port, auth) a Nodemailer transport-on keresztül vannak beállítva.
+- **Használat**: A `transporter` objektum importálásával küldhetőek emailek az alkalmazás bármely pontjáról.
+
+---
+
+## Hibakezelés és Naplózás
 Az alkalmazás központosított hibakezelést használ (`errorMiddleware.ts`).
 Minden hiba egységes JSON formátumban tér vissza.

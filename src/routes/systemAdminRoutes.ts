@@ -9,7 +9,7 @@ import {
      updateMeSystemAdmin,
      deleteMeSystemAdmin
 } from "../controllers/systemAdminController"
-import { systemAdminUpdateSchema } from "../schemas/systemAdminSchema"
+import { SystemAdminUpdateSchema } from "../schemas/systemAdminSchema"
 import { authenticateToken } from "../middlewares/authMiddleware"
 
 const router = Router()
@@ -17,14 +17,14 @@ const router = Router()
 router.use(authenticateToken)
 
 router.get("/me", getMeSystemAdmin)
-router.patch("/me", validate(systemAdminUpdateSchema), updateMeSystemAdmin)
+router.patch("/me", validate(SystemAdminUpdateSchema), updateMeSystemAdmin)
 router.delete("/me", deleteMeSystemAdmin)
 
 router.get("/", getSystemAdmins)
 
 router.get("/:id", getSystemAdminById)
 
-router.patch("/:id", validate(systemAdminUpdateSchema), updateSystemAdminById)
+router.patch("/:id", validate(SystemAdminUpdateSchema), updateSystemAdminById)
 
 router.delete("/:id", deleteSystemAdmin)
 

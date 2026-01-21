@@ -52,6 +52,7 @@ export const createNews = async (req: Request, res: Response) => {
           return res.status(201).json({ message: "Hír sikeresen létrehozva.", news })
 
      } catch (error) {
+          console.error("Create News Error:", error);
           return res.status(500).json({ message: "Hiba a hír létrehozásakor." })
      }
 }
@@ -78,6 +79,7 @@ export const getUserNews = async (req: Request, res: Response) => {
 
           return res.status(200).json({ news: filterNews })
      } catch (error) {
+          console.error("Get Admin News Error:", error);
           return res.status(500).json({ message: "Hiba a hírek lekérdezésekor." })
      }
 }
@@ -112,6 +114,7 @@ export const getAdminNews = async (req: Request, res: Response) => {
 
           return res.status(200).json({ news })
      } catch (error) {
+          console.error("Get Admin News Error:", error);
           return res.status(500).json({ message: "Hiba a hírek lekérdezésekor." })
      }
 }
@@ -229,6 +232,7 @@ export const updateNews = async (req: Request, res: Response) => {
 
           return res.status(200).json({ message: "Hír sikeresen frissítve.", news })
      } catch (error) {
+          console.error("Update News Error:", error);
           return res.status(500).json({ message: "Hiba a hír frissítésekor." })
      }
 }
@@ -265,6 +269,7 @@ export const deleteNews = async (req: Request, res: Response) => {
 
           return res.status(200).json({ message: "Hír sikeresen törölve lett." })
      } catch (error) {
+          console.error("Delete News Error:", error);
           return res.status(500).json({ message: "Hiba a hír törlésekor." })
      }
 }

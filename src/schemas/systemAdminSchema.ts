@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const systemAdminUpdateSchema = z.object({
+export const SystemAdminUpdateSchema = z.object({
      params: z.object({
           id: z.string().uuid("Érvénytelen rendszeradmin azonosító")
      }),

@@ -1,5 +1,6 @@
 import app from "./app";
 import dotenv from "dotenv";
+import "./services/emailWorker";
 
 dotenv.config();
 
