@@ -19,10 +19,6 @@ const router = Router();
 
 router.use(authenticateToken);
 
-// User routes
-router.get("/", getUserNews);
-router.get("/:id", getUserNewsById);
-
 // Admin routes
 router.post("/admin", validate(CreateNewsSchema), createNews);
 router.get("/admin", getAdminNews);
@@ -32,5 +28,9 @@ router.patch("/admin/:id", validate(UpdateNewsSchema), updateNews);
 router.patch("/admin/:id/archive", archiveNews);
 router.patch("/admin/:id/unarchive", unarchiveNews);
 router.delete("/admin/:id", deleteNews);
+
+// User routes
+router.get("/", getUserNews);
+router.get("/:id", getUserNewsById);
 
 export default router;
