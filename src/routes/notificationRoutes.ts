@@ -9,7 +9,8 @@ import {
      archiveNotification,
      getArchivedNotifications,
      unarchiveNotification,
-     createNotification
+     createNotification,
+     getUnreadNotificationsCount
 } from "../controllers/notificationController";
 
 const router = Router();
@@ -20,6 +21,7 @@ router.use(authenticateToken); // Minden értesítés route védett
 router.get("/", getNotifications); // Olvasatlan/Aktív értesítések
 router.get("/archived", getArchivedNotifications); // Archiváltak
 router.get("/:id", getNotificationById);
+router.get("/unread-count", getUnreadNotificationsCount);
 
 // Műveletek
 router.put("/read-all", markAllAsRead); // Összes olvasottnak jelölése

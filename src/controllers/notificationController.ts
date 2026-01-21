@@ -238,3 +238,20 @@ export const createNotification = async (req: Request, res: Response) => {
           return res.status(500).json({ message: "Hiba az értesítés létrehozásakor." })
      }
 }
+
+export const getUnreadNotificationsCount = async (req: Request, res: Response) => {
+     try {
+          const userId = req.user?.userId
+          if (!userId) {
+               return res.status(401).json({ message: "Nincs jogosultságod." })
+          }
+
+          const unreadNotificationsCount = await prisma.notification.count({
+               where: { userId: userId, isRead: false, isArchived: false }
+          })
+
+          return res.status(200).json({ unreadNotificationsCount })
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba az olvasatlan értesítések számának lekérésekor." })
+     }
+}
