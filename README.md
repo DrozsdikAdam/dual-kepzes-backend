@@ -190,6 +190,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `GET` | `/` | Olvasatlan/Aktív értesítések. |
 | `GET` | `/archived` | Archivált értesítések. |
 | `GET` | `/:id` | Értesítés részletei. |
+| `GET` | `/unread-count` | Olvasatlan értesítések száma. |
 | `POST` | `/` | Új értesítés létrehozása. |
 | `PUT` | `/read-all` | Minden megjelölése olvasottként. |
 | `PUT` | `/:id/read` | Egy elem olvasottnak jelölése. |
