@@ -187,10 +187,14 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
-| `GET` | `/` | Olvasatlan értesítések. |
+| `GET` | `/` | Olvasatlan/Aktív értesítések. |
 | `GET` | `/archived` | Archivált értesítések. |
+| `GET` | `/:id` | Értesítés részletei. |
+| `POST` | `/` | Új értesítés létrehozása. |
 | `PUT` | `/read-all` | Minden megjelölése olvasottként. |
 | `PUT` | `/:id/read` | Egy elem olvasottnak jelölése. |
+| `PUT` | `/:id/archive` | Értesítés archiválása. |
+| `PUT` | `/:id/unarchive` | Értesítés visszaállítása. |
 | `DELETE` | `/:id` | Értesítés törlése. |
 
 ### 📊 Statisztika (`/api/stats`)
