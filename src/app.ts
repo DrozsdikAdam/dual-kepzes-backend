@@ -20,6 +20,7 @@ import companyRoutes from "./routes/companyRoutes";
 import employeeRoutes from "./routes/employeeRoutes";
 import applicationRoutes from "./routes/applicationRoutes";
 import newsRoutes from "./routes/newsRoutes";
+import notificationRoutes from "./routes/notificationRoutes";
 
 const app: Application = express();
 app.set("trust proxy", 1);
@@ -51,6 +52,9 @@ app.use("/api/news", newsRoutes);
 
 //application endpoints
 app.use("/api/applications", applicationRoutes);
+
+//notification endpoints
+app.use("/api/notifications", notificationRoutes);
 
 // Test Route
 app.get("/", (req: Request, res: Response) => {

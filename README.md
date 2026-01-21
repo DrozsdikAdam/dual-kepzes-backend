@@ -1,290 +1,269 @@
 # Duális Képzés Backend API
 
-Ez a repository tartalmazza a Duális Képzés rendszer backend API-ját. Az alkalmazás Node.js környezetben, Express keretrendszerrel, TypeScript nyelven íródott, PostgreSQL adatbázist használ Prisma ORM-mel, és Zod könyvtárat a validációhoz.
+Ez a repository a Duális Képzés rendszer backend szolgáltatását tartalmazza. Az alkalmazás célja a hallgatók, cégek, egyetemi szereplők és a duális képzés adminisztrációjának támogatása egy robusztus, biztonságos és skálázható REST API-n keresztül.
 
-## Technológia Stack
+## 🛠 Technológia Stack
 
-- **Backend Keretrendszer**: [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/)
-- **Nyelv**: [TypeScript](https://www.typescriptlang.org/)
-- **Adatbázis**: [PostgreSQL](https://www.postgresql.org/)
-- **ORM**: [Prisma](https://www.prisma.io/)
-- **Validáció**: [Zod](https://zod.dev/)
-- **Autentikáció**: [JWT](https://jwt.io/) + [Bcrypt](https://www.npmjs.com/package/bcryptjs)
-- **Email Küldés**: [Nodemailer](https://nodemailer.com/) (Fejlesztéshez: [Mailtrap](https://mailtrap.io/))
-- **Egyéb**:
-    - [BullMQ](https://docs.bullmq.io/) (Háttérfolyamatok)
-    - [Helmet](https://helmetjs.github.io/) (Biztonság)
-    - [Morgan](https://www.npmjs.com/package/morgan) / Custom Logger (Naplózás)
+A projekt modern, iparági sztenderd technológiákra épül:
 
-## Projekt Struktúra
+-   **Runtime**: [Node.js](https://nodejs.org/) (v18+) - Skálázható, eseményvezérelt futtatókörnyezet a szerveroldali logika végrehajtásához.
+-   **Nyelv**: [TypeScript](https://www.typescriptlang.org/) - A JavaScript típusbiztos felülhalmaza, amely növeli a kód megbízhatóságát és karbantarthatóságát.
+-   **Keretrendszer**: [Express](https://expressjs.com/) - Minimalista webes keretrendszer a REST API végpontok és a HTTP kérések hatékony kezelésére.
+-   **Adatbázis**: [PostgreSQL](https://www.postgresql.org/) - Megbízható, nyílt forráskódú relációs adatbázis-kezelő a strukturált adatok tárolására.
+-   **ORM**: [Prisma](https://www.prisma.io/) - Modern adatbázis-hozzáférési réteg, amely egyszerűsíti az adatmodellezést és a lekérdezéseket.
+-   **Validáció**: [Zod](https://zod.dev/) - TypeScript-first séma deklarációs és validációs könyvtár a bejövő adatok ellenőrzésére.
+-   **Autentikáció**: JSON Web Token (JWT) + Bcrypt - Biztonságos token alapú azonosítás és jelszóhashelés a felhasználói fiókok védelmére.
+-   **Háttérfolyamatok**: [BullMQ](https://docs.bullmq.io/) (Redis alapú queue) - Nagy teljesítményű üzenetsor-kezelő az aszinkron feladatok és háttérműveletek megbízható végrehajtásához.
+-   **Email**: Nodemailer (SMTP) - Moduláris email küldő szolgáltatás a rendszerüzenetek és értesítések kézbesítésére.
 
-A projekt a következő struktúrát követi:
+## 🚀 Előfeltételek
 
-- `src/config`: Konfigurációs fájlok (Adatbázis, Redis, Email).
-- `src/controllers`: Üzleti logika és kérés kezelés.
-- `src/middlewares`: Express middleware-ek (Auth, Validáció, Error handling).
-- `src/routes`: API végpontok definíciói.
-- `src/schemas`: Zod validációs sémák.
-- `src/utils`: Segédfüggvények (Logger, Auth, Mappers).
-- `prisma`: Adatbázis séma és migrációk.
+A fejlesztői környezet futtatásához szükséges szoftverek:
 
-## Legutóbbi Változtatások (Refactoring)
+*   **Node.js**: Legalább v18.x verzió.
+*   **npm**: Csomagkezelő (általában a Node.js része).
+*   **PostgreSQL**: Helyi adatbázis szerver vagy Docker konténer.
+*   **Redis**: Opcionális, de ajánlott a háttérfolyamatokhoz (BullMQ).
 
-- **Egységes Csomagolás**: A `src/utils/mappers.ts` és `src/utils/auth.ts` refaktorálva lett a szigorúbb típusosság érdekében.
-- **API Végpontok**: 
-    - Az entitás frissítések egységesen `PATCH` metódust használnak (korábban vegyes `PUT`/`PATCH` volt).
-    - A route fájlok nevei és importjai egységesítve lettek.
-- **Sémák**: A validációs sémák elnevezései PascalCase konvencióra lettek átállítva (pl. `companyAdminUpdateSchema` -> `CompanyAdminUpdateSchema`), igazodva a többi sémához.
-- **Hibakezelés**: A `newsController`-ben és más helyeken javítottuk a hibák naplózását (`console.error`), hogy a szerver oldali hibák könnyebben nyomon követhetőek legyenek.
-- **Middleware**: Az `authMiddleware.ts` mostantól statikus importot használ a Prisma klienshez a jobb teljesítmény és kódminőség érdekében.
+## 📥 Telepítés és Indítás
 
-## Telepítés és Konfiguráció
+1.  **Repository klónozása**
+    ```bash
+    git clone https://github.com/DrozsdikAdam/dual-kepzes-backend.git
+    cd dual-kepzes-backend
+    ```
 
-Kövesd az alábbi lépéseket a fejlesztői környezet beállításához.
+2.  **Függőségek telepítése**
+    ```bash
+    npm install
+    ```
 
-### Repository klónozása
+3.  **Környezeti változók beállítása**
+    Másold a példa konfigurációt (vagy hozd létre manuálisan) egy `.env` fájlba a gyökérkönyvtárban:
+    
+    ```env
+    # Szerver
+    PORT=3000
+    NODE_ENV="development"
 
-```bash
-git clone https://github.com/DrozsdikAdam/dual-kepzes-backend
-cd dual-kepzes-backend
-npm install
+    # Adatbázis
+    DATABASE_URL="postgresql://user:password@localhost:5432/dual_db?schema=public"
+    # Ha szükséges (pl. Supabase): DIRECT_URL="..."
+
+    # Biztonság
+    JWT_SECRET="szuper_titkos_kulcs_min_32_karakter"
+
+    # Email (Mailtrap példa)
+    MAILTRAP_USER="your_user"
+    MAILTRAP_PASS="your_pass"
+
+    # Redis (Opcionális, BullMQ-hoz)
+    REDIS_HOST="localhost"
+    REDIS_PORT=6379
+    ```
+
+4.  **Adatbázis szinkronizáció**
+    Hozd létre a táblákat a Prisma séma alapján:
+    ```bash
+    npm run prisma:push
+    ```
+
+5.  **Szerver indítása (Fejlesztői mód)**
+    ```bash
+    npm run dev
+    ```
+    A szerver elindul a `http://localhost:3000` címen.
+
+## 📜 Elérhető Szkriptek
+
+A `package.json`-ben definiált főbb parancsok:
+
+| Parancs | Leírás |
+| :--- | :--- |
+| `npm run dev` | Fejlesztői szerver indítása watch módban (`nodemon` + `tsx`). |
+| `npm start` | A lefordított (`dist`) kód futtatása éles környezetben. |
+| `npm run build` | TypeScript kód fordítása JavaScriptre a `dist` mappába. |
+| `npm run prisma:push` | Adatbázis séma szinkronizálása a `schema.prisma` alapján (fejlesztéshez). |
+| `npm run prisma:format` | Prisma fájlok formázása. |
+| `npm run prisma:studio` | Adatbázis GUI megnyitása a böngészőben. |
+| `npx prisma db seed` | Adatbázis feltöltése tesztadatokkal (`prisma/seed.ts`). |
+
+## 🏗 Projekt Struktúra
+
+```
+src/
+├── config/         # App konfigurációk (DB, Redis, Email)
+├── controllers/    # Üzleti logika (Request/Response kezelés)
+├── middlewares/    # Express middleware-ek (Auth, Validáció, RateLimit)
+├── routes/         # API végpontok definíciói
+├── schemas/        # Zod validációs definíciók
+├── services/       # Komplex üzleti logika (opcionális réteg)
+├── utils/          # Segédfüggvények (Logger, Token, Mapper)
+└── app.ts          # Express App inicializálás
+prisma/
+├── schema.prisma   # Adatbázis modellek
+└── seed.ts         # Kezdeti adatfeltöltő szkript
 ```
 
-### Környezeti Változók (.env)
+## 🔌 API Dokumentáció
 
-Hozd létre a `.env` fájlt a gyökérkönyvtárban az alábbi tartalommal:
+Minden végpont a `/api` prefix alatt érhető el. A legtöbb végponthoz érvényes `Authorization: Bearer <token>` fejléc szükséges.
 
-```env
-# Szerver konfiguráció
-PORT=3000
+### 🔐 Autentikáció (`/api/auth`)
 
-# Adatbázis kapcsolat (PostgreSQL connection string)
-DATABASE_URL="postgresql://felhasznalo:jelszo@localhost:5432/adatbazis_neve?schema=public"
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `POST` | `/register` | Új felhasználó regisztrációja. |
+| `POST` | `/login` | Bejelentkezés és JWT token igénylése. |
 
-# Ha Supabase-t vagy tranzakciós poolert használsz (Opcionális)
-DIRECT_URL="postgresql://felhasznalo:jelszo@localhost:5432/adatbazis_neve?schema=public"
+### 👤 Hallgatók (`/api/students`)
 
-# JWT Titkos kulcs (Aláíráshoz)
-JWT_SECRET="ide_irj_egy_eros_titkos_kulcsot"
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/` | Összes hallgató listázása. |
+| `GET` | `/me` | Saját hallgatói profil lekérése. |
+| `PATCH` | `/me` | Saját profil frissítése. |
+| `DELETE` | `/me` | Saját profil törlése. |
+| `GET` | `/:id` | Hallgató lekérése ID alapján. |
+| `PATCH` | `/:id` | Hallgató módosítása (Admin). |
+| `DELETE` | `/:id` | Hallgató törlése (Soft delete). |
 
-# Környezet (development / production)
-NODE_ENV="development"
-```
+### 🏢 Cégek (`/api/companies`)
 
-## Biztonság és Middleware-ek
+A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 
-Az alkalmazás több rétegű védelmet használ a támadások ellen és a stabil működés érdekében.
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/` | Aktív cégek listázása. |
+| `POST` | `/` | Új cég létrehozása. |
+| `GET` | `/inactive` | Inaktív cégek listázása. |
+| `GET` | `/:id` | Cég részletei. |
+| `PATCH` | `/:id` | Cég adatainak frissítése. |
+| `DELETE` | `/:id` | Cég törlése (Soft delete). |
+| `PATCH` | `/:id/reactivate` | Cég újraaktiválása. |
+| `PATCH` | `/:id/deactivate` | Cég inaktiválása. |
 
-### 1. Rate Limiting (Forgalomkorlátozás)
+### 💼 Állások / Pozíciók (`/api/jobs/positions`)
 
-A `rateLimitMiddleware.ts` alapján kétféle korlátozás van érvényben a túlterheléses támadások (DDoS) és a brute-force próbálkozások ellen:
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/` | Minden aktív pozíció listázása. |
+| `POST` | `/` | Új pozíció létrehozása. |
+| `GET` | `/:id` | Pozíció részletei. |
+| `PATCH` | `/:id` | Pozíció frissítése. |
+| `DELETE` | `/:id` | Pozíció törlése. |
+| `PATCH` | `/:id/deactivate`| Pozíció inaktiválása. |
+| `GET` | `/company/:companyId` | Egy adott cég pozíciói. |
 
-*   **Autentikációs végpontok (`/api/auth/*`):** Szigorú limit.
-    *   Időablak: 15 perc.
-    *   Maximum kérés: 5 db / IP.
-    *   Cél: Jelszófeltörés megakadályozása.
-*   **Általános API végpontok (`/api/*`):** Enyhébb limit.
-    *   Időablak: 10 perc.
-    *   Maximum kérés: 100 db / IP.
-
-### 2. HTTP Header Biztonság
-
-A `helmet` middleware gondoskodik a biztonsági HTTP fejlécek (pl. X-XSS-Protection, Strict-Transport-Security) beállításáról.
-
-### 3. Jogosultságkezelés (RBAC)
-
-Az `authMiddleware.ts` biztosítja a szerepkör alapú hozzáférést.
-
-*   `authenticateToken`: Ellenőrzi a JWT érvényességét, valamint az adatbázisban ellenőrzi, hogy a felhasználó létezik-e, aktív-e (`isActive: true`) és nincs-e törölve (`deletedAt: null`).
-*   `requireRole`: Middleware gyár, amely ellenőrzi, hogy a felhasználó rendelkezik-e a szükséges szerepkörrel (pl. `isStudent`, `isMentor`, `isStaff`).
-
-## Autentikáció
-
-A rendszer robusztus regisztrációs és bejelentkezési folyamattal rendelkezik.
-
-### Regisztráció (`POST /api/auth/register`)
-
-A regisztráció során a rendszer adatbázis tranzakciót használ. Ez biztosítja, hogy a `User` (alapadatok) és a szerepkör-specifikus profil (pl. `StudentProfile`, `CompanyEmployee`) egyszerre jöjjön létre.
-
-*   **Validáció:** Zod séma ellenőrzi a jelszó erősségét és a kötelező mezőket.
-*   **Szerepkör validáció:** Mentor és Cégadminisztrátor regisztrációjakor kötelező a `companyId` megadása.
-*   **Email ellenőrzés:** Egyedi email cím kényszerítése.
-*   **Jelszó:** Bcrypt hashelés.
-
-### Bejelentkezés (`POST /api/auth/login`)
-
-Sikeres azonosítás esetén a rendszer JWT tokent állít ki, amely tartalmazza a felhasználó azonosítóját (`userId`) és szerepkörét (`role`).
-
-## API Modulok
-
-A végpontok logikai modulokra vannak bontva. Zárójelben a bázis útvonal található.
-
-### 1. Hallgatói Modul (`/api/students`)
-
-A hallgatók kezelése, profilmódosítás és törlés.
+### 📝 Jelentkezések (`/api/applications`)
 
 | Metódus | Végpont | Leírás | Jogosultság |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/` | Összes hallgató listázása. | Authenticated |
-| `GET` | `/me` | Saját profil lekérése. | Student |
-| `PUT` | `/me` | Saját profil frissítése. | Student |
-| `DELETE` | `/me` | Saját profil törlése (Soft Delete). | Student |
-| `GET` | `/:id` | Hallgató lekérése ID alapján. | Authenticated |
-| `PUT` | `/:id` | Hallgató módosítása ID alapján. | Authenticated |
-| `DELETE` | `/:id` | Hallgató törlése ID alapján (Soft Delete). | Authenticated |
-
-### 2. Cég Modul (`/api/companies`)
-
-Cégek teljes körű kezelése (CRUD), státuszmenedzsment és több telephely támogatása.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Összes cég listázása. | Authenticated |
-| `POST` | `/` | Új cég létrehozása. | Authenticated |
-| `GET` | `/inactive` | Inaktív (`isActive: false`) cégek listázása. | Authenticated |
-| `GET` | `/:id` | Cég részletei. | Authenticated |
-| `PATCH` | `/:id` | Cég adatainak frissítése. | Authenticated |
-| `DELETE` | `/:id` | Cég törlése (Soft Delete). | Authenticated |
-| `PATCH` | `/:id/reactivate` | Cég újraaktiválása (`isActive: true`). | Authenticated |
-| `PATCH` | `/:id/deactivate` | Cég inaktiválása (`isActive: false`). | Authenticated |
-
-### 3. Állásportál Modul (`/api/jobs`)
-
-Pozíciók (álláshirdetések) kezelése. A végpontok a `/positions` alútvonalon érhetőek el. A rendszer támogatja a nemzetközi munkavégzési helyszíneket is (opcionális ország mező).
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/positions` | Aktív pozíciók listázása. | Authenticated |
-| `GET` | `/positions/company/:companyId` | Adott cég pozícióinak listázása. | Authenticated |
-| `POST` | `/positions` | Új pozíció meghirdetése. | Authenticated |
-| `GET` | `/positions/:id` | Pozíció részletei. | Authenticated |
-| `PATCH` | `/positions/:id` | Pozíció frissítése. | Authenticated |
-| `DELETE` | `/positions/:id` | Pozíció törlése (Soft Delete). | Authenticated |
-| `PATCH` | `/positions/:id/deactivate` | Pozíció inaktiválása. | Authenticated |
-
-### 4. Munkavállalói Modul (`/api/employees`)
-
-A cégek munkavállalóinak (pl. mentorok, kapcsolattartók) kezelése.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Céghez tartozó munkavállalók listázása. | Authenticated |
-| `GET` | `/me` | Saját profil lekérése. | Authenticated |
-| `PUT` | `/me` | Saját profil frissítése. | Authenticated |
-| `DELETE` | `/me` | Saját profil törlése. | Authenticated |
-| `GET` | `/:id` | Munkavállaló lekérése ID alapján. | Authenticated |
-| `PUT` | `/:id` | Munkavállaló frissítése. | Authenticated |
-| `DELETE` | `/:id` | Munkavállaló törlése. | Authenticated |
-
-### 5. Jelentkezés Modul (`/api/applications`)
-
-A hallgatók jelentkezéseinek kezelése a pozíciókra.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/` | Jelentkezés egy pozícióra. | Student |
-| `GET` | `/` | Saját jelentkezések listázása. | Student |
+| `POST` | `/` | Jelentkezés leadása. | Student |
+| `GET` | `/` | Saját jelentkezések megtekintése. | Student |
 | `PATCH` | `/:id/retract` | Jelentkezés visszavonása. | Student |
-| `GET` | `/company` | Céghez érkezett jelentkezések listázása. | Company Employee |
-| `PATCH` | `/company/:id` | Értékelés frissítése. | Company Employee |
-| `PATCH` | `/company/:id/evaluate` | Jelentkezés értékelése. | Company Employee |
-| `GET` | `/admin` | Összes jelentkezés listázása. | System Admin |
-| `GET` | `/admin/:id` | Jelentkezés részletei. | System Admin |
-| `PATCH` | `/admin/:id` | Jelentkezés adminisztrátori módosítása. | System Admin |
+| `GET` | `/company` | Céghez érkezett jelentkezések. | Company |
+| `PATCH` | `/company/:id/evaluate` | Jelentkezés értékelése. | Company |
+| `PATCH` | `/company/:id` | Értékelés módosítása. | Company |
+| `GET` | `/admin` | Összes jelentkezés (Admin nézet). | Admin |
+| `GET` | `/admin/:id` | Jelentkezés részletei. | Admin |
+| `PATCH` | `/admin/:id` | Jelentkezés módosítása. | Admin |
 
-### 6. Statisztika Modul (`/api/stats`)
+### 📰 Hírek (`/api/news`)
 
-Rendszerszintű statisztikák.
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/` | Hírek listázása (hallgatóknak/felhasználóknak). |
+| `GET` | `/:id` | Hír részletei. |
+| `POST` | `/admin` | Hír létrehozása (Admin). |
+| `GET` | `/admin` | Hírek kezelése (Admin lista). |
+| `GET` | `/admin/archived` | Archivált hírek. |
+| `PATCH` | `/admin/:id` | Hír szerkesztése. |
+| `PATCH` | `/admin/:id/archive` | Hír archiválása. |
+| `PATCH` | `/admin/:id/unarchive` | Hír visszaállítása. |
+| `DELETE` | `/admin/:id` | Hír végleges törlése vagy soft delete. |
 
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Rendszer statisztikák lekérése. | Authenticated |
+### 🔔 Értesítések (`/api/notifications`)
 
-### 7. Hírek Modul (`/api/news`)
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/` | Olvasatlan értesítések. |
+| `GET` | `/archived` | Archivált értesítések. |
+| `PUT` | `/read-all` | Minden megjelölése olvasottként. |
+| `PUT` | `/:id/read` | Egy elem olvasottnak jelölése. |
+| `DELETE` | `/:id` | Értesítés törlése. |
 
-Hírek és közlemények kezelése. A felhasználók csak a rájuk vonatkozó aktív híreket látják.
+### 📊 Statisztika (`/api/stats`)
 
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Aktív, releváns hírek listázása. | Authenticated |
-| `GET` | `/:id` | Hír részletei. | Authenticated |
-| `POST` | `/admin` | Új hír létrehozása. | System Admin |
-| `GET` | `/admin` | Összes hír listázása (admin nézet). | System Admin |
-| `GET` | `/admin/archived` | Archivált hírek listázása. | System Admin |
-| `GET` | `/admin/:id` | Hír részletei (admin nézet). | System Admin |
-| `PATCH` | `/admin/:id` | Hír módosítása. | System Admin |
-| `PATCH` | `/admin/:id/archive` | Hír archiválása. | System Admin |
-| `PATCH` | `/admin/:id/unarchive` | Hír visszavonása az archívumból. | System Admin |
-| `DELETE` | `/admin/:id` | Hír törlése (Soft Delete). | System Admin |
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/` | Rendszerszintű statisztikák lekérése. |
 
-### 8. Adminisztrációs Modulok
+### 🏢 Cég Adminisztrátorok (`/api/company-admins`)
 
-A rendszer adminisztrátori szintjei.
+A cégek adminisztrátorainak kezelése.
 
-#### Rendszer Adminisztrátorok (`/api/system-admins`)
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/` | Összes cégadmin listázása. |
+| `GET` | `/me` | Saját profil lekérése. |
+| `PATCH` | `/me` | Saját profil frissítése. |
+| `DELETE` | `/me` | Saját profil törlése. |
+| `GET` | `/:id` | Cégadmin lekérése ID alapján. |
+| `PATCH` | `/:id` | Adatok frissítése (Admin). |
+| `DELETE` | `/:id` | Cégadmin törlése (Admin). |
 
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Összes rendszeradmin listázása. | Authenticated |
-| `GET` | `/me` | Saját admin profil lekérése. | Authenticated |
-| `PATCH` | `/me` | Saját admin profil frissítése. | Authenticated |
-| `DELETE` | `/me` | Saját admin profil törlése. | Authenticated |
-| `GET` | `/:id` | Rendszeradmin lekérése ID alapján. | Authenticated |
-| `PATCH` | `/:id` | Adatok frissítése. | Authenticated |
-| `DELETE` | `/:id` | Admin törlése. | Authenticated |
+### 👨‍💼 Munkavállalók (`/api/employees`)
 
-#### Cég Adminisztrátorok (`/api/company-admins`)
+Céges munkavállalók (pl. mentorok) kezelése.
 
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Összes cégadmin listázása. | Authenticated |
-| `GET` | `/me` | Saját profil lekérése. | Authenticated |
-| `PATCH` | `/me` | Saját profil frissítése. | Authenticated |
-| `DELETE` | `/me` | Saját profil törlése. | Authenticated |
-| `GET` | `/:id` | Cégadmin lekérése ID alapján. | Authenticated |
-| `PATCH` | `/:id` | Adatok frissítése. | Authenticated |
-| `DELETE` | `/:id` | Cégadmin törlése. | Authenticated |
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/` | Céghez tartozó munkavállalók listázása. |
+| `GET` | `/me` | Saját profil lekérése. |
+| `PATCH` | `/me` | Saját profil frissítése. |
+| `DELETE` | `/me` | Saját profil törlése. |
+| `GET` | `/:id` | Munkavállaló lekérése ID alapján. |
+| `PATCH` | `/:id` | Munkavállaló frissítése (Admin/CompanyAdmin). |
+| `DELETE` | `/:id` | Munkavállaló törlése (Admin/CompanyAdmin). |
 
-#### Egyetemi Felhasználók (`/api/university-users`)
+### 🎓 Egyetemi Felhasználók (`/api/university-users`)
 
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Összes egyetemi felhasználó listázása. | Authenticated |
-| `GET` | `/me` | Saját profil lekérése. | Authenticated |
-| `PATCH` | `/me` | Saját profil frissítése. | Authenticated |
-| `DELETE` | `/me` | Saját profil törlése. | Authenticated |
-| `GET` | `/:id` | Egyetemi felhasználó lekérése ID alapján. | Authenticated |
-| `PATCH` | `/:id` | Adatok frissítése. | Authenticated |
-| `DELETE` | `/:id` | Törlés. | Authenticated |
+Egyetemi kapcsolattartók és adminisztrátorok.
 
-### 9. Egyéb Modulok
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/` | Összes egyetemi felhasználó listázása. |
+| `GET` | `/me` | Saját profil lekérése. |
+| `PATCH` | `/me` | Saját profil frissítése. |
+| `DELETE` | `/me` | Saját profil törlése. |
+| `GET` | `/:id` | Egyetemi felhasználó lekérése ID alapján. |
+| `PATCH` | `/:id` | Adatok frissítése (Admin). |
+| `DELETE` | `/:id` | Törlés (Admin). |
 
-#### Felhasználók (`/api/users`)
+### 🛠 Rendszer Adminisztrátorok (`/api/system-admins`)
 
-Általános felhasználókezelés és inaktív fiókok adminisztrációja.
+A platform üzemeltetői.
 
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/inactive` | Inaktív (`isActive: false`, `deletedAt: null`) felhasználók listázása. | Authenticated |
-| `PATCH` | `/:id/reactivate` | Felhasználó újraaktiválása (`isActive: true`). | Authenticated |
-| `PATCH` | `/:id/deactivate` | Felhasználó inaktiválása (`isActive: false`). | Authenticated |
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/` | Összes rendszeradmin listázása. |
+| `GET` | `/me` | Saját admin profil lekérése. |
+| `PATCH` | `/me` | Saját admin profil frissítése. |
+| `DELETE` | `/me` | Saját admin profil törlése. |
+| `GET` | `/:id` | Rendszeradmin lekérése ID alapján. |
+| `PATCH` | `/:id` | Adatok frissítése (Superadmin). |
+| `DELETE` | `/:id` | Admin törlése (Superadmin). |
 
-## Validáció (Zod)
+### 👥 Felhasználók (`/api/users`)
 
-A beérkező adatok szigorú típus- és formátumellenőrzésen esnek át a `validate` middleware segítségével.
-*   **Formátum:** Email címek, URL-ek, Dátumok és Irányítószámok (4 számjegyű magyar formátum) ellenőrzése.
-*   **Biztonság:** Jelszóerősség (min. 12 karakter, vegyes karaktertípusok) kikényszerítése.
+Általános felhasználókezelés (pl. inaktív fiókok).
 
-## Email Szolgáltatás
-
-A rendszer **Nodemailer**-t használ az email küldéshez. Fejlesztői környezetben a **Mailtrap** szolgáltatást használjuk a kimenő levelek tesztelésére, így azok nem kerülnek kiküldésre valós email címekre.
-
-- **Konfiguráció**: `src/config/mailer.ts`
-- **Beállítások**: A kapcsolat adatai (host, port, auth) a Nodemailer transport-on keresztül vannak beállítva.
-- **Használat**: A `transporter` objektum importálásával küldhetőek emailek az alkalmazás bármely pontjáról.
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/inactive` | Inaktív felhasználók listázása. |
+| `PATCH` | `/:id/reactivate` | Felhasználó visszaállítása. |
+| `PATCH` | `/:id/deactivate` | Felhasználó felfüggesztése. |
 
 ---
-
-## Hibakezelés és Naplózás
-Az alkalmazás központosított hibakezelést használ (`errorMiddleware.ts`).
-Minden hiba egységes JSON formátumban tér vissza.
+**Megjegyzés**: Ez a dokumentáció a projekt jelenlegi állapotát tükrözi. API változtatások esetén kérjük a dokumentáció frissítését.
