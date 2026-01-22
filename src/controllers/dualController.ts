@@ -239,3 +239,85 @@ export const terminatePartnership = async (req: Request, res: Response) => {
         return res.status(500).json({ message: "Hiba történt a a partneri kapcsolat megszüntetésekor." })
     }
 }
+
+export const assignMentor = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { mentorId } = req.body;
+    const userId = req.user!.userId;
+
+    try {
+        const companyId = await getCompanyIdForUser(userId);
+        if (!companyId) {
+            return res.status(403).json({ message: "Nincs jogosultsága mentort hozzárendelni." });
+        }
+
+        const partnership = await prisma.dualPartnership.findFirst({
+            where: { id },
+            select: { status: true, studentId: true }
+        });
+
+        if (!partnership) return res.status(404).json({ message: "Nem található partnerség." });
+
+        const validApplication = await prisma.application.findFirst({
+            where: {
+                studentId: partnership.studentId,
+                status: 'ACCEPTED',
+                position: {
+                    companyId: companyId
+                }
+            }
+        });
+
+        if (!validApplication) {
+            return res.status(403).json({ message: "Ez a partnerség nem a te cégedhez tartozik." });
+        }
+
+        const updated = await prisma.dualPartnership.update({
+            where: { id },
+            data: {
+                mentorId: mentorId,
+                status: PartnershipStatus.PENDING_UNIVERSITY
+            },
+            select: partnershipSelect
+        });
+
+        await logAction(req, {
+            action: "ASSIGN_MENTOR",
+            entity: "DualPartnership",
+            entityId: id,
+            details: { assignedMentorId: mentorId, assignedBy: userId }
+        });
+
+        return res.json(updated);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ message: "Hiba a mentor hozzárendelésekor." });
+    }
+}
+
+export const assignUniversityUser = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { uniEmployeeId } = req.body;
+
+    try {
+        const updated = await prisma.dualPartnership.update({
+            where: { id },
+            data: {
+                uniEmployeeId: uniEmployeeId,
+                status: PartnershipStatus.ACTIVE
+            },
+            select: partnershipSelect
+        });
+
+        await logAction(req, {
+            action: "ASSIGN_UNI_USER",
+            entity: "DualPartnership",
+            entityId: id,
+            details: { assignedUniUserId: uniEmployeeId, assignedBy: req.user!.userId }
+        });
+
+        return res.json(updated);
+    } catch (e) {
+        return res.status(500).json({ message: "Hiba az egyetemi felhasználó hozzárendelésekor." });
+    }
+}
