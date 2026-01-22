@@ -228,3 +228,36 @@ export const deleteSystemAdmin = async (req: Request, res: Response) => {
           return res.status(500).json({ message: "Hiba történt a törlés során." })
      }
 }
+
+// Endpoint a System Admin számára, hogy lássa az összes admint (Rendszer, Cég, Egyetem)
+export const getAllAdminUsers = async (req: Request, res: Response) => {
+     try {
+          const admins = await prisma.user.findMany({
+               where: {
+                    role: {
+                         in: [Role.SYSTEM_ADMIN, Role.COMPANY_ADMIN, Role.UNIVERSITY_USER]
+                    }
+               },
+               select: {
+                    id: true,
+                    email: true,
+                    fullName: true,
+                    phoneNumber: true,
+                    role: true,
+                    isActive: true,
+                    companyEmployee: { select: { company: { select: { name: true } } } }
+               },
+               orderBy: { role: "asc" }
+          })
+
+          await logAction(req, {
+               action: "LIST_ALL_ADMINS",
+               entity: "User",
+               details: { count: admins.length }
+          })
+
+          return res.json(admins)
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba az adminok lekérésekor." })
+     }
+}

@@ -235,6 +235,40 @@ export const getCompanyEmployees = async (req: Request, res: Response) => {
     }
 };
 
+export const getCompanyMentors = async (req: Request, res: Response) => {
+    if (!req.user) return res.status(401).json({ message: "Nincs azonosítva." });
+
+    try {
+        const companyId = await getCompanyIdForUser(req.user.userId);
+
+        if (!companyId || (req.user.role !== "COMPANY_ADMIN")) {
+            return res.status(403).json({ message: "Nincs jogosultságod a lista megtekintéséhez." });
+        }
+
+        const mentors = await prisma.user.findMany({
+            where: {
+                companyEmployee: { companyId: companyId },
+                role: Role.MENTOR
+            },
+            select: userEmployeeSelect,
+            orderBy: { fullName: "asc" }
+        });
+
+        await logAction(req, {
+            action: "VIEW_COMPANY_MENTORS",
+            entity: "User",
+            details: {
+                viewerId: req.user.userId,
+                count: mentors.length
+            }
+        })
+
+        res.json(mentors);
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a mentorok lekérdezése során." });
+    }
+};
+
 export const updateEmployeeById = async (req: Request<{ id: string }, {}, UpdateEmployeeInput>, res: Response) => {
     const userIdToUpdate = req.params.id;
     const { fullName, phoneNumber, jobTitle, isActive } = req.body;
