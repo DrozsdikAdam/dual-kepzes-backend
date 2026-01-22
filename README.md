@@ -163,7 +163,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `GET` | `/` | Saját jelentkezések megtekintése. | Student |
 | `PATCH` | `/:id/retract` | Jelentkezés visszavonása. | Student |
 | `GET` | `/company` | Céghez érkezett jelentkezések. | Company |
-| `PATCH` | `/company/:id/evaluate` | Jelentkezés értékelése. | Company |
+| `PATCH` | `/company/:id/evaluate` | Jelentkezés értékelése. (`ACCEPTED` esetén automatikusan létrejön a partnerség). | Company |
 | `PATCH` | `/company/:id` | Értékelés módosítása. | Company |
 | `GET` | `/admin` | Összes jelentkezés (Admin nézet). | Admin |
 | `GET` | `/admin/:id` | Jelentkezés részletei. | Admin |
@@ -207,6 +207,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 ### 🤝 Duális Partnerkapcsolatok (`/api/partnerships`)
 
 A hallgatók és cégek közötti duális képzési szerződések kezelése.
+A partnerség automatikusan létrejön `PENDING_MENTOR` státusszal, amikor a cég elfogad egy jelentkezést (`ACCEPTED`).
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
