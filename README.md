@@ -241,6 +241,7 @@ Céges munkavállalók (pl. mentorok) kezelése.
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
 | `GET` | `/` | Céghez tartozó munkavállalók listázása. |
+| `GET` | `/mentors` | Csak a mentorok listázása (Cégadminnak). |
 | `GET` | `/me` | Saját profil lekérése. |
 | `PATCH` | `/me` | Saját profil frissítése. |
 | `DELETE` | `/me` | Saját profil törlése. |
@@ -269,6 +270,7 @@ A platform üzemeltetői.
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
 | `GET` | `/` | Összes rendszeradmin listázása. |
+| `GET` | `/admin-users` | Minden admin (Rendszer, Cég, Egyetem) listázása. |
 | `GET` | `/me` | Saját admin profil lekérése. |
 | `PATCH` | `/me` | Saját admin profil frissítése. |
 | `DELETE` | `/me` | Saját admin profil törlése. |
