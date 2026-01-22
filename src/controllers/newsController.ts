@@ -60,7 +60,7 @@ export const createNews = async (req: Request, res: Response) => {
 export const getUserNews = async (req: Request, res: Response) => {
      try {
           const newsArray = await prisma.news.findMany({
-               where: { isArchived: false, deletedAt: null },
+               where: { isArchived: false },
                orderBy: {
                     createdAt: "desc"
                },
@@ -89,7 +89,7 @@ export const getUserNewsById = async (req: Request, res: Response) => {
           const { id } = req.params;
 
           const news = await prisma.news.findFirst({
-               where: { id, isArchived: false, deletedAt: null },
+               where: { id, isArchived: false },
                select: userNewsSelector
           })
 
@@ -106,7 +106,7 @@ export const getUserNewsById = async (req: Request, res: Response) => {
 export const getAdminNews = async (req: Request, res: Response) => {
      try {
           const news = await prisma.news.findMany({
-               where: { isArchived: false, deletedAt: null },
+               where: { isArchived: false },
                orderBy: {
                     createdAt: "desc"
                },
@@ -125,7 +125,7 @@ export const getAdminNewsById = async (req: Request, res: Response) => {
           const { id } = req.params;
 
           const news = await prisma.news.findFirst({
-               where: { id, deletedAt: null },
+               where: { id },
                select: newsSelector
           })
 
