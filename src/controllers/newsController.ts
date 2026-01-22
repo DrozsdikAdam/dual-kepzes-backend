@@ -60,7 +60,7 @@ export const createNews = async (req: Request, res: Response) => {
 export const getUserNews = async (req: Request, res: Response) => {
      try {
           const newsArray = await prisma.news.findMany({
-               where: { isArchived: false },
+               where: { isArchived: false, deletedAt: null },
                orderBy: {
                     createdAt: "desc"
                },
@@ -77,9 +77,9 @@ export const getUserNews = async (req: Request, res: Response) => {
                return false;
           })
 
-          return res.status(200).json({ news: filterNews })
+          return res.json({ news: filterNews })
      } catch (error) {
-          console.error("Get Admin News Error:", error);
+          console.error("Get User News Error:", error);
           return res.status(500).json({ message: "Hiba a hírek lekérdezésekor." })
      }
 }
@@ -89,7 +89,7 @@ export const getUserNewsById = async (req: Request, res: Response) => {
           const { id } = req.params;
 
           const news = await prisma.news.findFirst({
-               where: { id, isArchived: false },
+               where: { id, isArchived: false, deletedAt: null },
                select: userNewsSelector
           })
 
@@ -97,7 +97,7 @@ export const getUserNewsById = async (req: Request, res: Response) => {
                return res.status(404).json({ message: "A hír nem található." })
           }
 
-          return res.status(200).json({ news })
+          return res.json({ news })
      } catch (error) {
           return res.status(500).json({ message: "Hiba a hír lekérdezésekor." })
      }
@@ -106,14 +106,14 @@ export const getUserNewsById = async (req: Request, res: Response) => {
 export const getAdminNews = async (req: Request, res: Response) => {
      try {
           const news = await prisma.news.findMany({
-               where: { isArchived: false },
+               where: { isArchived: false, deletedAt: null },
                orderBy: {
                     createdAt: "desc"
                },
                select: newsSelector
           })
 
-          return res.status(200).json({ news })
+          return res.json({ news })
      } catch (error) {
           console.error("Get Admin News Error:", error);
           return res.status(500).json({ message: "Hiba a hírek lekérdezésekor." })
@@ -125,7 +125,7 @@ export const getAdminNewsById = async (req: Request, res: Response) => {
           const { id } = req.params;
 
           const news = await prisma.news.findFirst({
-               where: { id },
+               where: { id, deletedAt: null },
                select: newsSelector
           })
 
@@ -133,7 +133,7 @@ export const getAdminNewsById = async (req: Request, res: Response) => {
                return res.status(404).json({ message: "A hír nem található." })
           }
 
-          return res.status(200).json({ news })
+          return res.json({ news })
      } catch (error) {
           return res.status(500).json({ message: "Hiba a hír lekérdezésekor." })
      }
@@ -162,7 +162,7 @@ export const archiveNews = async (req: Request, res: Response) => {
                }
           })
 
-          return res.status(200).json({ message: "Hír sikeresen archiválva.", news })
+          return res.json({ message: "Hír sikeresen archiválva.", news })
      } catch (error) {
           return res.status(500).json({ message: "Hiba a hír archiválásakor." })
      }
@@ -197,7 +197,7 @@ export const unarchiveNews = async (req: Request, res: Response) => {
                }
           })
 
-          return res.status(200).json({ message: "Hír sikeresen visszaállítva." })
+          return res.json({ message: "Hír sikeresen visszaállítva." })
      } catch (error) {
           return res.status(500).json({ message: "Hiba a hír archiválásának visszavonásakor." })
      }
@@ -231,7 +231,7 @@ export const updateNews = async (req: Request, res: Response) => {
                }
           })
 
-          return res.status(200).json({ message: "Hír sikeresen frissítve.", news })
+          return res.json({ message: "Hír sikeresen frissítve.", news })
      } catch (error) {
           console.error("Update News Error:", error);
           return res.status(500).json({ message: "Hiba a hír frissítésekor." })
@@ -268,7 +268,7 @@ export const deleteNews = async (req: Request, res: Response) => {
                }
           })
 
-          return res.status(200).json({ message: "Hír sikeresen törölve lett." })
+          return res.json({ message: "Hír sikeresen törölve lett." })
      } catch (error) {
           console.error("Delete News Error:", error);
           return res.status(500).json({ message: "Hiba a hír törlésekor." })
@@ -288,7 +288,7 @@ export const getArchivedNews = async (req: Request, res: Response) => {
                }
           })
 
-          return res.status(200).json({ news })
+          return res.json({ news })
      } catch (error) {
           return res.status(500).json({ message: "Hiba a archivált hírek lekérdezésekor." })
      }
