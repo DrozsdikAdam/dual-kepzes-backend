@@ -20,8 +20,8 @@ router.use(authenticateToken); // Minden értesítés route védett
 // Alapvető műveletek
 router.get("/", getNotifications); // Olvasatlan/Aktív értesítések
 router.get("/archived", getArchivedNotifications); // Archiváltak
-router.get("/:id", getNotificationById);
 router.get("/unread-count", getUnreadNotificationsCount);
+router.get("/:id", getNotificationById);
 
 // Műveletek
 router.put("/read-all", markAllAsRead); // Összes olvasottnak jelölése
