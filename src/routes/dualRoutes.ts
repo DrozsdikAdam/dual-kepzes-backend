@@ -15,30 +15,30 @@ import { authenticateToken } from "../middlewares/authMiddleware";
 
 const router = Router();
 
-router.get("/partnerships",
+router.get("/",
     authenticateToken,
     getAllPartnerships
 );
 
-router.get("/partnerships/:id",
+router.get("/:id",
     authenticateToken,
     getPartnershipById
 );
 
 router.patch(
-    "/partnerships/:id",
+    "/:id",
     authenticateToken,
     validate(DualPartnershipUpdateSchema),
     updatePartnership
 );
 
 router.patch(
-    "/partnerships/:id/terminate",
+    "/:id/terminate",
     authenticateToken,
     terminatePartnership
 );
 
-router.delete("/partnerships/:id",
+router.delete("/:id",
     authenticateToken,
     deletePartnership
 );
