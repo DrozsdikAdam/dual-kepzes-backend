@@ -98,10 +98,10 @@ export const getPartnershipById = async (req: Request, res: Response) => {
     const { userId } = req.user!;
     try {
         const companyId = await getCompanyIdForUser(userId);
-        
+
         const partnership = await prisma.dualPartnership.findFirst({
-            where: { 
-                id, 
+            where: {
+                id,
                 deletedAt: null,
                 // If user is in a company, they must match the mentor's company
                 ...(companyId && { mentor: { companyId } })
@@ -126,7 +126,7 @@ export const getPartnershipById = async (req: Request, res: Response) => {
 
             return res.status(404).json({ message: "Partnerség nem található vagy nincs jogosultsága megtekinteni." });
         }
-        
+
         res.json(mapDualPartnership(partnership));
     } catch (error) {
         res.status(500).json({ message: "Hiba a partnerség lekérésekor." });
@@ -145,7 +145,7 @@ export const updatePartnership = async (
     try {
         const companyId = await getCompanyIdForUser(userId);
         if (!companyId) {
-             return res.status(403).json({ message: "Nincs jogosultsága partnerséget frissíteni." });
+            return res.status(403).json({ message: "Nincs jogosultsága partnerséget frissíteni." });
         }
 
         const partnershipToUpdate = await prisma.dualPartnership.findFirst({
@@ -153,9 +153,9 @@ export const updatePartnership = async (
         });
 
         if (!partnershipToUpdate) {
-             return res.status(404).json({ message: "Partnerség nem található vagy nincs jogosultsága frissíteni." });
+            return res.status(404).json({ message: "Partnerség nem található vagy nincs jogosultsága frissíteni." });
         }
-        
+
         const updatedPartnership = await prisma.dualPartnership.update({
             where: { id },
             data: {
@@ -185,7 +185,7 @@ export const updatePartnership = async (
 export const deletePartnership = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { userId } = req.user!;
-    
+
     try {
         const companyId = await getCompanyIdForUser(userId);
         if (!companyId) {
@@ -211,5 +211,39 @@ export const deletePartnership = async (req: Request, res: Response) => {
         return res.json({ message: "Partnerség sikeresen törölve." });
     } catch (error) {
         return res.status(500).json({ message: "Hiba a partnerség törlésekor." });
+    }
+}
+
+export const terminatePartnership = async (req: Request, res: Response) => {
+    const userId = req.user?.userId
+    const { id } = req.params
+
+    if (!userId) {
+        return res.status(401).json({ message: "Nincs jogosultságod." })
+    }
+
+    try {
+        const target = await prisma.dualPartnership.findUnique({ where: { id } })
+
+        if (!target) {
+            return res.status(404).json({ message: "Nem található partneri kapcsolat." })
+        }
+
+        const updated = await prisma.dualPartnership.update({
+            where: { id },
+            data: { status: "TERMINATED" }, // Enum import might be needed or string literal if enum is widely used as string in Prisma. Ideally import PartnershipStatus.
+            select: partnershipSelect
+        })
+
+        await logAction(req, {
+            action: "TERMINATE_DUAL_PARTNERSHIP",
+            entity: "DualPartnership",
+            entityId: id,
+            details: { terminatedBy: userId }
+        })
+
+        return res.json({ message: "Partneri kapcsolat megszakítva.", updated })
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba történt a a partneri kapcsolat megszüntetésekor." })
     }
 }
