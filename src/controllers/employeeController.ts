@@ -370,3 +370,35 @@ export const getMyStudents = async (req: Request, res: Response) => {
         return res.status(500).json({ message: "Hiba a hallgatók lekérésekor." })
     }
 }
+
+export const getMyPartnershipById = async (req: Request, res: Response) => {
+    const userId = req.user?.userId;
+    const { id } = req.params;
+    if (!userId) {
+        return res.status(401).json({ message: "Nincs jogosultságod." })
+    }
+
+    try {
+        const mentorProfile = await prisma.companyEmployee.findFirst({
+            where: { userId },
+            select: { id: true, companyId: true }
+        })
+
+        if (!mentorProfile) {
+            return res.status(403).json({ message: "Nem található mentor profil." })
+        }
+
+        const partnership = await prisma.dualPartnership.findFirst({
+            where: { mentorId: mentorProfile.id, id },
+            select: dualPartnershipSelect
+        })
+
+        if (!partnership) {
+            return res.status(404).json({ message: "Nem található a keresett partnerség." })
+        }
+
+        return res.json(partnership)
+    } catch (error) {
+        return res.status(500).json({ messsage: "Hiba a partnerség lekérésekor." })
+    }
+}

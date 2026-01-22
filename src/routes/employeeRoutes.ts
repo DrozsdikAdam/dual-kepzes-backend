@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteEmployeeById, getCompanyEmployees, getEmployeeById, updateEmployeeById, getMeEmployee, updateMeEmployee, deleteMeEmployee, getMyStudents } from "../controllers/employeeController";
+import { deleteEmployeeById, getCompanyEmployees, getEmployeeById, updateEmployeeById, getMeEmployee, updateMeEmployee, deleteMeEmployee, getMyStudents, getMyPartnershipById } from "../controllers/employeeController";
 import { UpdateEmployeeSchema } from "../schemas/employeeSchema";
 import { validate } from "../middlewares/validateMiddleware";
 import { authenticateToken } from "../middlewares/authMiddleware";
@@ -12,6 +12,8 @@ router.patch("/me", authenticateToken, validate(UpdateEmployeeSchema), updateMeE
 router.delete("/me", authenticateToken, deleteMeEmployee);
 
 router.get("/me/students", authenticateToken, getMyStudents);
+
+router.get("/me/students/:id", authenticateToken, getMyPartnershipById);
 
 router.get("/", authenticateToken, getCompanyEmployees)
 
