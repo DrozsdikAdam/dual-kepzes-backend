@@ -70,7 +70,34 @@ export const getMyProfile = async (req: Request, res: Response) => {
     try {
         const student = await prisma.user.findUnique({
             where: { id: userId },
-            select: studentSelect
+            select: {
+                id: true,
+                email: true,
+                fullName: true,
+                phoneNumber: true,
+                role: true,
+                studentProfile: {
+                    select: {
+                        id: true,
+                        mothersName: true,
+                        birthDate: true,
+                        locations: {
+                            select: {
+                                country: true,
+                                zipCode: true,
+                                city: true,
+                                address: true
+                            }
+                        },
+                        highSchool: true,
+                        graduationYear: true,
+                        neptunCode: true,
+                        currentMajor: true,
+                        studyMode: true,
+                        hasLanguageCert: true
+                    }
+                }
+            }
         })
 
         if (!student) {
