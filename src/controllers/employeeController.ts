@@ -45,6 +45,35 @@ const employeeProfileSelect = {
     }
 };
 
+const dualPartnershipSelect = {
+    id: true,
+    status: true,
+    contractNumber: true,
+    startDate: true,
+    endDate: true,
+    student: {
+        select: {
+            id: true,
+            neptunCode: true,
+            currentMajor: true,
+            studyMode: true,
+            user: {
+                select: {
+                    fullName: true,
+                    email: true,
+                    phoneNumber: true
+                }
+            }
+        }
+    },
+    uniEmployee: {
+        select: {
+            fullName: true,
+            email: true
+        }
+    }
+}
+
 
 export const getMeEmployee = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
@@ -307,3 +336,37 @@ export const deleteEmployeeById = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Hiba a törlés során." });
     }
 };
+
+export const getMyStudents = async (req: Request, res: Response) => {
+    const userId = req.user?.userId;
+    if (!userId) {
+        return res.status(401).json({ message: "Nincs jogosultságod." })
+    }
+
+    try {
+        // 1. Megkeressük a mentor munkavállalói profilját az ID-ja miatt
+        const mentorProfile = await prisma.companyEmployee.findUnique({
+            where: { userId },
+            select: { id: true, companyId: true }
+        });
+
+        if (!mentorProfile) {
+            return res.status(403).json({ message: "Nem található munkavállalói (mentor) profil." });
+        }
+
+        // 2. Lekérjük az összes olyan partnerséget, ahol ez a dolgozó a mentor
+        const partnerships = await prisma.dualPartnership.findMany({
+            where: {
+                mentorId: mentorProfile.id,
+            },
+            select: dualPartnershipSelect,
+            orderBy: {
+                startDate: "desc"
+            }
+        });
+
+        return res.json(partnerships)
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba a hallgatók lekérésekor." })
+    }
+}
