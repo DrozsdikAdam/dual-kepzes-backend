@@ -33,6 +33,7 @@ const prisma = basePrisma.$extends({
                 if (softDeleteModels.includes(model)) {
                     const modelName = model.charAt(0).toLowerCase() + model.slice(1);
                     return (basePrisma as any)[modelName].findFirst({
+                        ...args,
                         where: { ...args.where, deletedAt: null }
                     });
                 }
