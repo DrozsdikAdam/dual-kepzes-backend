@@ -5,6 +5,7 @@ import {
     getAllPartnerships,
     getPartnershipById,
     updatePartnership,
+    terminatePartnership
 } from "../controllers/dualController";
 import { validate } from "../middlewares/validateMiddleware";
 import {
@@ -29,6 +30,12 @@ router.patch(
     authenticateToken,
     validate(DualPartnershipUpdateSchema),
     updatePartnership
+);
+
+router.patch(
+    "/partnerships/:id/terminate",
+    authenticateToken,
+    terminatePartnership
 );
 
 router.delete("/partnerships/:id",
