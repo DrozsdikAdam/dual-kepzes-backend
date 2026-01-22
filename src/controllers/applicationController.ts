@@ -343,13 +343,49 @@ export const evaluateApplication = async (req: Request, res: Response) => {
 
         if (status === ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Nem lehet BEADOTT státuszra állítani a jelentkezést." })
 
-        const evaluateApplication = await prisma.application.update({
-            where: { id },
-            data: {
-                status,
-                companyNote,
+        const result = await prisma.$transaction(async (tx) => {
+            const updatedApp = await tx.application.update({
+                where: { id },
+                data: {
+                    status,
+                    companyNote,
+                }
+            });
+
+            if (status === ApplicationStatus.ACCEPTED) {
+                const now = new Date();
+                const month = now.getMonth(); // 0-11
+                const year = now.getFullYear();
+
+                let semester = "";
+                // Sept (8) - Jan (0) -> Semester 1
+                if (month >= 8) {
+                    semester = `${year}/${year + 1}/1`;
+                } else if (month <= 0) {
+                    semester = `${year - 1}/${year}/1`;
+                } else {
+                    // Feb (1) - Aug (7) -> Semester 2
+                    semester = `${year - 1}/${year}/2`;
+                }
+
+                // 3.5 years (7 semesters) expiration default
+                const endDate = new Date(now);
+                endDate.setMonth(endDate.getMonth() + 42);
+
+                await tx.dualPartnership.create({
+                    data: {
+                        studentId: application.student.id,
+                        status: PartnershipStatus.PENDING_MENTOR,
+                        startDate: now,
+                        endDate: endDate,
+                        semester: semester,
+                        contractNumber: `D-${year}-${application.student.neptunCode || 'UNK'}`, // Temporary ID generation
+                    }
+                });
             }
-        })
+
+            return updatedApp;
+        });
 
         const message = status + "_APPLICATION"
 
@@ -380,8 +416,9 @@ export const evaluateApplication = async (req: Request, res: Response) => {
             subject: notification.title,
             body: notification.message
         })*/
-        return res.json(evaluateApplication)
+        return res.json(result)
     } catch (error) {
+        console.error("Evaluation Error:", error);
         return res.status(500).json({ message: "Hiba az elbírálás során." })
     }
 }
