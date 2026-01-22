@@ -1,6 +1,6 @@
 import { Request, Response } from "express"
 import prisma from "../config/prisma"
-import { Role } from "@prisma/client"
+import { PartnershipStatus, Role } from "@prisma/client"
 import { logAction } from "../utils/logger"
 
 // 1. Központi SELECT definíció
@@ -24,6 +24,7 @@ const companyAdminSelect = {
           }
      }
 }
+
 
 // Saját profil lekérése
 export const getMeCompanyAdmin = async (req: Request, res: Response) => {
@@ -258,5 +259,31 @@ export const deleteCompanyAdmin = async (req: Request, res: Response) => {
           return res.json({ message: "A rekord sikeresen törölve." })
      } catch (error) {
           return res.status(500).json({ message: "Hiba történt a törlés során." })
+     }
+}
+
+export const restoreCompanyAdmin = async (req: Request, res: Response) => {
+     const userId = req.user?.userId
+     const { id } = req.params
+
+     if (!userId) {
+          return res.status(401).json({ message: "Nincs jogosultságod." })
+     }
+     try {
+
+          const target = await prisma.user.findUnique({ where: { id } })
+          if (!target || target.role !== Role.COMPANY_ADMIN) {
+               return res.status(404).json({ message: "Nem található cégadminisztrátor." })
+          }
+
+          const updated = await prisma.user.update({
+               where: { id },
+               data: { isActive: true, deletedAt: null },
+               select: companyAdminSelect
+          })
+
+          return res.json(updated)
+     } catch (error) {
+          return res.status(500).json({ message: "Hiba történt a visszaállítása során." })
      }
 }
