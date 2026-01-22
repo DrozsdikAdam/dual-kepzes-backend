@@ -90,3 +90,49 @@ export const mapApplication = (application: any) => {
 
      return mapped;
 };
+
+export const mapDualPartnership = (partnership: any) => {
+     if (!partnership) return null;
+
+     const mapped = { ...partnership };
+
+     if (mapped.student) {
+          // partnership.student is the StudentProfile
+          // We need to construct a user-like object from it
+          const profile = mapped.student;
+          const user = profile.user || {};
+
+          mapped.student = {
+               id: profile.userId,
+               email: user.email,
+               fullName: user.fullName,
+               studentProfile: mapStudentProfile({
+                    ...profile,
+                    user: undefined, // Avoid circular reference
+               }),
+          };
+     }
+
+     if (mapped.mentor) {
+          const employee = mapped.mentor;
+          const user = employee.user || {};
+          mapped.mentor = {
+               id: employee.userId,
+               email: user.email,
+               fullName: user.fullName,
+               companyId: employee.companyId,
+               jobTitle: employee.jobTitle,
+          };
+     }
+
+     if (mapped.uniEmployee) {
+          const user = mapped.uniEmployee;
+          mapped.uniEmployee = {
+               id: user.id,
+               email: user.email,
+               fullName: user.fullName,
+          };
+     }
+
+     return mapped;
+};
