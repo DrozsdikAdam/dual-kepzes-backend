@@ -4,6 +4,8 @@ import { logAction } from "../utils/logger";
 import { ApplicationStatus } from "@prisma/client";
 import { mapApplication } from "../utils/mappers";
 import { addEmailToQueue } from "../services/emailQueue";
+import { PartnershipStatus } from "@prisma/client";
+
 
 const applicationSelect = {
     id: true,
@@ -82,7 +84,50 @@ const companyApplicationSelect = {
     }
 }
 
+const dualPartnershipSelect = {
+    id: true,
+    status: true,
+    contractNumber: true,
+    startDate: true,
+    endDate: true,
+    student: {
+        select: {
+            id: true,
+            neptunCode: true,
+            currentMajor: true,
+            studyMode: true,
+            user: {
+                select: {
+                    fullName: true,
+                    email: true,
+                    phoneNumber: true
+                }
+            }
+        }
+    },
+    uniEmployee: {
+        select: {
+            fullName: true,
+            email: true
+        }
+    },
+    mentor: {
+        select: {
+            id: true,
+            jobTitle: true,
+            companyId: true,
+            user: {
+                select: {
+                    id: true,
+                    fullName: true,
+                    email: true,
+                    phoneNumber: true,
+                }
+            }
+        }
 
+    }
+}
 
 //hallgatói
 
@@ -427,5 +472,40 @@ export const updateEvaluation = async (req: Request, res: Response) => {
         return res.json(updatedApplication)
     } catch (error) {
         return res.status(500).json({ message: "Hiba a módosítás során." })
+    }
+}
+
+
+export const terminatePartnerShip = async (req: Request, res: Response) => {
+    const userId = req.user?.userId
+    const { id } = req.params
+
+    if (!userId) {
+        return res.status(401).json({ message: "Nincs jogosultságod." })
+    }
+
+    try {
+        const target = await prisma.dualPartnership.findUnique({ where: { id } })
+
+        if (!target) {
+            return res.status(404).json({ message: "Nem található partneri kapcsolat." })
+        }
+
+        const updated = await prisma.dualPartnership.update({
+            where: { id },
+            data: { status: PartnershipStatus.TERMINATED },
+            select: dualPartnershipSelect
+        })
+
+        await logAction(req, {
+            action: "TERMINATE_DUAL_PARTNERSHIP",
+            entity: "DualPartnership",
+            entityId: id,
+            details: { terminatedBy: userId }
+        })
+
+        return res.json({ message: "Partneri kapcsolat megszakítva.", updated })
+    } catch (error) {
+        return res.status(500).json({ message: "Hiba történt a a partneri kapcsolat megszüntetésekor." })
     }
 }

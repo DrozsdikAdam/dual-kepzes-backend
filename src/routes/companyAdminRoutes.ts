@@ -7,7 +7,8 @@ import {
      deleteCompanyAdmin,
      getMeCompanyAdmin,
      updateMeCompanyAdmin,
-     deleteMeCompanyAdmin
+     deleteMeCompanyAdmin,
+     restoreCompanyAdmin
 } from "../controllers/companyAdminController"
 import { CompanyAdminUpdateSchema } from "../schemas/companyAdminSchema"
 import { authenticateToken } from "../middlewares/authMiddleware"
@@ -21,6 +22,8 @@ router.patch("/me", validate(CompanyAdminUpdateSchema), updateMeCompanyAdmin)
 router.delete("/me", deleteMeCompanyAdmin)
 
 router.get("/", getCompanyAdmins)
+
+router.patch("/restore/:id", restoreCompanyAdmin)
 
 router.get("/:id", getCompanyAdminById)
 
