@@ -204,6 +204,18 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | :--- | :--- | :--- |
 | `GET` | `/` | Rendszerszintű statisztikák lekérése. |
 
+### 🤝 Duális Partnerkapcsolatok (`/api/partnerships`)
+
+A hallgatók és cégek közötti duális képzési szerződések kezelése.
+
+| Metódus | Végpont | Leírás |
+| :--- | :--- | :--- |
+| `GET` | `/` | Partnerkapcsolatok listázása (jogosultság szerint). |
+| `GET` | `/:id` | Partnerkapcsolat részletei. |
+| `PATCH` | `/:id` | Partnerkapcsolat adatainak frissítése. |
+| `PATCH` | `/:id/terminate` | Partnerkapcsolat megszakítása (Terminated státusz). |
+| `DELETE` | `/:id` | Partnerkapcsolat törlése (Soft delete). |
+
 ### 🏢 Cég Adminisztrátorok (`/api/company-admins`)
 
 A cégek adminisztrátorainak kezelése.
@@ -217,6 +229,7 @@ A cégek adminisztrátorainak kezelése.
 | `GET` | `/:id` | Cégadmin lekérése ID alapján. |
 | `PATCH` | `/:id` | Adatok frissítése (Admin). |
 | `DELETE` | `/:id` | Cégadmin törlése (Admin). |
+| `PATCH` | `/restore/:id` | Törölt cégadmin visszaállítása. |
 
 ### 👨‍💼 Munkavállalók (`/api/employees`)
 
