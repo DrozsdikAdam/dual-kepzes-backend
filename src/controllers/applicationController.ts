@@ -5,6 +5,7 @@ import { ApplicationStatus } from "@prisma/client";
 import { mapApplication } from "../utils/mappers";
 import { addEmailToQueue } from "../services/emailQueue";
 import { PartnershipStatus } from "@prisma/client";
+import { getCompanyIdForUser } from "../utils/companyUtils";
 
 
 const applicationSelect = {
@@ -320,11 +321,9 @@ export const evaluateApplication = async (req: Request, res: Response) => {
     const userId = req.user!.userId;
 
     try {
-        const employee = await prisma.companyEmployee.findFirst({
-            where: { userId, deletedAt: null }
-        });
+        const companyId = await getCompanyIdForUser(userId);
 
-        if (!employee) {
+        if (!companyId) {
             return res.status(403).json({ message: "Nincs céges jogosultsága." });
         }
 
@@ -332,7 +331,7 @@ export const evaluateApplication = async (req: Request, res: Response) => {
             where: {
                 id,
                 position: {
-                    companyId: employee.companyId
+                    companyId: companyId
                 }
             },
             select: companyApplicationSelect
@@ -392,25 +391,14 @@ export const getMyCompanyApplications = async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ message: "Nem található felhasználói azonosító." })
 
     try {
+        const companyId = await getCompanyIdForUser(userId);
 
-        const company = await prisma.company.findFirst({
-            where: {
-                employees: {
-                    some: {
-                        userId,
-                        deletedAt: null
-                    }
-                }
-            },
-            select: { id: true }
-        })
-
-        if (!company) return res.status(404).json({ message: "Nem található cég." })
+        if (!companyId) return res.status(404).json({ message: "Nem található cég." })
 
         const applications = await prisma.application.findMany({
             where: {
                 position: {
-                    companyId: company.id
+                    companyId: companyId
                 }
             },
             select: companyApplicationSelect,
@@ -429,11 +417,9 @@ export const updateEvaluation = async (req: Request, res: Response) => {
     const userId = req.user!.userId;
 
     try {
-        const employee = await prisma.companyEmployee.findFirst({
-            where: { userId, deletedAt: null }
-        });
+        const companyId = await getCompanyIdForUser(userId);
 
-        if (!employee) {
+        if (!companyId) {
             return res.status(403).json({ message: "Nincs céges jogosultsága." });
         }
 
@@ -441,7 +427,7 @@ export const updateEvaluation = async (req: Request, res: Response) => {
             where: {
                 id,
                 position: {
-                    companyId: employee.companyId
+                    companyId: companyId
                 }
             },
             select: companyApplicationSelect
