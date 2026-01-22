@@ -263,7 +263,7 @@ export const deleteCompanyAdmin = async (req: Request, res: Response) => {
 }
 
 export const restoreCompanyAdmin = async (req: Request, res: Response) => {
-     const userId = req.user?.userId
+     const userId = req.user!.userId
      const { id } = req.params
 
      if (!userId) {
@@ -276,13 +276,28 @@ export const restoreCompanyAdmin = async (req: Request, res: Response) => {
                return res.status(404).json({ message: "Nem található cégadminisztrátor." })
           }
 
-          const updated = await prisma.user.update({
+          const updated = await prisma.$transaction(async (tx) => {
+               const user = await tx.user.update({
+                    where: { id },
+                    data: { isActive: true, deletedAt: null },
+               })
+
+               await tx.companyEmployee.update({
+                    where: { userId: id },
+                    data: { deletedAt: null }
+               })
+
+               return user;
+          })
+
+          // Ha az updated nem tartalmazza a relációkat, külön lekérjük vagy a transaction visszatérési értékét módosítjuk
+          // De mivel a companyAdminSelect kell, egyszerűbb újra lekérni vagy a transzaction-ben selectálni
+          const finalResult = await prisma.user.findUnique({
                where: { id },
-               data: { isActive: true, deletedAt: null },
                select: companyAdminSelect
           })
 
-          return res.json(updated)
+          return res.json(finalResult)
      } catch (error) {
           return res.status(500).json({ message: "Hiba történt a visszaállítása során." })
      }
