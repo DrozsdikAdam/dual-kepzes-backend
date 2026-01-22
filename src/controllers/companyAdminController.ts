@@ -271,9 +271,15 @@ export const restoreCompanyAdmin = async (req: Request, res: Response) => {
      }
      try {
 
-          const target = await prisma.user.findUnique({ where: { id } })
+          const target = await prisma.user.findFirst({
+               where: {
+                    id,
+                    deletedAt: { not: null }
+               }
+          })
+
           if (!target || target.role !== Role.COMPANY_ADMIN) {
-               return res.status(404).json({ message: "Nem található cégadminisztrátor." })
+               return res.status(404).json({ message: "Nem található (törölt) cégadminisztrátor." })
           }
 
           const updated = await prisma.$transaction(async (tx) => {
@@ -290,8 +296,6 @@ export const restoreCompanyAdmin = async (req: Request, res: Response) => {
                return user;
           })
 
-          // Ha az updated nem tartalmazza a relációkat, külön lekérjük vagy a transaction visszatérési értékét módosítjuk
-          // De mivel a companyAdminSelect kell, egyszerűbb újra lekérni vagy a transzaction-ben selectálni
           const finalResult = await prisma.user.findUnique({
                where: { id },
                select: companyAdminSelect

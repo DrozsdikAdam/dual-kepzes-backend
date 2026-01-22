@@ -279,7 +279,6 @@ export const getArchivedNews = async (req: Request, res: Response) => {
      try {
           const news = await prisma.news.findMany({
                where: {
-                    deletedAt: null,
                     isArchived: true
                },
                select: newsSelector,

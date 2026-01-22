@@ -1,16 +1,9 @@
-
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
-import {
-    DualPartnershipUpdateSchema
-} from "../schemas/dualSchema";
+import { DualPartnershipUpdateRequest } from "../schemas/dualSchema";
+import { PartnershipStatus } from "@prisma/client";
 import { logAction } from "../utils/logger";
 import { mapDualPartnership } from "../utils/mappers";
-import { z } from "zod";
-
-// Schema-inferred types
-type DualPartnershipUpdateRequest = z.infer<typeof DualPartnershipUpdateSchema>;
-
 
 const partnershipSelect = {
     id: true,
@@ -53,7 +46,7 @@ const partnershipSelect = {
 // Helper to get company ID for a user
 const getCompanyIdForUser = async (userId: string): Promise<string | null> => {
     const employee = await prisma.companyEmployee.findUnique({
-        where: { userId, deletedAt: null },
+        where: { userId },
         select: { companyId: true },
     });
     return employee?.companyId || null;
@@ -63,7 +56,7 @@ const getCompanyIdForUser = async (userId: string): Promise<string | null> => {
 export const getAllPartnerships = async (req: Request, res: Response) => {
     const { userId } = req.user!;
     try {
-        let whereClause: any = { deletedAt: null };
+        let whereClause: any = {};
 
         const companyId = await getCompanyIdForUser(userId);
         if (companyId) {
@@ -102,7 +95,6 @@ export const getPartnershipById = async (req: Request, res: Response) => {
         const partnership = await prisma.dualPartnership.findFirst({
             where: {
                 id,
-                deletedAt: null,
                 // If user is in a company, they must match the mentor's company
                 ...(companyId && { mentor: { companyId } })
             },
@@ -114,7 +106,7 @@ export const getPartnershipById = async (req: Request, res: Response) => {
             if (!companyId) {
                 const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
                 const studentPartnership = await prisma.dualPartnership.findFirst({
-                    where: { id, deletedAt: null, studentId: studentProfile?.id },
+                    where: { id, studentId: studentProfile?.id },
                     select: partnershipSelect
                 });
 
@@ -231,7 +223,7 @@ export const terminatePartnership = async (req: Request, res: Response) => {
 
         const updated = await prisma.dualPartnership.update({
             where: { id },
-            data: { status: "TERMINATED" }, // Enum import might be needed or string literal if enum is widely used as string in Prisma. Ideally import PartnershipStatus.
+            data: { status: PartnershipStatus.TERMINATED },
             select: partnershipSelect
         })
 

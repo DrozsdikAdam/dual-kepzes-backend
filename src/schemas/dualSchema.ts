@@ -12,9 +12,12 @@ const dualPartnershipBody = z.object({
   endDate: z.coerce.date().optional().nullable(),
 });
 
+
 export const DualPartnershipUpdateSchema = z.object({
   body: dualPartnershipBody.partial(),
   params: z.object({
     id: z.string().uuid(),
   })
 });
+
+export type DualPartnershipUpdateRequest = z.infer<typeof DualPartnershipUpdateSchema>;
