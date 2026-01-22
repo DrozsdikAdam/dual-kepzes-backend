@@ -213,6 +213,8 @@ A hallgatók és cégek közötti duális képzési szerződések kezelése.
 | `GET` | `/` | Partnerkapcsolatok listázása (jogosultság szerint). |
 | `GET` | `/:id` | Partnerkapcsolat részletei. |
 | `PATCH` | `/:id` | Partnerkapcsolat adatainak frissítése. |
+| `PATCH` | `/:id/assign-mentor` | Mentor hozzárendelése (Cégadmin). |
+| `PATCH` | `/:id/assign-university-user` | Egyetemi felelős hozzárendelése (Admin). |
 | `PATCH` | `/:id/terminate` | Partnerkapcsolat megszakítása (Terminated státusz). |
 | `DELETE` | `/:id` | Partnerkapcsolat törlése (Soft delete). |
 
