@@ -4,6 +4,7 @@ import { DualPartnershipUpdateRequest } from "../schemas/dualSchema";
 import { PartnershipStatus } from "@prisma/client";
 import { logAction } from "../utils/logger";
 import { mapDualPartnership } from "../utils/mappers";
+import { getCompanyIdForUser } from "../utils/companyUtils";
 
 const partnershipSelect = {
     id: true,
@@ -41,15 +42,6 @@ const partnershipSelect = {
     },
     createdAt: true,
     updatedAt: true,
-};
-
-// Helper to get company ID for a user
-const getCompanyIdForUser = async (userId: string): Promise<string | null> => {
-    const employee = await prisma.companyEmployee.findUnique({
-        where: { userId },
-        select: { companyId: true },
-    });
-    return employee?.companyId || null;
 };
 
 

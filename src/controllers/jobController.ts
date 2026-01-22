@@ -319,25 +319,22 @@ export const getInactivePositions = async (req: Request, res: Response) => {
     }
 }
 
+import { getCompanyIdForUser } from "../utils/companyUtils";
+
 export const getMyCompanyPositions = async (req: Request, res: Response) => {
     try {
         if (!req.user || !req.user.userId) {
             return res.status(401).json({ message: "Nem vagy bejelentkezve." });
         }
 
-        const employee = await prisma.companyEmployee.findFirst({
-            where: {
-                userId: req.user.userId,
-                deletedAt: null
-            }
-        });
+        const companyId = await getCompanyIdForUser(req.user.userId);
 
-        if (!employee) {
+        if (!companyId) {
             return res.status(403).json({ message: "Nem tartozol egyetlen céghez sem." });
         }
 
         const positions = await prisma.position.findMany({
-            where: { companyId: employee.companyId, deletedAt: null },
+            where: { companyId: companyId, deletedAt: null },
             select: positionSelect
         });
         return res.json(positions.map(mapPosition));

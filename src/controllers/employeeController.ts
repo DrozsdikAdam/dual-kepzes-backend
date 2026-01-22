@@ -201,19 +201,21 @@ export const getEmployeeById = async (req: Request, res: Response) => {
     }
 }
 
+import { getCompanyIdForUser } from "../utils/companyUtils";
+
 export const getCompanyEmployees = async (req: Request, res: Response) => {
     if (!req.user) return res.status(401).json({ message: "Nincs azonosítva." });
 
     try {
-        const requester = await prisma.companyEmployee.findUnique({ where: { userId: req.user.userId } });
+        const companyId = await getCompanyIdForUser(req.user.userId);
 
-        if (!requester || (req.user.role !== "COMPANY_ADMIN")) {
+        if (!companyId || (req.user.role !== "COMPANY_ADMIN")) {
             return res.status(403).json({ message: "Nincs jogosultságod a lista megtekintéséhez." });
         }
 
         const employees = await prisma.user.findMany({
             where: {
-                companyEmployee: { companyId: requester.companyId },
+                companyEmployee: { companyId: companyId },
             },
             select: userEmployeeSelect,
             orderBy: { fullName: "asc" }
