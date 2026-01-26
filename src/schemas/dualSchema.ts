@@ -9,6 +9,7 @@ const dualPartnershipBody = z.object({
   status: z.enum(['ACTIVE', 'FINISHED', 'TERMINATED', 'PENDING_MENTOR', 'PENDING_UNIVERSITY']).default('PENDING_MENTOR'),
   startDate: z.coerce.date(),
   endDate: z.coerce.date().optional().nullable(),
+  positionId: z.string().uuid().optional(),
 });
 
 export const DualPartnershipUpdateSchema = z.object({

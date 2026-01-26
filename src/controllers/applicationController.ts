@@ -380,6 +380,7 @@ export const evaluateApplication = async (req: Request, res: Response) => {
                         endDate: endDate,
                         semester: semester,
                         contractNumber: `D-${year}-${application.student.neptunCode || 'UNK'}`, // Temporary ID generation
+                        positionId: application.position.id
                     }
                 });
             }

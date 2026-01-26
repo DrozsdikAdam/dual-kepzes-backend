@@ -197,9 +197,10 @@ model Position {
   updatedAt DateTime? @updatedAt
   deletedAt DateTime?
 
-  applications Application[]
-  location     Location?     @relation(fields: [locationId], references: [id])
-  locationId   String?
+  applications     Application[]
+  location         Location?         @relation(fields: [locationId], references: [id])
+  locationId       String?
+  dualPartnerships DualPartnership[]
 }
 
 model Tag {
@@ -247,6 +248,9 @@ model DualPartnership {
 
   uniEmployeeId String?
   uniEmployee   User?   @relation(fields: [uniEmployeeId], references: [id])
+
+  positionId String?
+  position   Position? @relation(fields: [positionId], references: [id])
 
   semester       String
   contractNumber String?

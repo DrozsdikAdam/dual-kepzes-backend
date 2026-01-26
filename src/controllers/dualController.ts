@@ -33,6 +33,14 @@ const partnershipSelect = {
             jobTitle: true,
         }
     },
+    position: {
+        select: {
+            id: true,
+            title: true,
+            companyId: true,
+            company: { select: { name: true } }
+        }
+    },
     uniEmployee: {
         select: {
             id: true,
@@ -56,8 +64,13 @@ export const getPartnershipById = async (req: Request, res: Response) => {
         const partnership = await prisma.dualPartnership.findFirst({
             where: {
                 id,
-                // If user is in a company, they must match the mentor's company
-                ...(companyId && { mentor: { companyId } })
+                // Match if user is mentor OR if the position belongs to their company
+                ...(companyId && {
+                    OR: [
+                        { mentor: { companyId } },
+                        { position: { companyId } }
+                    ]
+                })
             },
             select: partnershipSelect
         });
@@ -102,7 +115,13 @@ export const updatePartnership = async (
         }
 
         const partnershipToUpdate = await prisma.dualPartnership.findFirst({
-            where: { id, mentor: { companyId } }
+            where: {
+                id,
+                OR: [
+                    { mentor: { companyId } },
+                    { position: { companyId } }
+                ]
+            }
         });
 
         if (!partnershipToUpdate) {
@@ -146,7 +165,13 @@ export const deletePartnership = async (req: Request, res: Response) => {
         }
 
         const result = await prisma.dualPartnership.updateMany({
-            where: { id, mentor: { companyId } },
+            where: {
+                id,
+                OR: [
+                    { mentor: { companyId } },
+                    { position: { companyId } }
+                ]
+            },
             data: { deletedAt: new Date() }
         });
 
@@ -309,7 +334,12 @@ export const getCompanyPartnerships = async (req: Request, res: Response) => {
             return res.status(403).json({ message: "Nincs céghez rendelve vagy nincs jogosultsága." });
         }
         const partnerships = await prisma.dualPartnership.findMany({
-            where: { mentor: { companyId } },
+            where: {
+                OR: [
+                    { mentor: { companyId } },
+                    { position: { companyId } }
+                ]
+            },
             select: partnershipSelect,
             orderBy: { createdAt: "desc" }
         });
