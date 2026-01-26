@@ -258,10 +258,37 @@ export const assignMentor = async (req: Request, res: Response) => {
             return res.status(403).json({ message: "Ez a partnerség nem a te cégedhez tartozik." });
         }
 
+        // Logic to determine if mentorId is an Employee ID or User ID
+        let finalMentorId = mentorId;
+
+        // 1. Try to find by CompanyEmployee ID
+        const employeeById = await prisma.companyEmployee.findUnique({
+            where: { id: mentorId }
+        });
+
+        if (employeeById) {
+            // Found by ID - verify company ownership
+            if (employeeById.companyId !== companyId) {
+                return res.status(400).json({ message: "A megadott mentor nem ehhez a céghez tartozik." });
+            }
+            finalMentorId = employeeById.id;
+        } else {
+            // 2. Try to find by User ID (common frontend mistake)
+            const employeeByUserId = await prisma.companyEmployee.findUnique({
+                where: { userId: mentorId }
+            });
+
+            if (employeeByUserId && employeeByUserId.companyId === companyId) {
+                finalMentorId = employeeByUserId.id; // Correct to the Employee ID
+            } else {
+                return res.status(400).json({ message: "A megadott azonosítóval nem található mentor ennél a cégnél." });
+            }
+        }
+
         const updated = await prisma.dualPartnership.update({
             where: { id },
             data: {
-                mentorId: mentorId,
+                mentorId: finalMentorId,
                 status: PartnershipStatus.PENDING_UNIVERSITY
             },
             select: partnershipSelect
@@ -271,13 +298,13 @@ export const assignMentor = async (req: Request, res: Response) => {
             action: "ASSIGN_MENTOR",
             entity: "DualPartnership",
             entityId: id,
-            details: { assignedMentorId: mentorId, assignedBy: userId }
+            details: { assignedMentorId: finalMentorId, assignedBy: userId }
         });
 
         return res.json(updated);
-    } catch (e) {
-        console.error(e);
-        return res.status(500).json({ message: "Hiba a mentor hozzárendelésekor." });
+    } catch (e: any) {
+        console.error("Assign mentor error:", e);
+        return res.status(500).json({ message: "Hiba a mentor hozzárendelésekor.", error: e.message });
     }
 }
 
