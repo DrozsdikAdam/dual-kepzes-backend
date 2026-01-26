@@ -211,7 +211,9 @@ A partnerség automatikusan létrejön `PENDING_MENTOR` státusszal, amikor a c�
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
-| `GET` | `/` | Partnerkapcsolatok listázása (jogosultság szerint). |
+| `GET` | `/student` | Hallgató saját partnerségeinek listázása. |
+| `GET` | `/company` | Céghez tartozó partnerségek listázása. |
+| `GET` | `/university` | Összes partnerség listázása (Egyetem). |
 | `GET` | `/:id` | Partnerkapcsolat részletei. |
 | `PATCH` | `/:id` | Partnerkapcsolat adatainak frissítése. |
 | `PATCH` | `/:id/assign-mentor` | Mentor hozzárendelése (Cégadmin). |
