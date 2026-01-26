@@ -313,3 +313,51 @@ export const assignUniversityUser = async (req: Request, res: Response) => {
         return res.status(500).json({ message: "Hiba az egyetemi felhasználó hozzárendelésekor." });
     }
 }
+
+export const getStudentPartnerships = async (req: Request, res: Response) => {
+    const { userId } = req.user!;
+    try {
+        const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
+        if (!studentProfile) {
+            return res.status(403).json({ message: "Nem található hallgatói profil." });
+        }
+        const partnerships = await prisma.dualPartnership.findMany({
+            where: { studentId: studentProfile.id },
+            select: partnershipSelect,
+            orderBy: { createdAt: "desc" }
+        });
+        res.json(partnerships.map(mapDualPartnership));
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a hallgatói partnerségek lekérésekor." });
+    }
+}
+
+export const getCompanyPartnerships = async (req: Request, res: Response) => {
+    const { userId } = req.user!;
+    try {
+        const companyId = await getCompanyIdForUser(userId);
+        if (!companyId) {
+            return res.status(403).json({ message: "Nincs céghez rendelve vagy nincs jogosultsága." });
+        }
+        const partnerships = await prisma.dualPartnership.findMany({
+            where: { mentor: { companyId } },
+            select: partnershipSelect,
+            orderBy: { createdAt: "desc" }
+        });
+        res.json(partnerships.map(mapDualPartnership));
+    } catch (error) {
+        res.status(500).json({ message: "Hiba a céges partnerségek lekérésekor." });
+    }
+}
+
+export const getUniversityPartnerships = async (req: Request, res: Response) => {
+    try {
+        const partnerships = await prisma.dualPartnership.findMany({
+            select: partnershipSelect,
+            orderBy: { createdAt: "desc" }
+        });
+        res.json(partnerships.map(mapDualPartnership));
+    } catch (error) {
+        res.status(500).json({ message: "Hiba az egyetemi partnerségek lekérésekor." });
+    }
+}
