@@ -258,8 +258,6 @@ model DualPartnership {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-
-  logbookEntries LogbookEntry[]
 }
 
 // ---------------------------------------------------------
@@ -279,23 +277,6 @@ model Document {
 
   uploadedAt DateTime  @default(now())
   deletedAt  DateTime?
-}
-
-model LogbookEntry {
-  id String @id @default(uuid())
-
-  partnershipId String
-  partnership   DualPartnership @relation(fields: [partnershipId], references: [id])
-
-  date     DateTime
-  activity String
-
-  status        LogStatus @default(DRAFT)
-  rejectionNote String?
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
 }
 
 // ---------------------------------------------------------
