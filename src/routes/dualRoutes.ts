@@ -2,7 +2,6 @@
 import { Router } from "express";
 import {
     deletePartnership,
-    getAllPartnerships,
     getPartnershipById,
     updatePartnership,
     terminatePartnership,
@@ -27,26 +26,18 @@ import {
 
 const router = Router();
 
-router.get("/",
-    authenticateToken,
-    getAllPartnerships
-);
-
 router.get("/student",
     authenticateToken,
-    isStudent,
     getStudentPartnerships
 );
 
 router.get("/company",
     authenticateToken,
-    isCompanyEmployee,
     getCompanyPartnerships
 );
 
 router.get("/university",
     authenticateToken,
-    isUniversityStaff,
     getUniversityPartnerships
 );
 
