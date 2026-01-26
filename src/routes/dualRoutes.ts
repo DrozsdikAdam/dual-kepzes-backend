@@ -7,7 +7,10 @@ import {
     updatePartnership,
     terminatePartnership,
     assignMentor,
-    assignUniversityUser
+    assignUniversityUser,
+    getStudentPartnerships,
+    getCompanyPartnerships,
+    getUniversityPartnerships
 } from "../controllers/dualController";
 import { validate } from "../middlewares/validateMiddleware";
 import {
@@ -15,13 +18,36 @@ import {
     AssignUniversityUserSchema,
     DualPartnershipUpdateSchema,
 } from "../schemas/dualSchema";
-import { authenticateToken } from "../middlewares/authMiddleware";
+import {
+    authenticateToken,
+    isCompanyEmployee,
+    isStudent,
+    isUniversityStaff
+} from "../middlewares/authMiddleware";
 
 const router = Router();
 
 router.get("/",
     authenticateToken,
     getAllPartnerships
+);
+
+router.get("/student",
+    authenticateToken,
+    isStudent,
+    getStudentPartnerships
+);
+
+router.get("/company",
+    authenticateToken,
+    isCompanyEmployee,
+    getCompanyPartnerships
+);
+
+router.get("/university",
+    authenticateToken,
+    isUniversityStaff,
+    getUniversityPartnerships
 );
 
 router.get("/:id",
