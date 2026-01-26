@@ -254,15 +254,6 @@ export const getCompanyMentors = async (req: Request, res: Response) => {
             orderBy: { fullName: "asc" }
         });
 
-        await logAction(req, {
-            action: "VIEW_COMPANY_MENTORS",
-            entity: "User",
-            details: {
-                viewerId: req.user.userId,
-                count: mentors.length
-            }
-        })
-
         res.json(mentors);
     } catch (error) {
         res.status(500).json({ message: "Hiba a mentorok lekérdezése során." });

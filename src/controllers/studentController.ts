@@ -117,14 +117,6 @@ export const getAllStudents = async (req: Request, res: Response) => {
             orderBy: { createdAt: "desc" }
         })
 
-
-        // LISTÁZÁS NAPLÓZÁSA
-        await logAction(req, {
-            action: "LIST_STUDENTS",
-            entity: "User",
-            details: { listById: req.user?.userId, count: students.length }
-        });
-
         res.status(200).json(students.map(mapStudent));
     } catch (error) {
         console.error("GetAllStudents Error:", error);

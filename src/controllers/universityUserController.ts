@@ -105,11 +105,6 @@ export const getUniversityUsers = async (req: Request, res: Response) => {
                orderBy: { fullName: "asc" }
           });
 
-          await logAction(req, {
-               action: "LIST_UNIVERSITY_USERS",
-               entity: "User",
-               details: { listById: req.user?.userId, count: users.length }
-          });
           return res.json(users);
      } catch (error) {
           return res.status(500).json({ message: "Hiba az egyetemi dolgozók lekérésekor." });
