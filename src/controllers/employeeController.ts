@@ -4,7 +4,7 @@ import { userService } from "../services/user.service";
 import { logAction } from "../utils/logger";
 import { Role } from "@prisma/client";
 import { UpdateEmployeeInput } from "../schemas/employeeSchema";
-import { getCompanyIdForUser } from "../utils/companyUtils";
+import { getPaginationParams } from "../utils/pagination";
 
 export const getMeEmployee = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -88,13 +88,14 @@ export const getEmployeeById = async (req: Request, res: Response, next: NextFun
 
 export const getCompanyEmployees = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const companyId = await getCompanyIdForUser(req.user!.userId);
-        if (!companyId || req.user!.role !== Role.COMPANY_ADMIN) {
-            return res.status(403).json({ message: "Nincs jogosultságod a lista megtekintéséhez." });
-        }
-
-        const employees = await userService.getAllByRole([Role.MENTOR, Role.COMPANY_ADMIN], companyId);
-        res.json(employees);
+        const { companyId } = req.params;
+        const params = getPaginationParams(req.query);
+        const result = await userService.getAllByRole([Role.MENTOR, Role.COMPANY_ADMIN], companyId, params);
+        res.json({
+            success: true,
+            data: (result as any).data,
+            pagination: (result as any).pagination
+        });
     } catch (error) {
         next(error);
     }
@@ -102,13 +103,14 @@ export const getCompanyEmployees = async (req: Request, res: Response, next: Nex
 
 export const getCompanyMentors = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const companyId = await getCompanyIdForUser(req.user!.userId);
-        if (!companyId || req.user!.role !== Role.COMPANY_ADMIN) {
-            return res.status(403).json({ message: "Nincs jogosultságod a lista megtekintéséhez." });
-        }
-
-        const mentors = await userService.getAllByRole(Role.MENTOR, companyId);
-        res.json(mentors);
+        const { companyId } = req.params;
+        const params = getPaginationParams(req.query);
+        const result = await userService.getAllByRole(Role.MENTOR, companyId, params);
+        res.json({
+            success: true,
+            data: (result as any).data,
+            pagination: (result as any).pagination
+        });
     } catch (error) {
         next(error);
     }

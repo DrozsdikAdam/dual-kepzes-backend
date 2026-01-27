@@ -1,6 +1,7 @@
 import prisma from '../config/prisma';
-import { NotFoundError, ForbiddenError } from '../errors/AppError';
+import { NotFoundError } from '../errors/AppError';
 import { Role } from '@prisma/client';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
 
 export class StudentService {
      private studentSelect = {
@@ -46,12 +47,21 @@ export class StudentService {
           return student;
      }
 
-     async getAll() {
-          return await prisma.user.findMany({
-               where: { role: Role.STUDENT },
-               select: this.studentSelect,
-               orderBy: { createdAt: 'desc' }
-          });
+     async getAll(params: Required<PaginationParams>) {
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = { role: Role.STUDENT };
+
+          return await paginate(
+               params,
+               prisma.user.findMany({
+                    where,
+                    select: this.studentSelect,
+                    orderBy: { createdAt: 'desc' as const },
+                    skip,
+                    take
+               }),
+               prisma.user.count({ where })
+          );
      }
 
      async updateProfile(userId: string, data: any) {

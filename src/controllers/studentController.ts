@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { studentService } from "../services/student.service";
 import { logAction } from "../utils/logger";
 import { mapStudent } from "../utils/mappers";
+import { getPaginationParams } from "../utils/pagination";
 
 export const getMyProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -37,8 +38,13 @@ export const getStudentById = async (req: Request, res: Response, next: NextFunc
 
 export const getAllStudents = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const students = await studentService.getAll();
-        res.status(200).json(students.map(mapStudent));
+        const params = getPaginationParams(req.query);
+        const result = await studentService.getAll(params);
+        res.status(200).json({
+            success: true,
+            data: result.data.map(mapStudent),
+            pagination: result.pagination
+        });
     } catch (error) {
         next(error);
     }

@@ -1,6 +1,7 @@
 import prisma from '../config/prisma';
-import { NotFoundError, ForbiddenError } from '../errors/AppError';
+import { NotFoundError } from '../errors/AppError';
 import { Role } from '@prisma/client';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
 
 export class UserService {
      private userSelect = {
@@ -45,21 +46,32 @@ export class UserService {
           return user;
      }
 
-     async getAllByRole(role: Role | Role[], companyId?: string) {
-          return await prisma.user.findMany({
-               where: {
-                    role: Array.isArray(role) ? { in: role } : role,
-                    deletedAt: null,
-                    ...(companyId && {
-                         companyEmployee: { companyId }
-                    })
-               },
-               select: {
-                    ...this.userSelect,
-                    companyEmployee: { select: { company: { select: { id: true, name: true } } } }
-               },
-               orderBy: { fullName: "asc" }
-          });
+     async getAllByRole(role: Role | Role[], companyId?: string, params?: Required<PaginationParams>) {
+          const where = {
+               role: Array.isArray(role) ? { in: role } : role,
+               deletedAt: null,
+               ...(companyId && {
+                    companyEmployee: { companyId }
+               })
+          };
+
+          const select = {
+               ...this.userSelect,
+               companyEmployee: { select: { company: { select: { id: true, name: true } } } }
+          };
+
+          const orderBy = { fullName: "asc" as const };
+
+          if (params) {
+               const { skip, take } = getPrismaSkipTake(params);
+               return await paginate(
+                    params,
+                    prisma.user.findMany({ where, select, orderBy, skip, take }),
+                    prisma.user.count({ where })
+               );
+          }
+
+          return await prisma.user.findMany({ where, select, orderBy });
      }
 
      async update(id: string, data: any, updaterRole: Role) {
