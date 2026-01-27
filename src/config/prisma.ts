@@ -15,16 +15,18 @@ const prisma = basePrisma.$extends({
         $allModels: {
             async findMany({ model, args, query }) {
                 if (softDeleteModels.includes(model)) {
-                    if (!(args.where as any)?.deletedAt) {
-                        args.where = { ...args.where, deletedAt: null };
+                    args.where = args.where || {};
+                    if (!(args.where as any).deletedAt) {
+                        (args.where as any).deletedAt = null;
                     }
                 }
                 return query(args);
             },
             async findFirst({ model, args, query }) {
                 if (softDeleteModels.includes(model)) {
-                    if (!(args.where as any)?.deletedAt) {
-                        args.where = { ...args.where, deletedAt: null };
+                    args.where = args.where || {};
+                    if (!(args.where as any).deletedAt) {
+                        (args.where as any).deletedAt = null;
                     }
                 }
                 return query(args);
@@ -32,9 +34,13 @@ const prisma = basePrisma.$extends({
             async findUnique({ model, args, query }) {
                 if (softDeleteModels.includes(model)) {
                     const modelName = model.charAt(0).toLowerCase() + model.slice(1);
+                    const where = args.where || {};
+                    if (!(where as any).deletedAt) {
+                        (where as any).deletedAt = null;
+                    }
                     return (basePrisma as any)[modelName].findFirst({
                         ...args,
-                        where: { ...args.where, deletedAt: null }
+                        where
                     });
                 }
                 return query(args);

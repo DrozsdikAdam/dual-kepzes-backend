@@ -16,7 +16,8 @@ export const errorHandler = (
 
     // A korábbi megoldáshoz hűen konzolra írjuk a hibát
     console.error("--- SZERVER OLDALI HIBA NAPLÓ ---");
-    console.error(err.stack || err.message);
+    console.error(err);
+    if (err.stack) console.error(err.stack);
 
     // Handle known application errors
     if (err instanceof AppError) {
