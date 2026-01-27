@@ -1,57 +1,26 @@
-import { Request, Response } from "express";
-import prisma from "../config/prisma";
-import { Role } from "@prisma/client";
+import { Request, Response, NextFunction } from "express";
+import { userService } from "../services/user.service";
 import { logAction } from "../utils/logger";
+import { Role } from "@prisma/client";
 
-const universityUserSelect = {
-     id: true,
-     email: true,
-     fullName: true,
-     phoneNumber: true,
-     role: true,
-     isActive: true,
-     createdAt: true
+export const getMeUniversityUser = async (req: Request, res: Response, next: NextFunction) => {
+     try {
+          const userId = req.user?.userId;
+          if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+
+          const user = await userService.getById(userId, Role.UNIVERSITY_USER);
+          res.json(user);
+     } catch (error) {
+          next(error);
+     }
 };
 
-
-export const getMeUniversityUser = async (req: Request, res: Response) => {
-     const userId = req.user?.userId;
-     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
-
+export const updateMeUniversityUser = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const user = await prisma.user.findFirst({
-               where: {
-                    id: userId,
-                    role: Role.UNIVERSITY_USER
-               },
-               select: universityUserSelect
-          });
+          const userId = req.user?.userId;
+          if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
 
-          if (!user) {
-               return res.status(404).json({ message: "Nem található az egyetemi felhasználó profil." });
-          }
-
-          return res.json(user);
-     } catch (error) {
-          return res.status(500).json({ message: "Hiba a profil lekérésekor." });
-     }
-}
-
-export const updateMeUniversityUser = async (req: Request, res: Response) => {
-     const userId = req.user?.userId;
-     const { fullName, phoneNumber } = req.body;
-
-     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
-
-     try {
-          const updatedUser = await prisma.user.update({
-               where: { id: userId },
-               data: {
-                    fullName,
-                    phoneNumber
-               },
-               select: universityUserSelect
-          });
+          const updatedUser = await userService.update(userId, req.body, Role.UNIVERSITY_USER);
 
           await logAction(req, {
                action: "UPDATE_MY_PROFILE",
@@ -59,28 +28,22 @@ export const updateMeUniversityUser = async (req: Request, res: Response) => {
                entityId: userId,
                details: {
                     updatedBy: userId,
-                    changes: { fullName, phoneNumber }
-               }
-          })
-
-          return res.json({ message: "Profil sikeresen frissítve.", user: updatedUser });
-     } catch (error) {
-          return res.status(500).json({ message: "Hiba a profil frissítésekor." });
-     }
-}
-
-export const deleteMeUniversityUser = async (req: Request, res: Response) => {
-     const userId = req.user?.userId;
-     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
-
-     try {
-          await prisma.user.update({
-               where: { id: userId },
-               data: {
-                    isActive: false,
-                    deletedAt: new Date()
+                    changes: req.body
                }
           });
+
+          res.json({ success: true, message: "Profil sikeresen frissítve.", user: updatedUser });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const deleteMeUniversityUser = async (req: Request, res: Response, next: NextFunction) => {
+     try {
+          const userId = req.user?.userId;
+          if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+
+          await userService.delete(userId);
 
           await logAction(req, {
                action: "DELETE_MY_PROFILE",
@@ -89,88 +52,50 @@ export const deleteMeUniversityUser = async (req: Request, res: Response) => {
                details: { deletedById: userId }
           });
 
-          return res.json({ message: "A profil sikeresen törölve." });
+          res.json({ success: true, message: "A profil sikeresen törölve." });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba a törlés során." });
-     }
-}
-
-export const getUniversityUsers = async (req: Request, res: Response) => {
-     try {
-          const users = await prisma.user.findMany({
-               where: {
-                    role: Role.UNIVERSITY_USER
-               },
-               select: universityUserSelect,
-               orderBy: { fullName: "asc" }
-          });
-
-          return res.json(users);
-     } catch (error) {
-          return res.status(500).json({ message: "Hiba az egyetemi dolgozók lekérésekor." });
+          next(error);
      }
 };
 
-export const getUniversityUserById = async (req: Request, res: Response) => {
-     const { id } = req.params;
-
+export const getUniversityUsers = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const user = await prisma.user.findFirst({
-               where: {
-                    id: id,
-                    role: Role.UNIVERSITY_USER
-               },
-               select: universityUserSelect
-          });
+          const users = await userService.getAllByRole(Role.UNIVERSITY_USER);
+          res.json(users);
+     } catch (error) {
+          next(error);
+     }
+};
 
-          if (!user) {
-               return res.status(404).json({ message: "A keresett dolgozó nem található." });
-          }
-
+export const getUniversityUserById = async (req: Request, res: Response, next: NextFunction) => {
+     try {
+          const { id } = req.params;
+          const user = await userService.getById(id, Role.UNIVERSITY_USER);
 
           await logAction(req, {
                action: "VIEW_UNIVERSITY_USER_DETAILS",
                entity: "User",
                entityId: id,
                details: { viewedById: req.user?.userId }
-          })
+          });
 
-          return res.json(user);
+          res.json(user);
      } catch (error) {
-          return res.status(500).json({ message: "Hiba történt a lekérdezés közben." });
+          next(error);
      }
 };
 
-export const updateUniversityUserById = async (req: Request, res: Response) => {
-     const { id } = req.params;
-     const { fullName, phoneNumber, isActive } = req.body;
-     const currentUser = req.user!;
-
+export const updateUniversityUserById = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const target = await prisma.user.findFirst({
-               where: { id: id, role: Role.UNIVERSITY_USER }
-          });
+          const { id } = req.params;
+          const currentUser = req.user!;
 
-          if (!target) {
-               return res.status(404).json({ message: "A keresett dolgozó nem található." });
-          }
-
-          const isSelf = id === currentUser.userId;
-          const isSystemAdmin = currentUser.role === Role.SYSTEM_ADMIN;
-
-          if (!isSelf && !isSystemAdmin) {
+          // Check permissions: Self or System Admin
+          if (id !== currentUser.userId && currentUser.role !== Role.SYSTEM_ADMIN) {
                return res.status(403).json({ message: "Nincs jogosultságod a művelet elvégzéséhez." });
           }
 
-          const updatedUser = await prisma.user.update({
-               where: { id },
-               data: {
-                    fullName,
-                    phoneNumber,
-                    isActive: isSystemAdmin ? isActive : undefined
-               },
-               select: universityUserSelect
-          });
+          const updatedUser = await userService.update(id, req.body, currentUser.role as Role);
 
           await logAction(req, {
                action: "UPDATE_UNIVERSITY_USER",
@@ -178,36 +103,21 @@ export const updateUniversityUserById = async (req: Request, res: Response) => {
                entityId: id,
                details: {
                     updatedBy: currentUser.userId,
-                    fields: { fullName, phoneNumber, isActive: isSystemAdmin ? isActive : "unchanged" }
+                    changes: req.body
                }
           });
 
-          return res.json({ message: "Adatok sikeresen frissítve.", user: updatedUser });
-
+          res.json({ success: true, message: "Adatok sikeresen frissítve.", user: updatedUser });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba történt a frissítés során." });
+          next(error);
      }
 };
 
-export const deleteUniversityUser = async (req: Request, res: Response) => {
-     const { id } = req.params;
-
+export const deleteUniversityUser = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const target = await prisma.user.findFirst({
-               where: { id: id, role: Role.UNIVERSITY_USER }
-          })
-
-          if (!target) {
-               return res.status(404).json({ message: "Nem található az egyetemi dolgozó." })
-          }
-
-          await prisma.user.update({
-               where: { id },
-               data: {
-                    isActive: false,
-                    deletedAt: new Date()
-               }
-          });
+          const { id } = req.params;
+          await userService.getById(id, Role.UNIVERSITY_USER); // Check exists
+          await userService.delete(id);
 
           await logAction(req, {
                action: "DELETE_UNIVERSITY_USER",
@@ -216,8 +126,8 @@ export const deleteUniversityUser = async (req: Request, res: Response) => {
                details: { deletedById: req.user?.userId }
           });
 
-          return res.json({ message: "A rekord sikeresen törölve." });
+          res.json({ success: true, message: "A rekord sikeresen törölve." });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba történt a törlés során." });
+          next(error);
      }
 };

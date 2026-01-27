@@ -1,60 +1,28 @@
-import { Request, Response } from "express"
-import prisma from "../config/prisma"
-import { Role } from "@prisma/client"
-import { logAction } from "../utils/logger"
+import { Request, Response, NextFunction } from "express";
+import { userService } from "../services/user.service";
+import { logAction } from "../utils/logger";
+import { Role } from "@prisma/client";
 
-const systemAdminSelect = {
-     id: true,
-     email: true,
-     fullName: true,
-     phoneNumber: true,
-     role: true,
-     isActive: true
-}
-
-
-export const getMeSystemAdmin = async (req: Request, res: Response) => {
-     const userId = req.user?.userId
-
-     if (!userId) {
-          return res.status(401).json({ message: "Nincs azonosított felhasználó." })
-     }
-
+export const getMeSystemAdmin = async (req: Request, res: Response, next: NextFunction) => {
      try {
-
-          const user = await prisma.user.findFirst({
-               where: {
-                    id: userId
-               },
-               select: systemAdminSelect
-          })
-
-          if (!user) {
-               return res.status(404).json({ message: "Nem található az admin profil." })
+          const userId = req.user?.userId;
+          if (!userId) {
+               return res.status(401).json({ message: "Nincs azonosított felhasználó." });
           }
 
-          return res.json(user)
-
+          const user = await userService.getById(userId, Role.SYSTEM_ADMIN);
+          res.json(user);
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az admin lekérésekor." })
+          next(error);
      }
-}
+};
 
-export const updateMeSystemAdmin = async (req: Request, res: Response) => {
-     const userId = req.user?.userId
-     const { fullName, phoneNumber } = req.body
-
-     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." })
-
+export const updateMeSystemAdmin = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const updated = await prisma.user.update({
-               where: { id: userId },
-               data: {
-                    fullName,
-                    phoneNumber
-               },
-               select: systemAdminSelect
-          })
+          const userId = req.user?.userId;
+          if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+
+          const updated = await userService.update(userId, req.body, Role.SYSTEM_ADMIN);
 
           await logAction(req, {
                action: "UPDATE_MY_PROFILE",
@@ -62,119 +30,74 @@ export const updateMeSystemAdmin = async (req: Request, res: Response) => {
                entityId: userId,
                details: {
                     updatedBy: userId,
-                    changes: { fullName, phoneNumber }
+                    changes: req.body
                }
-          })
+          });
 
-          return res.json({ message: "Profil sikeresen frissítve.", user: updated })
+          res.json({ success: true, message: "Profil sikeresen frissítve.", user: updated });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az admin profil frissítésekor." })
+          next(error);
      }
-}
+};
 
-export const deleteMeSystemAdmin = async (req: Request, res: Response) => {
-     const userId = req.user?.userId
-
-     if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." })
-
+export const deleteMeSystemAdmin = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          await prisma.user.update({
-               where: { id: userId },
-               data: {
-                    isActive: false,
-                    deletedAt: new Date()
-               }
-          })
+          const userId = req.user?.userId;
+          if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+
+          await userService.delete(userId);
 
           await logAction(req, {
                action: "DELETE_MY_PROFILE",
                entity: "User",
                entityId: userId,
-               details: {
-                    deletedBy: userId,
-               }
-          })
+               details: { deletedBy: userId }
+          });
 
-          return res.json({ message: "A profil sikeresen törölve." })
+          res.json({ success: true, message: "A profil sikeresen törölve." });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba történt a törlés során." })
+          next(error);
      }
-}
+};
 
-export const getSystemAdmins = async (req: Request, res: Response) => {
+export const getSystemAdmins = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const admins = await prisma.user.findMany({
-               where: { role: Role.SYSTEM_ADMIN },
-               select: systemAdminSelect,
-               orderBy: { fullName: "asc" }
-          })
+          const admins = await userService.getAllByRole(Role.SYSTEM_ADMIN);
 
           await logAction(req, {
                action: "LIST_SYSTEM_ADMINS",
                entity: "User",
                details: { listById: req.user?.userId, count: admins.length }
-          })
+          });
 
-          return res.json(admins)
+          res.json(admins);
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az adminok lekérésekor." })
+          next(error);
      }
-}
+};
 
-export const getSystemAdminById = async (req: Request, res: Response) => {
-     const { id } = req.params
-
+export const getSystemAdminById = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const admin = await prisma.user.findFirst({
-               where: {
-                    id,
-                    role: Role.SYSTEM_ADMIN
-               },
-               select: systemAdminSelect
-          })
+          const { id } = req.params;
+          const admin = await userService.getById(id, Role.SYSTEM_ADMIN);
 
-          if (!admin) {
-               return res.status(404).json({ message: "A rendszeradminisztrátor nem található." })
-          }
-
-          // EGYEDI ADMIN MEGTEKINTÉSÉNEK NAPLÓZÁSA
           await logAction(req, {
                action: "VIEW_SYSTEM_ADMIN_DETAILS",
                entity: "User",
                entityId: id,
                details: { viewedById: req.user?.userId, viewedEmail: admin.email }
-          })
+          });
 
-          return res.json(admin)
+          res.json(admin);
      } catch (error) {
-          return res.status(500).json({ message: "Hiba a lekérdezés során." })
+          next(error);
      }
-}
+};
 
-export const updateSystemAdminById = async (req: Request, res: Response) => {
-     const { id } = req.params
-     const { fullName, phoneNumber, isActive } = req.body
-
+export const updateSystemAdminById = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const target = await prisma.user.findFirst({
-               where: {
-                    id, role: Role.SYSTEM_ADMIN
-               }
-          })
-
-          if (!target) {
-               return res.status(404).json({ message: "Nem található a profil." })
-          }
-
-          const updated = await prisma.user.update({
-               where: { id },
-               data: {
-                    fullName,
-                    phoneNumber,
-                    isActive
-               },
-               select: systemAdminSelect
-          })
+          const { id } = req.params;
+          const updated = await userService.update(id, req.body, Role.SYSTEM_ADMIN);
 
           await logAction(req, {
                action: "UPDATE_SYSTEM_ADMIN",
@@ -182,82 +105,47 @@ export const updateSystemAdminById = async (req: Request, res: Response) => {
                entityId: id,
                details: {
                     updatedBy: req.user?.userId,
-                    changes: { fullName, phoneNumber, isActive }
+                    changes: req.body
                }
-          })
+          });
 
-          return res.json({ message: "Rendszeradmin adatai sikeresen frissítve.", updated })
+          res.json({ success: true, message: "Rendszeradmin adatai sikeresen frissítve.", user: updated });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba történt a frissítéskor." })
+          next(error);
      }
-}
+};
 
-export const deleteSystemAdmin = async (req: Request, res: Response) => {
-     const { id } = req.params
-
+export const deleteSystemAdmin = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const target = await prisma.user.findFirst({
-               where: {
-                    id, role: Role.SYSTEM_ADMIN
-               }
-          })
-
-          if (!target) {
-               return res.status(404).json({ message: "Nem található ilyen rendszeradminisztrátor." })
-          }
-
-          await prisma.user.update({
-               where: { id },
-               data: {
-                    isActive: false,
-                    deletedAt: new Date()
-               }
-          })
+          const { id } = req.params;
+          await userService.getById(id, Role.SYSTEM_ADMIN); // Check if exists and is admin
+          await userService.delete(id);
 
           await logAction(req, {
                action: "DELETE_SYSTEM_ADMIN",
                entity: "User",
                entityId: id,
-               details: {
-                    deletedBy: req.user?.userId,
-               }
-          })
+               details: { deletedBy: req.user?.userId }
+          });
 
-          return res.json({ message: "A rekord sikeresen törölve." })
+          res.json({ success: true, message: "A rekord sikeresen törölve." });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba történt a törlés során." })
+          next(error);
      }
-}
+};
 
-// Endpoint a System Admin számára, hogy lássa az összes admint (Rendszer, Cég, Egyetem)
-export const getAllAdminUsers = async (req: Request, res: Response) => {
+export const getAllAdminUsers = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const admins = await prisma.user.findMany({
-               where: {
-                    role: {
-                         in: [Role.SYSTEM_ADMIN, Role.COMPANY_ADMIN, Role.UNIVERSITY_USER]
-                    }
-               },
-               select: {
-                    id: true,
-                    email: true,
-                    fullName: true,
-                    phoneNumber: true,
-                    role: true,
-                    isActive: true,
-                    companyEmployee: { select: { company: { select: { name: true } } } }
-               },
-               orderBy: { role: "asc" }
-          })
+          const admins = await userService.getAllByRole([Role.SYSTEM_ADMIN, Role.COMPANY_ADMIN, Role.UNIVERSITY_USER]);
 
           await logAction(req, {
                action: "LIST_ALL_ADMINS",
                entity: "User",
                details: { count: admins.length }
-          })
+          });
 
-          return res.json(admins)
+          res.json(admins);
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az adminok lekérésekor." })
+          next(error);
      }
-}
+};
