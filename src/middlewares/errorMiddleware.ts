@@ -44,13 +44,20 @@ export const errorHandler = (
     }
 
     // Handle Prisma Client errors (example: unique constraint)
-    if (err.name === 'PrismaClientKnownRequestError') {
-        return res.status(400).json({
+    if (err.name === 'PrismaClientKnownRequestError' || err.name === 'PrismaClientUnknownRequestError' || err.name === 'PrismaClientInitializationError') {
+        const isConnLimit = err.message?.includes("Max client connections reached") || err.message?.includes("connection limit");
+
+        return res.status(isConnLimit ? 503 : 400).json({
             success: false,
             error: {
-                code: ErrorCodes.DATABASE_ERROR,
-                message: 'Adatbázis hiba történt.',
-                ...(process.env.NODE_ENV === 'development' && { details: err.meta })
+                code: isConnLimit ? "DATABASE_CONNECTION_LIMIT" : ErrorCodes.DATABASE_ERROR,
+                message: isConnLimit
+                    ? 'Az adatbázis jelenleg túlterhelt, kérjük próbálja újra később.'
+                    : 'Adatbázis hiba történt.',
+                ...(process.env.NODE_ENV === 'development' && {
+                    details: err.meta,
+                    originalError: err.message
+                })
             },
         });
     }
