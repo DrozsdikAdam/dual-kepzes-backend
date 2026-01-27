@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { applicationService } from "../services/application.service";
 import { logAction } from "../utils/logger";
 import { mapApplication } from "../utils/mappers";
+import { getPaginationParams } from "../utils/pagination";
 import prisma from "../config/prisma";
 
 export const applyToPosition = async (req: Request, res: Response, next: NextFunction) => {
@@ -41,8 +42,13 @@ export const getMyApplications = async (req: Request, res: Response, next: NextF
             return res.status(403).json({ message: "Nincs hallgatói profilod." });
         }
 
-        const applications = await applicationService.getMyApplications(studentProfile.id);
-        res.json(applications.map(mapApplication));
+        const params = getPaginationParams(req.query);
+        const result = await applicationService.getMyApplications(studentProfile.id, params);
+        res.json({
+            success: true,
+            data: result.data.map(mapApplication),
+            pagination: result.pagination
+        });
     } catch (error) {
         next(error);
     }
@@ -79,14 +85,13 @@ export const retractApplication = async (req: Request, res: Response, next: Next
 
 export const getApplications = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // This could be admin only, but currently used for system admins
-        const applications = await prisma.application.findMany({
-            include: {
-                student: { include: { user: true } },
-                position: { include: { company: true } }
-            }
+        const params = getPaginationParams(req.query);
+        const result = await applicationService.getAll(params);
+        res.json({
+            success: true,
+            data: result.data.map(mapApplication),
+            pagination: result.pagination
         });
-        res.json(applications.map(mapApplication));
     } catch (error) {
         next(error);
     }
@@ -141,8 +146,13 @@ export const evaluateApplication = async (req: Request, res: Response, next: Nex
 export const getMyCompanyApplications = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { userId } = req.user!;
-        const applications = await applicationService.getCompanyApplications(userId);
-        res.json(applications.map(mapApplication));
+        const params = getPaginationParams(req.query);
+        const result = await applicationService.getCompanyApplications(userId, params);
+        res.json({
+            success: true,
+            data: result.data.map(mapApplication),
+            pagination: result.pagination
+        });
     } catch (error) {
         next(error);
     }

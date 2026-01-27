@@ -2,6 +2,7 @@ import prisma from '../config/prisma';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../errors/AppError';
 import { ApplicationStatus } from '@prisma/client';
 import { getCompanyIdForUser } from '../utils/companyUtils';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
 
 export class ApplicationService {
      async apply(studentId: string, positionId: string, studentNote?: string) {
@@ -39,12 +40,21 @@ export class ApplicationService {
           });
      }
 
-     async getMyApplications(studentId: string) {
-          return await prisma.application.findMany({
-               where: { studentId },
-               include: this.getApplicationInclude(),
-               orderBy: { submittedAt: 'desc' }
-          });
+     async getMyApplications(studentId: string, params: Required<PaginationParams>) {
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = { studentId };
+
+          return await paginate(
+               params,
+               prisma.application.findMany({
+                    where,
+                    include: this.getApplicationInclude(),
+                    orderBy: { submittedAt: 'desc' as const },
+                    skip,
+                    take
+               }),
+               prisma.application.count({ where })
+          );
      }
 
      async retract(applicationId: string, studentId: string) {
@@ -125,19 +135,45 @@ export class ApplicationService {
           });
      }
 
-     async getCompanyApplications(userId: string) {
+     async getCompanyApplications(userId: string, params: Required<PaginationParams>) {
           const companyId = await getCompanyIdForUser(userId);
           if (!companyId) {
                throw new ForbiddenError('Nincs jogosultsága a művelethez.');
           }
 
-          return await prisma.application.findMany({
-               where: {
-                    position: { companyId }
-               },
-               include: this.getApplicationInclude(),
-               orderBy: { submittedAt: 'desc' }
-          });
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = {
+               position: { companyId }
+          };
+
+          return await paginate(
+               params,
+               prisma.application.findMany({
+                    where,
+                    include: this.getApplicationInclude(),
+                    orderBy: { submittedAt: 'desc' as const },
+                    skip,
+                    take
+               }),
+               prisma.application.count({ where })
+          );
+     }
+
+     async getAll(params: Required<PaginationParams>) {
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = {};
+
+          return await paginate(
+               params,
+               prisma.application.findMany({
+                    where,
+                    include: this.getApplicationInclude(),
+                    orderBy: { submittedAt: 'desc' as const },
+                    skip,
+                    take
+               }),
+               prisma.application.count({ where })
+          );
      }
 
      private getApplicationInclude() {
