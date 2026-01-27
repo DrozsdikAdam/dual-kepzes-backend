@@ -40,6 +40,22 @@ The following optional query parameters can be used on all affected endpoints:
 | `page`    | Number  | 1       | The page number to retrieve. |
 | `limit`   | Number  | 10      | Number of items per page. |
 
+## Request Examples
+
+The parameters are passed as standard URL query strings:
+
+- **Basic request (default 10 items):**
+  `GET /api/jobs`
+
+- **Requesting a specific page:**
+  `GET /api/jobs?page=2`
+
+- **Customizing the number of items per page:**
+  `GET /api/jobs?limit=25`
+
+- **Combining parameters (Page 3, 20 items per page):**
+  `GET /api/jobs?page=3&limit=20`
+
 ---
 
 ## Affected Endpoints
