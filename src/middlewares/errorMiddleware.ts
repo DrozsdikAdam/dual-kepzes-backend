@@ -62,7 +62,7 @@ export const errorHandler = (
         success: false,
         error: {
             code: ErrorCodes.INTERNAL_ERROR,
-            message: process.env.NODE_ENV === "development" ? message : "Belső szerver hiba",
+            message: process.env.NODE_ENV === "development" ? message : (err.message || "Belső szerver hiba"),
             ...(process.env.NODE_ENV === "development" && { stack: err.stack })
         }
     });
