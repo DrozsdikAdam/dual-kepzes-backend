@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { newsService } from "../services/news.service";
 import { logAction } from "../utils/logger";
+import { getPaginationParams } from "../utils/pagination";
 
 export const createNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
@@ -27,11 +28,17 @@ export const createNews = async (req: Request, res: Response, next: NextFunction
      }
 };
 
-export const getUserNews = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
+          const params = getPaginationParams(req.query);
           const role = req.user?.role;
-          const news = await newsService.getAll(role, false);
-          res.json({ success: true, data: news });
+          const result = await newsService.getAll(params, role);
+
+          res.json({
+               success: true,
+               data: result.data,
+               pagination: result.pagination
+          });
      } catch (error) {
           next(error);
      }
@@ -49,8 +56,13 @@ export const getUserNewsById = async (req: Request, res: Response, next: NextFun
 
 export const getAdminNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const news = await newsService.getAll('SYSTEM_ADMIN', false);
-          res.json({ success: true, data: news });
+          const params = getPaginationParams(req.query);
+          const result = await newsService.getAll(params, 'SYSTEM_ADMIN');
+          res.json({
+               success: true,
+               data: result.data,
+               pagination: result.pagination
+          });
      } catch (error) {
           next(error);
      }
@@ -164,8 +176,13 @@ export const deleteNews = async (req: Request, res: Response, next: NextFunction
 
 export const getArchivedNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const news = await newsService.getAll('SYSTEM_ADMIN', true);
-          res.json({ success: true, data: news });
+          const params = getPaginationParams(req.query);
+          const result = await newsService.getAll(params, 'SYSTEM_ADMIN', true);
+          res.json({
+               success: true,
+               data: result.data,
+               pagination: result.pagination
+          });
      } catch (error) {
           next(error);
      }

@@ -1,5 +1,6 @@
 import prisma from '../config/prisma';
 import { NotFoundError } from '../errors/AppError';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
 
 export class NewsService {
      private newsSelect = {
@@ -26,23 +27,35 @@ export class NewsService {
           });
      }
 
-     async getAll(role?: string, isArchived: boolean = false) {
-          const news = await prisma.news.findMany({
-               where: { isArchived },
-               orderBy: { createdAt: 'desc' },
-               select: this.newsSelect
+     async getAll(params: Required<PaginationParams>, role?: string, isArchived: boolean = false) {
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = { isArchived, deletedAt: null };
+
+          const dataPromise = prisma.news.findMany({
+               where,
+               orderBy: { createdAt: 'desc' as const },
+               select: this.newsSelect,
+               skip,
+               take
           });
 
+          const paginated = await paginate(
+               params,
+               dataPromise,
+               prisma.news.count({ where })
+          );
+
           if (role === 'SYSTEM_ADMIN') {
-               return news;
+               return paginated;
           }
 
-          // Filter for non-admin users
-          return news.filter((item) => {
+          paginated.data = paginated.data.filter((item) => {
                if (item.targetGroup === 'ALL' || item.targetGroup === 'All') return true;
                if (item.targetGroup === 'STUDENT' && role === 'STUDENT') return true;
                return false;
           });
+
+          return paginated;
      }
 
      async getById(id: string, isArchived?: boolean) {
