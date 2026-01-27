@@ -1,214 +1,79 @@
-import { Request, Response } from "express";
-import prisma from "../config/prisma";
+import { Request, Response, NextFunction } from "express";
+import { studentService } from "../services/student.service";
 import { logAction } from "../utils/logger";
 import { mapStudent } from "../utils/mappers";
 
-const studentSelect = {
-    id: true,
-    email: true,
-    fullName: true,
-    phoneNumber: true,
-    role: true,
-    studentProfile: {
-        select: {
-            id: true,
-            mothersName: true,
-            birthDate: true,
-            locations: {
-                select: {
-                    country: true,
-                    zipCode: true,
-                    city: true,
-                    address: true
-                }
-            },
-            highSchool: true,
-            graduationYear: true,
-            neptunCode: true,
-            currentMajor: true,
-            studyMode: true,
-            hasLanguageCert: true
-        }
-    }
-};
-
-// Helper function to handle location updates
-const prepareLocationUpdate = (existingLocation: any, newLocation: any) => {
-    if (!newLocation) return undefined;
-
-    if (existingLocation) {
-        return {
-            update: {
-                where: { id: existingLocation.id },
-                data: {
-                    country: newLocation.country || existingLocation.country,
-                    zipCode: newLocation.zipCode ? String(newLocation.zipCode) : existingLocation.zipCode,
-                    city: newLocation.city || existingLocation.city,
-                    address: newLocation.address || existingLocation.address
-                }
-            }
-        };
-    } else {
-        return {
-            create: {
-                country: newLocation.country || "Magyarország",
-                zipCode: newLocation.zipCode || "",
-                city: newLocation.city || "",
-                address: newLocation.address || ""
-            }
-        };
-    }
-};
-
-export const getMyProfile = async (req: Request, res: Response) => {
-    const userId = req.user?.userId;
-
-    if (!userId) {
-        return res.status(401).json({ message: "Nincs azonosítva a felhasználó." });
-    }
-
+export const getMyProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const student = await prisma.user.findUnique({
-            where: { id: userId },
-            select: studentSelect
-        })
-
-        if (!student) {
-            return res.status(404).json({ message: "Profil nem található." });
+        const userId = req.user?.userId;
+        if (!userId) {
+            return res.status(401).json({ message: "Nincs azonosítva a felhasználó." });
         }
 
+        const student = await studentService.getProfile(userId);
         res.status(200).json(mapStudent(student));
     } catch (error) {
-        res.status(500).json({ message: "Hiba a profil lekérésekor." });
+        next(error);
     }
-}
+};
 
-export const getStudentById = async (req: Request, res: Response) => {
-    const id = req.params.id;
+export const getStudentById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const student = await prisma.user.findFirst({
-            where: { id, role: "STUDENT" },
-            select: studentSelect
-        });
-
-        if (!student) return res.status(404).json({ message: "Hallgató nem található." });
+        const id = req.params.id;
+        const student = await studentService.getProfile(id);
 
         await logAction(req, {
             action: "VIEW_STUDENT",
             entity: "User",
             entityId: id,
-            details: {
-                viewerId: req.user?.userId,
-            }
-
-        })
+            details: { viewerId: req.user?.userId }
+        });
 
         res.status(200).json(mapStudent(student));
     } catch (error) {
-        res.status(500).json({ message: "Hiba a hallgató lekérésekor." });
+        next(error);
     }
-}
+};
 
-export const getAllStudents = async (req: Request, res: Response) => {
+export const getAllStudents = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const students = await prisma.user.findMany({
-            where: { role: "STUDENT" },
-            select: studentSelect,
-            orderBy: { createdAt: "desc" }
-        })
-
+        const students = await studentService.getAll();
         res.status(200).json(students.map(mapStudent));
     } catch (error) {
-        console.error("GetAllStudents Error:", error);
-        res.status(500).json({ message: "Hiba történt a hallgatók listázásakor." });
+        next(error);
     }
-}
+};
 
-export const updateMyProfile = async (req: Request, res: Response) => {
-    const userId = req.user?.userId;
-    const { fullName, phoneNumber, ...profileData } = req.body;
-
-    if (!userId) {
-        return res.status(401).json({ message: "Nincs azonosítva." });
-    }
-
+export const updateMyProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { location, ...otherProfileData } = profileData;
+        const userId = req.user?.userId;
+        if (!userId) {
+            return res.status(401).json({ message: "Nincs azonosítva." });
+        }
 
-        // Fetch current profile to get location ID
-        const currentUser = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { studentProfile: { select: { locations: true } } }
-        });
-
-        const existingLocation = currentUser?.studentProfile?.locations?.[0];
-        const locationsUpdate = prepareLocationUpdate(existingLocation, location);
-
-        const updated = await prisma.user.update({
-            where: { id: userId },
-            data: {
-                fullName,
-                phoneNumber,
-                studentProfile: {
-                    update: {
-                        ...otherProfileData,
-                        locations: locationsUpdate
-                    }
-                }
-            },
-            select: studentSelect
-        })
+        const updated = await studentService.updateProfile(userId, req.body);
 
         await logAction(req, {
             action: "UPDATE_OWN_PROFILE",
             entity: "User",
             entityId: userId,
-            details: { updatedById: req.user?.userId, updatedFields: Object.keys(req.body) }
+            details: { updatedById: userId, updatedFields: Object.keys(req.body) }
         });
 
-        res.json({ message: "Profilod sikeresen frissítve!", user: mapStudent(updated) });
+        res.json({
+            success: true,
+            message: "Profilod sikeresen frissítve!",
+            data: mapStudent(updated)
+        });
     } catch (error) {
-        console.error("Update Profile Error:", error);
-        res.status(500).json({ message: "Hiba a profil frissítése során." });
+        next(error);
     }
-}
+};
 
-export const updateStudentById = async (req: Request, res: Response) => {
-    const id = req.params.id;
-    const data = req.body;
-    const { fullName, phoneNumber, ...profileData } = data;
+export const updateStudentById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // 1. Ellenőrizzük, hogy a felhasználó létezik és DIÁK
-        const target = await prisma.user.findFirst({
-            where: { id: id, role: "STUDENT" },
-            select: { studentProfile: { select: { locations: true } } }
-        })
-
-        if (!target) {
-            return res.status(404).json({ message: "Nem található a módosítandó hallgató." });
-        }
-
-        const { location, ...otherProfileData } = profileData;
-
-        // Prepare location update
-        const existingLocation = target.studentProfile?.locations?.[0];
-        const locationsUpdate = prepareLocationUpdate(existingLocation, location);
-
-        // 2. Frissítés egyetlen tranzakcióban (Nested Update)
-        const updatedUser = await prisma.user.update({
-            where: { id },
-            data: {
-                fullName: data.fullName,
-                phoneNumber: data.phoneNumber,
-                studentProfile: {
-                    update: {
-                        ...otherProfileData,
-                        locations: locationsUpdate
-                    }
-                }
-            },
-            select: studentSelect
-        });
+        const id = req.params.id;
+        const updated = await studentService.updateProfile(id, req.body);
 
         await logAction(req, {
             action: "UPDATE_STUDENT_BY_ADMIN",
@@ -216,39 +81,28 @@ export const updateStudentById = async (req: Request, res: Response) => {
             entityId: id,
             details: {
                 updatedBy: req.user?.userId,
-                updatedFields: Object.keys(data)
+                updatedFields: Object.keys(req.body)
             }
         });
 
         res.status(200).json({
+            success: true,
             message: "Hallgatói adatok sikeresen frissítve.",
-            user: mapStudent(updatedUser)
+            data: mapStudent(updated)
         });
+    } catch (error) {
+        next(error);
+    }
+};
 
-    } catch (error: any) {
-        // Ha nem található az ID
-        if (error.code === "P2025") {
-            return res.status(404).json({ message: "A megadott azonosítóval nem található hallgató." });
+export const deleteMyProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) {
+            return res.status(401).json({ message: "Nincs azonosítva." });
         }
 
-        console.error("Student Update Error:", error);
-        res.status(500).json({ message: "Szerver hiba történt a módosítás során." });
-    }
-}
-
-export const deleteMyProfile = async (req: Request, res: Response) => {
-    const userId = req.user?.userId;
-    try {
-        await prisma.user.update({
-            where: { id: userId },
-            data: {
-                isActive: false,
-                deletedAt: new Date(),
-                studentProfile: {
-                    update: { deletedAt: new Date() }
-                }
-            }
-        });
+        await studentService.deleteProfile(userId);
 
         await logAction(req, {
             action: "DELETE_OWN_PROFILE",
@@ -257,33 +111,16 @@ export const deleteMyProfile = async (req: Request, res: Response) => {
             details: { reason: "User self-deletion" }
         });
 
-        res.json({ message: "Profilod sikeresen törölve." })
+        res.json({ success: true, message: "Profilod sikeresen törölve." });
     } catch (error) {
-        res.status(500).json({ message: "Hiba a törlés során." });
+        next(error);
     }
-}
+};
 
-export const deleteStudentById = async (req: Request, res: Response) => {
-    const id = req.params.id;
+export const deleteStudentById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const target = await prisma.user.findFirst({
-            where: { id: id, role: "STUDENT" }
-        })
-
-        if (!target) {
-            return res.status(404).json({ message: "Nem található a hallgató." });
-        }
-
-        await prisma.user.update({
-            where: { id },
-            data: {
-                isActive: false,
-                deletedAt: new Date(),
-                studentProfile: {
-                    update: { deletedAt: new Date() }
-                }
-            }
-        })
+        const id = req.params.id;
+        await studentService.deleteProfile(id);
 
         await logAction(req, {
             action: "DELETE_STUDENT_BY_ADMIN",
@@ -292,8 +129,8 @@ export const deleteStudentById = async (req: Request, res: Response) => {
             details: { deletedBy: req.user?.userId }
         });
 
-        res.json({ message: "A hallgatói profil sikeresen törölve." });
+        res.json({ success: true, message: "A hallgatói profil sikeresen törölve." });
     } catch (error) {
-        res.status(404).json({ message: "A hallgató nem található vagy már törölték." });
+        next(error);
     }
-}
+};

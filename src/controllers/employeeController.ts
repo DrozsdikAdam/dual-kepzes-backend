@@ -1,188 +1,75 @@
-import { Request, Response } from "express"
-import prisma from "../config/prisma"
-import { UpdateEmployeeInput } from "../schemas/employeeSchema"
-import { Role } from "@prisma/client"
+import { Request, Response, NextFunction } from "express";
+import { employeeService } from "../services/employee.service";
+import { userService } from "../services/user.service";
 import { logAction } from "../utils/logger";
+import { Role } from "@prisma/client";
+import { UpdateEmployeeInput } from "../schemas/employeeSchema";
+import { getCompanyIdForUser } from "../utils/companyUtils";
 
-// 1. SELECT definíciók a konzisztencia érdekében
-// Amikor User-t kérünk le dolgozói adatokkal
-const userEmployeeSelect = {
-    id: true,
-    email: true,
-    fullName: true,
-    phoneNumber: true,
-    role: true,
-    companyEmployee: {
-        select: {
-            id: true,
-            jobTitle: true,
-            companyId: true,
-            company: {
-                select: {
-                    id: true,
-                    name: true,
-                    logoUrl: true
-                }
-            }
-        }
-    }
-};
-
-// Amikor a CompanyEmployee profilból indulunk ki
-const employeeProfileSelect = {
-    id: true,
-    jobTitle: true,
-    companyId: true,
-    user: {
-        select: {
-            id: true,
-            fullName: true,
-            email: true,
-            phoneNumber: true,
-            role: true,
-            isActive: true
-        }
-    }
-};
-
-const dualPartnershipSelect = {
-    id: true,
-    status: true,
-    contractNumber: true,
-    startDate: true,
-    endDate: true,
-    student: {
-        select: {
-            id: true,
-            neptunCode: true,
-            currentMajor: true,
-            studyMode: true,
-            user: {
-                select: {
-                    fullName: true,
-                    email: true,
-                    phoneNumber: true
-                }
-            }
-        }
-    },
-    uniEmployee: {
-        select: {
-            fullName: true,
-            email: true
-        }
-    }
-}
-
-
-export const getMeEmployee = async (req: Request, res: Response) => {
-    const userId = req.user?.userId;
-
-    if (!userId) {
-        return res.status(401).json({ message: "Nincs azonosított felhasználó." });
-    }
-
+export const getMeEmployee = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const employee = await prisma.companyEmployee.findUnique({
-            where: { userId },
-            select: employeeProfileSelect
-        });
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
 
-        if (!employee) {
-            return res.status(404).json({ message: "A dolgozó profil nem található." });
-        }
-
+        const employee = await employeeService.getProfile(userId);
         res.json(employee);
     } catch (error) {
-        res.status(500).json({ message: "Hiba a profil lekérésekor." });
+        next(error);
     }
-}
+};
 
-export const updateMeEmployee = async (req: Request<{}, {}, UpdateEmployeeInput>, res: Response) => {
-    const userId = req.user?.userId;
-    const { fullName, phoneNumber } = req.body;
-
-    if (!userId) {
-        return res.status(401).json({ message: "Nincs azonosított felhasználó." });
-    }
-
+export const updateMeEmployee = async (req: Request<{}, {}, UpdateEmployeeInput>, res: Response, next: NextFunction) => {
     try {
-        const updatedUser = await prisma.user.update({
-            where: { id: userId },
-            data: {
-                fullName,
-                phoneNumber
-            },
-            select: userEmployeeSelect
-        });
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+
+        const updatedUser = await userService.update(userId, req.body, Role.MENTOR); // Assumed role for employee controller
 
         await logAction(req, {
             action: "UPDATE_MY_PROFILE",
             entity: "User",
             entityId: userId,
-            details: {
-                updatedFields: { fullName, phoneNumber }
-            }
-        })
+            details: { updatedFields: req.body }
+        });
 
         res.json({
+            success: true,
             message: "Profil sikeresen frissítve.",
             user: updatedUser
         });
     } catch (error) {
-        res.status(500).json({ message: "Hiba a profil frissítésekor." });
+        next(error);
     }
-}
+};
 
-export const deleteMeEmployee = async (req: Request, res: Response) => {
-    const userId = req.user?.userId;
-
-    if (!userId) {
-        return res.status(401).json({ message: "Nincs azonosított felhasználó." });
-    }
-
+export const deleteMeEmployee = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        await prisma.user.update({
-            where: { id: userId },
-            data: {
-                isActive: false,
-                deletedAt: new Date(),
-                companyEmployee: { update: { deletedAt: new Date() } }
-            }
-        });
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+
+        await userService.delete(userId);
 
         await logAction(req, {
             action: "DELETE_MY_PROFILE",
             entity: "User",
             entityId: userId
-        })
+        });
 
-        res.json({ message: "Profil sikeresen törölve." });
+        res.json({ success: true, message: "Profil sikeresen törölve." });
     } catch (error) {
-        res.status(500).json({ message: "Hiba a profil törlésekor." });
+        next(error);
     }
-}
+};
 
-export const getEmployeeById = async (req: Request, res: Response) => {
-    const userToFind = req.params.id;
-    const currentUser = req.user!;
-
+export const getEmployeeById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const target = await prisma.companyEmployee.findUnique({
-            where: { userId: userToFind },
-            select: employeeProfileSelect
-        });
-        const requester = await prisma.companyEmployee.findUnique({
-            where: { userId: currentUser.userId }
-        });
+        const userToFind = req.params.id;
+        const currentUser = req.user!;
 
-        if (!target) {
-            return res.status(404).json({ message: "A dolgozó nem található." });
-        }
+        const target = await employeeService.getProfile(userToFind);
+        const requester = await employeeService.getProfile(currentUser.userId);
 
-        const isSameCompany = requester && target.companyId === requester.companyId;
-
-        if (!isSameCompany) {
+        if (target.companyId !== requester.companyId) {
             return res.status(403).json({ message: "Nincs jogosultságod a dolgozó adatainak megtekintéséhez." });
         }
 
@@ -190,242 +77,122 @@ export const getEmployeeById = async (req: Request, res: Response) => {
             action: "VIEW_EMPLOYEE",
             entity: "User",
             entityId: userToFind,
-            details: {
-                viewerId: currentUser.userId
-            }
-        })
+            details: { viewerId: currentUser.userId }
+        });
 
         res.json(target);
     } catch (error) {
-        res.status(500).json({ message: "Hiba a dolgozó lekérésekor." });
+        next(error);
     }
-}
+};
 
-import { getCompanyIdForUser } from "../utils/companyUtils";
-
-export const getCompanyEmployees = async (req: Request, res: Response) => {
-    if (!req.user) return res.status(401).json({ message: "Nincs azonosítva." });
-
+export const getCompanyEmployees = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const companyId = await getCompanyIdForUser(req.user.userId);
-
-        if (!companyId || (req.user.role !== "COMPANY_ADMIN")) {
+        const companyId = await getCompanyIdForUser(req.user!.userId);
+        if (!companyId || req.user!.role !== Role.COMPANY_ADMIN) {
             return res.status(403).json({ message: "Nincs jogosultságod a lista megtekintéséhez." });
         }
 
-        const employees = await prisma.user.findMany({
-            where: {
-                companyEmployee: { companyId: companyId },
-            },
-            select: userEmployeeSelect,
-            orderBy: { fullName: "asc" }
-        });
-
-        await logAction(req, {
-            action: "VIEW_EMPLOYEES",
-            entity: "User",
-            details: {
-                viewerId: req.user.userId
-            }
-        })
-
+        const employees = await userService.getAllByRole([Role.MENTOR, Role.COMPANY_ADMIN], companyId);
         res.json(employees);
     } catch (error) {
-        res.status(500).json({ message: "Hiba a lekérdezés során." });
+        next(error);
     }
 };
 
-export const getCompanyMentors = async (req: Request, res: Response) => {
-    if (!req.user) return res.status(401).json({ message: "Nincs azonosítva." });
-
+export const getCompanyMentors = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const companyId = await getCompanyIdForUser(req.user.userId);
-
-        if (!companyId || (req.user.role !== "COMPANY_ADMIN")) {
+        const companyId = await getCompanyIdForUser(req.user!.userId);
+        if (!companyId || req.user!.role !== Role.COMPANY_ADMIN) {
             return res.status(403).json({ message: "Nincs jogosultságod a lista megtekintéséhez." });
         }
 
-        const mentors = await prisma.user.findMany({
-            where: {
-                companyEmployee: { companyId: companyId },
-                role: Role.MENTOR
-            },
-            select: userEmployeeSelect,
-            orderBy: { fullName: "asc" }
-        });
-
+        const mentors = await userService.getAllByRole(Role.MENTOR, companyId);
         res.json(mentors);
     } catch (error) {
-        res.status(500).json({ message: "Hiba a mentorok lekérdezése során." });
+        next(error);
     }
 };
 
-export const updateEmployeeById = async (req: Request<{ id: string }, {}, UpdateEmployeeInput>, res: Response) => {
-    const userIdToUpdate = req.params.id;
-    const { fullName, phoneNumber, jobTitle, isActive } = req.body;
-
-    // A req.user itt már garantáltan létezik a middleware-ek miatt
-    const currentUser = req.user!;
-
+export const updateEmployeeById = async (req: Request<{ id: string }, {}, UpdateEmployeeInput>, res: Response, next: NextFunction) => {
     try {
-        // 1. Adatok lekérése az ellenőrzéshez
-        const target = await prisma.companyEmployee.findUnique({ where: { userId: userIdToUpdate } });
-        const requester = await prisma.companyEmployee.findUnique({ where: { userId: currentUser.userId } });
+        const userIdToUpdate = req.params.id;
+        const currentUser = req.user!;
 
-        if (!target || !requester) {
-            return res.status(404).json({ message: "A kért profil nem található." });
-        }
+        const target = await employeeService.getProfile(userIdToUpdate);
+        const requester = await employeeService.getProfile(currentUser.userId);
 
-        // 2. JOGOSULTSÁG ELLENŐRZÉSE (Kontroller szinten)
         const isSelf = userIdToUpdate === currentUser.userId;
         const isAdminAtSameCompany = currentUser.role === Role.COMPANY_ADMIN && target.companyId === requester.companyId;
 
-        // Ha nem saját maga, nem az adminja és nem rendszeradmin -> Tiltás
-        if (!isSelf && !isAdminAtSameCompany) {
+        if (!isSelf && !isAdminAtSameCompany && currentUser.role !== Role.SYSTEM_ADMIN) {
             return res.status(403).json({ message: "Nincs jogosultságod más dolgozó adatainak módosításához." });
         }
 
-        // 3. FRISSÍTÉS (Nested Update)
-        const updatedUser = await prisma.user.update({
-            where: { id: userIdToUpdate },
-            data: {
-                fullName,
-                phoneNumber,
-                // Biztonság: Az isActive státuszt csak ADMIN-ok állíthatják
-                isActive: (isAdminAtSameCompany) ? isActive : undefined,
-                companyEmployee: {
-                    update: {
-                        jobTitle: jobTitle
-                    }
-                }
-            },
-            select: userEmployeeSelect
-        });
-
+        const updatedUser = await userService.update(userIdToUpdate, req.body, currentUser.role as Role);
 
         await logAction(req, {
             action: "UPDATE_EMPLOYEE",
             entity: "User",
             entityId: userIdToUpdate,
             details: {
-                updatedFields: { fullName, phoneNumber, jobTitle, isActive },
+                updatedFields: req.body,
                 updatedBy: currentUser.userId
             }
-        })
-
-        res.status(200).json({
-            message: "Adatok sikeresen frissítve.",
-            user: updatedUser
         });
 
-    } catch (error: any) {
-        if (error.code === "P2025") {
-            return res.status(404).json({ message: "Nem található a módosítandó rekord." });
-        }
-        res.status(500).json({ message: "Szerver hiba történt." });
+        res.json({ success: true, message: "Adatok sikeresen frissítve.", user: updatedUser });
+    } catch (error) {
+        next(error);
     }
 };
 
-export const deleteEmployeeById = async (req: Request, res: Response) => {
-    const userIdToDelete = req.params.id;
-
+export const deleteEmployeeById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const target = await prisma.companyEmployee.findUnique({ where: { userId: userIdToDelete } });
-        const requester = await prisma.companyEmployee.findUnique({ where: { userId: req.user!.userId } });
+        const userIdToDelete = req.params.id;
+        const target = await employeeService.getProfile(userIdToDelete);
+        const requester = await employeeService.getProfile(req.user!.userId);
 
-        if (!target || !requester) return res.status(404).json({ message: "Nem található." });
-
-        // Csak azt kell ellenőrizni, hogy ugyanaz a cég-e
-        if (target.companyId !== requester.companyId) {
+        if (target.companyId !== requester.companyId && req.user!.role !== Role.SYSTEM_ADMIN) {
             return res.status(403).json({ message: "Csak a saját céged dolgozóit törölheted." });
         }
 
-        await prisma.user.update({
-            where: { id: userIdToDelete },
-            data: {
-                isActive: false,
-                deletedAt: new Date(),
-                companyEmployee: { update: { deletedAt: new Date() } }
-            }
-        });
+        await userService.delete(userIdToDelete);
 
         await logAction(req, {
             action: "DELETE_EMPLOYEE",
             entity: "User",
             entityId: userIdToDelete,
-            details: {
-                deletedBy: req.user!.userId
-            }
-        })
+            details: { deletedBy: req.user!.userId }
+        });
 
-        res.json({ message: "Munkavállaló sikeresen eltávolítva." });
+        res.json({ success: true, message: "Munkavállaló sikeresen eltávolítva." });
     } catch (error) {
-        res.status(500).json({ message: "Hiba a törlés során." });
+        next(error);
     }
 };
 
-export const getMyStudents = async (req: Request, res: Response) => {
-    const userId = req.user?.userId;
-    if (!userId) {
-        return res.status(401).json({ message: "Nincs jogosultságod." })
-    }
-
+export const getMyStudents = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // 1. Megkeressük a mentor munkavállalói profilját az ID-ja miatt
-        const mentorProfile = await prisma.companyEmployee.findUnique({
-            where: { userId },
-            select: { id: true, companyId: true }
-        });
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ message: "Nincs jogosultságod." });
 
-        if (!mentorProfile) {
-            return res.status(403).json({ message: "Nem található munkavállalói (mentor) profil." });
-        }
-
-        // 2. Lekérjük az összes olyan partnerséget, ahol ez a dolgozó a mentor
-        const partnerships = await prisma.dualPartnership.findMany({
-            where: {
-                mentorId: mentorProfile.id,
-            },
-            select: dualPartnershipSelect,
-            orderBy: {
-                startDate: "desc"
-            }
-        });
-
-        return res.json(partnerships)
+        const partnerships = await employeeService.getMentorStudents(userId);
+        res.json(partnerships);
     } catch (error) {
-        return res.status(500).json({ message: "Hiba a hallgatók lekérésekor." })
+        next(error);
     }
-}
+};
 
-export const getMyPartnershipById = async (req: Request, res: Response) => {
-    const userId = req.user?.userId;
-    const { id } = req.params;
-    if (!userId) {
-        return res.status(401).json({ message: "Nincs jogosultságod." })
-    }
-
+export const getMyPartnershipById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const mentorProfile = await prisma.companyEmployee.findFirst({
-            where: { userId },
-            select: { id: true, companyId: true }
-        })
+        const userId = req.user?.userId;
+        const { id } = req.params;
+        if (!userId) return res.status(401).json({ message: "Nincs jogosultságod." });
 
-        if (!mentorProfile) {
-            return res.status(403).json({ message: "Nem található mentor profil." })
-        }
-
-        const partnership = await prisma.dualPartnership.findFirst({
-            where: { mentorId: mentorProfile.id, id },
-            select: dualPartnershipSelect
-        })
-
-        if (!partnership) {
-            return res.status(404).json({ message: "Nem található a keresett partnerség." })
-        }
-
-        return res.json(partnership)
+        const partnership = await employeeService.getMentorPartnership(userId, id);
+        res.json(partnership);
     } catch (error) {
-        return res.status(500).json({ messsage: "Hiba a partnerség lekérésekor." })
+        next(error);
     }
-}
+};
