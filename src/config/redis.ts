@@ -4,9 +4,10 @@ const getRedisConfig = (): { config: ConnectionOptions; enabled: boolean } => {
      const url = process.env.REDIS_URL;
      const isProd = process.env.NODE_ENV === 'production';
 
-     // Only enable if we have a connection source
-     const hasConfig = !!(url || process.env.REDIS_HOST);
-     const shouldEnable = hasConfig;
+     // Only enable if we have a connection source THAT IS NOT localhost 
+     // (unless we are in development and explicitly want it)
+     const hasConfig = !!process.env.REDIS_URL || (!!process.env.REDIS_HOST && process.env.REDIS_HOST !== '127.0.0.1');
+     const shouldEnable = hasConfig || (process.env.NODE_ENV !== 'production' && !!process.env.REDIS_HOST);
 
      if (!hasConfig && isProd) {
           console.warn("⚠️ [PRODUCTION] Redis is not configured. Background jobs (email) will be disabled.");
