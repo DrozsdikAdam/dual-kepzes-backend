@@ -1,5 +1,7 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger";
 
 import { securityMiddleware } from "./middlewares/securityMiddleware";
 import { sanitizationMiddleware } from "./middlewares/sanitizationMiddleware";
@@ -36,6 +38,8 @@ app.use(sanitizationMiddleware);
 app.use("/api/auth", authRoutes);
 // app.use("/api", apiRateLimiter);
 
+// API Documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/api/stats", statsRoutes);
 
