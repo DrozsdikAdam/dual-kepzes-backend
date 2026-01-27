@@ -1,0 +1,289 @@
+import prisma from '../config/prisma';
+import { NotFoundError, ForbiddenError } from '../errors/AppError';
+import { PartnershipStatus } from '@prisma/client';
+import { getCompanyIdForUser } from '../utils/companyUtils';
+
+export class PartnershipService {
+     async getById(partnershipId: string, userId: string) {
+          const companyId = await getCompanyIdForUser(userId);
+
+          const partnership = await prisma.dualPartnership.findFirst({
+               where: {
+                    id: partnershipId,
+                    ...(companyId && {
+                         OR: [
+                              { mentor: { companyId } },
+                              { position: { companyId } }
+                         ]
+                    })
+               },
+               select: this.getPartnershipSelect()
+          });
+
+          if (!partnership) {
+               // If not found with company scope, check if student
+               const studentProfile = await prisma.studentProfile.findUnique({
+                    where: { userId }
+               });
+
+               if (studentProfile) {
+                    const studentPartnership = await prisma.dualPartnership.findFirst({
+                         where: { id: partnershipId, studentId: studentProfile.id },
+                         select: this.getPartnershipSelect()
+                    });
+
+                    if (!studentPartnership) {
+                         throw new NotFoundError('Partnerség');
+                    }
+
+                    return studentPartnership;
+               }
+               throw new NotFoundError('Partnerség');
+          }
+
+          return partnership;
+     }
+
+     async update(id: string, userId: string, data: any) {
+          const companyId = await getCompanyIdForUser(userId);
+          if (!companyId) {
+               throw new ForbiddenError('Nincs jogosultsága partnerséget frissíteni.');
+          }
+
+          const partnershipToUpdate = await prisma.dualPartnership.findFirst({
+               where: {
+                    id,
+                    OR: [
+                         { mentor: { companyId } },
+                         { position: { companyId } }
+                    ]
+               }
+          });
+
+          if (!partnershipToUpdate) {
+               throw new NotFoundError('Partnerség');
+          }
+
+          return await prisma.dualPartnership.update({
+               where: { id },
+               data: {
+                    ...data,
+                    studentId: undefined, // Student cannot be changed
+               },
+               select: this.getPartnershipSelect()
+          });
+     }
+
+     async delete(id: string, userId: string) {
+          const companyId = await getCompanyIdForUser(userId);
+          if (!companyId) {
+               throw new ForbiddenError('Nincs jogosultsága partnerséget törölni.');
+          }
+
+          const result = await prisma.dualPartnership.updateMany({
+               where: {
+                    id,
+                    OR: [
+                         { mentor: { companyId } },
+                         { position: { companyId } }
+                    ]
+               },
+               data: { deletedAt: new Date() }
+          });
+
+          if (result.count === 0) {
+               throw new NotFoundError('Partnerség');
+          }
+
+          return true;
+     }
+
+     async terminate(partnershipId: string, userId: string) {
+          const partnership = await prisma.dualPartnership.findUnique({
+               where: { id: partnershipId }
+          });
+
+          if (!partnership) {
+               throw new NotFoundError('Partnerség');
+          }
+
+          return await prisma.dualPartnership.update({
+               where: { id: partnershipId },
+               data: { status: PartnershipStatus.TERMINATED },
+               select: this.getPartnershipSelect()
+          });
+     }
+
+     async assignMentor(
+          partnershipId: string,
+          mentorId: string,
+          userId: string
+     ) {
+          const companyId = await getCompanyIdForUser(userId);
+          if (!companyId) {
+               throw new ForbiddenError('Nincs jogosultsága mentort hozzárendelni.');
+          }
+
+          const partnership = await prisma.dualPartnership.findFirst({
+               where: { id: partnershipId },
+               select: { status: true, studentId: true }
+          });
+
+          if (!partnership) {
+               throw new NotFoundError('Partnerség');
+          }
+
+          // Verify partnership belongs to company
+          const validApplication = await prisma.application.findFirst({
+               where: {
+                    studentId: partnership.studentId,
+                    status: 'ACCEPTED',
+                    position: { companyId }
+               }
+          });
+
+          if (!validApplication) {
+               throw new ForbiddenError('Ez a partnerség nem a te cégedhez tartozik.');
+          }
+
+          // Resolve mentor ID (handle both employee ID and user ID)
+          const finalMentorId = await this.resolveMentorId(mentorId, companyId);
+
+          return await prisma.dualPartnership.update({
+               where: { id: partnershipId },
+               data: {
+                    mentorId: finalMentorId,
+                    status: PartnershipStatus.PENDING_UNIVERSITY
+               },
+               select: this.getPartnershipSelect()
+          });
+     }
+
+     async assignUniversityUser(id: string, uniEmployeeId: string, userId: string) {
+          // Basic assignment logic - could be expanded with more permission checks
+          return await prisma.dualPartnership.update({
+               where: { id },
+               data: {
+                    uniEmployeeId: uniEmployeeId,
+                    status: PartnershipStatus.ACTIVE
+               },
+               select: this.getPartnershipSelect()
+          });
+     }
+
+     async getStudentPartnerships(userId: string) {
+          const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
+          if (!studentProfile) {
+               throw new NotFoundError('Hallgatói profil');
+          }
+
+          return await prisma.dualPartnership.findMany({
+               where: { studentId: studentProfile.id },
+               select: this.getPartnershipSelect(),
+               orderBy: { createdAt: "desc" }
+          });
+     }
+
+     async getCompanyPartnerships(userId: string) {
+          const companyId = await getCompanyIdForUser(userId);
+          if (!companyId) {
+               throw new ForbiddenError('Nincs céghez rendelve vagy nincs jogosultsága.');
+          }
+
+          return await prisma.dualPartnership.findMany({
+               where: {
+                    OR: [
+                         { mentor: { companyId } },
+                         { position: { companyId } }
+                    ]
+               },
+               select: this.getPartnershipSelect(),
+               orderBy: { createdAt: "desc" }
+          });
+     }
+
+     async getUniversityPartnerships() {
+          return await prisma.dualPartnership.findMany({
+               select: this.getPartnershipSelect(),
+               orderBy: { createdAt: "desc" }
+          });
+     }
+
+     private async resolveMentorId(
+          mentorId: string,
+          companyId: string
+     ): Promise<string> {
+          // Try by employee ID first
+          const employeeById = await prisma.companyEmployee.findUnique({
+               where: { id: mentorId }
+          });
+
+          if (employeeById) {
+               if (employeeById.companyId !== companyId) {
+                    throw new ForbiddenError('A megadott mentor nem ehhez a céghez tartozik.');
+               }
+               return employeeById.id;
+          }
+
+          // Try by user ID
+          const employeeByUserId = await prisma.companyEmployee.findUnique({
+               where: { userId: mentorId }
+          });
+
+          if (employeeByUserId && employeeByUserId.companyId === companyId) {
+               return employeeByUserId.id;
+          }
+
+          throw new NotFoundError('Mentor');
+     }
+
+     private getPartnershipSelect() {
+          return {
+               id: true,
+               semester: true,
+               contractNumber: true,
+               status: true,
+               startDate: true,
+               endDate: true,
+               student: {
+                    select: {
+                         id: true,
+                         userId: true,
+                         user: { select: { email: true, fullName: true } },
+                         mothersName: true,
+                         birthDate: true,
+                         highSchool: true,
+                         graduationYear: true,
+                         neptunCode: true,
+                    }
+               },
+               mentor: {
+                    select: {
+                         userId: true,
+                         user: { select: { email: true, fullName: true } },
+                         company: { select: { id: true, name: true } },
+                         jobTitle: true,
+                    }
+               },
+               position: {
+                    select: {
+                         id: true,
+                         title: true,
+                         companyId: true,
+                         company: { select: { name: true } }
+                    }
+               },
+               uniEmployee: {
+                    select: {
+                         id: true,
+                         email: true,
+                         fullName: true,
+                    }
+               },
+               createdAt: true,
+               updatedAt: true,
+          };
+     }
+}
+
+export const partnershipService = new PartnershipService();
