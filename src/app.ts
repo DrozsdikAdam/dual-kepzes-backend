@@ -30,8 +30,8 @@ import dualRoutes from "./routes/dualRoutes";
 const app: Application = express();
 app.set("trust proxy", 1);
 // Global Middlewares
-app.use(securityMiddleware);
 app.use(cors(corsOptions));
+app.use(securityMiddleware);
 app.use(express.json());
 app.use(sanitizationMiddleware);
 // Auth Rate Limiter
