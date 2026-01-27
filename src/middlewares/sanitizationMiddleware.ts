@@ -9,10 +9,16 @@ export const sanitizationMiddleware = (req: Request, res: Response, next: NextFu
           req.body = sanitizeObject(req.body);
      }
      if (req.query) {
-          req.query = sanitizeObject(req.query) as any;
+          const sanitizedQuery = sanitizeObject(req.query);
+          for (const key in sanitizedQuery) {
+               (req.query as any)[key] = sanitizedQuery[key];
+          }
      }
      if (req.params) {
-          req.params = sanitizeObject(req.params) as any;
+          const sanitizedParams = sanitizeObject(req.params);
+          for (const key in sanitizedParams) {
+               (req.params as any)[key] = sanitizedParams[key];
+          }
      }
      next();
 };
