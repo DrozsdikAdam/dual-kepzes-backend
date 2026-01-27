@@ -55,6 +55,13 @@ export const deleteMeCompanyAdmin = async (req: Request, res: Response, next: Ne
      }
 };
 
+/**
+ * Get all company administrators
+ * @route GET /api/company-admins
+ * @group Admins - Admin management
+ * @returns {object} 200 - Paginated list of company admins
+ * @security bearerAuth
+ */
 export const getCompanyAdmins = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const params = getPaginationParams(req.query);

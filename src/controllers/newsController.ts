@@ -28,6 +28,12 @@ export const createNews = async (req: Request, res: Response, next: NextFunction
      }
 };
 
+/**
+ * Get all news items
+ * @route GET /api/news
+ * @group News - News and announcements
+ * @returns {object} 200 - Paginated news list
+ */
 export const getAllNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const params = getPaginationParams(req.query);

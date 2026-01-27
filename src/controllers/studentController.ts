@@ -36,6 +36,13 @@ export const getStudentById = async (req: Request, res: Response, next: NextFunc
     }
 };
 
+/**
+ * Get all students
+ * @route GET /api/students
+ * @group Students - Student operations
+ * @returns {object} 200 - Paginated list of students
+ * @security bearerAuth
+ */
 export const getAllStudents = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const params = getPaginationParams(req.query);

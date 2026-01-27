@@ -6,6 +6,12 @@ import { mapPosition } from "../utils/mappers";
 import { getCompanyIdForUser } from "../utils/companyUtils";
 import { getPaginationParams } from "../utils/pagination";
 
+/**
+ * Get all job positions
+ * @route GET /api/jobs
+ * @group Jobs - Operations related to job positions
+ * @returns {object} 200 - Paginated list of positions
+ */
 export const getAllPositions = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const params = getPaginationParams(req.query);
@@ -40,6 +46,13 @@ export const getPositionsByCompanyId = async (req: Request, res: Response, next:
     }
 };
 
+/**
+ * Create a new tag
+ * @route POST /api/jobs/tags
+ * @group Tags - Job position tags
+ * @param {object} tag.body.required - Tag name
+ * @returns {object} 201 - Tag created
+ */
 export const createTag = async (
     req: Request<{}, {}, TagInput>,
     res: Response,
@@ -53,6 +66,14 @@ export const createTag = async (
     }
 };
 
+/**
+ * Create a new job position
+ * @route POST /api/jobs
+ * @group Jobs - Job operations
+ * @param {object} position.body.required - Position details
+ * @returns {object} 201 - Position created
+ * @security bearerAuth
+ */
 export const createPosition = async (
     req: Request<{}, {}, PositionInput>,
     res: Response,
