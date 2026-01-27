@@ -50,21 +50,27 @@ export const errorHandler = (
 
     // Handle Prisma Client errors (including connection limits)
     const isPrismaError = err.name?.includes('Prisma') || err.code?.startsWith('P');
-    if (isPrismaError) {
+    if (isPrismaError || err.name === 'PrismaClientValidationError') {
         const isConnLimit = err.message?.includes("Max client connections reached") ||
             err.message?.includes("connection limit") ||
             err.code === 'P2024';
+
+        const isValidationError = err.name === 'PrismaClientValidationError';
 
         return res.status(isConnLimit ? 503 : 400).json({
             success: false,
             message: isConnLimit
                 ? 'Az adatbázis jelenleg túlterhelt, kérjük próbálja újra később.'
-                : 'Adatbázis hiba történt.',
+                : isValidationError
+                    ? 'Adatbázis validációs hiba (hibás paraméterek).'
+                    : 'Adatbázis hiba történt.',
             error: {
                 code: isConnLimit ? "DATABASE_CONNECTION_LIMIT" : ErrorCodes.DATABASE_ERROR,
                 message: isConnLimit
                     ? 'Az adatbázis jelenleg túlterhelt, kérjük próbálja újra később.'
-                    : 'Adatbázis hiba történt.',
+                    : isValidationError
+                        ? 'Adatbázis validációs hiba (hibás paraméterek).'
+                        : 'Adatbázis hiba történt.',
                 ...(process.env.NODE_ENV === 'development' && {
                     details: err.meta,
                     originalError: err.message,

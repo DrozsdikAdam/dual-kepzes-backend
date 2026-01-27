@@ -34,10 +34,24 @@ const prisma = basePrisma.$extends({
             async findUnique({ model, args, query }) {
                 if (softDeleteModels.includes(model)) {
                     const modelName = model.charAt(0).toLowerCase() + model.slice(1);
-                    const where = args.where || {};
-                    if (!(where as any).deletedAt) {
-                        (where as any).deletedAt = null;
+                    const where = { ...args.where } as any;
+
+                    // Handle composite unique keys (e.g. studentId_positionId)
+                    // We need to flatten them because findFirst doesn't support the composite key name in where
+                    for (const key in where) {
+                        if (key.includes('_') && typeof where[key] === 'object' && where[key] !== null) {
+                            const subKeys = where[key];
+                            for (const subKey in subKeys) {
+                                where[subKey] = subKeys[subKey];
+                            }
+                            delete where[key];
+                        }
                     }
+
+                    if (!where.deletedAt) {
+                        where.deletedAt = null;
+                    }
+
                     return (basePrisma as any)[modelName].findFirst({
                         ...args,
                         where
