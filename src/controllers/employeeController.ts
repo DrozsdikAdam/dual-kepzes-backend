@@ -88,7 +88,15 @@ export const getEmployeeById = async (req: Request, res: Response, next: NextFun
 
 export const getCompanyEmployees = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { companyId } = req.params;
+        const currentUser = req.user!;
+        let { companyId } = req.params;
+
+        // If no companyId in params (standard list) and not system admin, force current company
+        if (!companyId && currentUser.role !== Role.SYSTEM_ADMIN) {
+            const profile = await employeeService.getProfile(currentUser.userId);
+            companyId = profile.companyId;
+        }
+
         const params = getPaginationParams(req.query);
         const result = await userService.getAllByRole([Role.MENTOR, Role.COMPANY_ADMIN], companyId, params);
         res.json({
@@ -103,7 +111,15 @@ export const getCompanyEmployees = async (req: Request, res: Response, next: Nex
 
 export const getCompanyMentors = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { companyId } = req.params;
+        const currentUser = req.user!;
+        let { companyId } = req.params;
+
+        // If no companyId in params and not system admin, force current company
+        if (!companyId && currentUser.role !== Role.SYSTEM_ADMIN) {
+            const profile = await employeeService.getProfile(currentUser.userId);
+            companyId = profile.companyId;
+        }
+
         const params = getPaginationParams(req.query);
         const result = await userService.getAllByRole(Role.MENTOR, companyId, params);
         res.json({
