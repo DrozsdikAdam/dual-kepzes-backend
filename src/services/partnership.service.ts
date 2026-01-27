@@ -2,6 +2,7 @@ import prisma from '../config/prisma';
 import { NotFoundError, ForbiddenError } from '../errors/AppError';
 import { PartnershipStatus } from '@prisma/client';
 import { getCompanyIdForUser } from '../utils/companyUtils';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
 
 export class PartnershipService {
      async getById(partnershipId: string, userId: string) {
@@ -171,42 +172,70 @@ export class PartnershipService {
           });
      }
 
-     async getStudentPartnerships(userId: string) {
+     async getStudentPartnerships(userId: string, params: Required<PaginationParams>) {
           const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
           if (!studentProfile) {
                throw new NotFoundError('Hallgatói profil');
           }
 
-          return await prisma.dualPartnership.findMany({
-               where: { studentId: studentProfile.id },
-               select: this.getPartnershipSelect(),
-               orderBy: { createdAt: "desc" }
-          });
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = { studentId: studentProfile.id };
+
+          return await paginate(
+               params,
+               prisma.dualPartnership.findMany({
+                    where,
+                    select: this.getPartnershipSelect(),
+                    orderBy: { createdAt: "desc" as const },
+                    skip,
+                    take
+               }),
+               prisma.dualPartnership.count({ where })
+          );
      }
 
-     async getCompanyPartnerships(userId: string) {
+     async getCompanyPartnerships(userId: string, params: Required<PaginationParams>) {
           const companyId = await getCompanyIdForUser(userId);
           if (!companyId) {
                throw new ForbiddenError('Nincs céghez rendelve vagy nincs jogosultsága.');
           }
 
-          return await prisma.dualPartnership.findMany({
-               where: {
-                    OR: [
-                         { mentor: { companyId } },
-                         { position: { companyId } }
-                    ]
-               },
-               select: this.getPartnershipSelect(),
-               orderBy: { createdAt: "desc" }
-          });
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = {
+               OR: [
+                    { mentor: { companyId } },
+                    { position: { companyId } }
+               ]
+          };
+
+          return await paginate(
+               params,
+               prisma.dualPartnership.findMany({
+                    where,
+                    select: this.getPartnershipSelect(),
+                    orderBy: { createdAt: "desc" as const },
+                    skip,
+                    take
+               }),
+               prisma.dualPartnership.count({ where })
+          );
      }
 
-     async getUniversityPartnerships() {
-          return await prisma.dualPartnership.findMany({
-               select: this.getPartnershipSelect(),
-               orderBy: { createdAt: "desc" }
-          });
+     async getUniversityPartnerships(params: Required<PaginationParams>) {
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = {}; // Add University filters if needed (e.g. non-deleted)
+
+          return await paginate(
+               params,
+               prisma.dualPartnership.findMany({
+                    where,
+                    select: this.getPartnershipSelect(),
+                    orderBy: { createdAt: "desc" as const },
+                    skip,
+                    take
+               }),
+               prisma.dualPartnership.count({ where })
+          );
      }
 
      private async resolveMentorId(

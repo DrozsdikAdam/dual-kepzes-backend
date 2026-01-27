@@ -3,6 +3,7 @@ import { partnershipService } from "../services/partnership.service";
 import { DualPartnershipUpdateRequest } from "../schemas/dualSchema";
 import { logAction } from "../utils/logger";
 import { mapDualPartnership } from "../utils/mappers";
+import { getPaginationParams } from "../utils/pagination";
 
 export const getPartnershipById = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -141,8 +142,13 @@ export const assignUniversityUser = async (req: Request, res: Response, next: Ne
 export const getStudentPartnerships = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { userId } = req.user!;
-        const partnerships = await partnershipService.getStudentPartnerships(userId);
-        res.json(partnerships.map(mapDualPartnership));
+        const params = getPaginationParams(req.query);
+        const result = await partnershipService.getStudentPartnerships(userId, params);
+        res.json({
+            success: true,
+            data: result.data.map(mapDualPartnership),
+            pagination: result.pagination
+        });
     } catch (error) {
         next(error);
     }
@@ -151,8 +157,13 @@ export const getStudentPartnerships = async (req: Request, res: Response, next: 
 export const getCompanyPartnerships = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { userId } = req.user!;
-        const partnerships = await partnershipService.getCompanyPartnerships(userId);
-        res.json(partnerships.map(mapDualPartnership));
+        const params = getPaginationParams(req.query);
+        const result = await partnershipService.getCompanyPartnerships(userId, params);
+        res.json({
+            success: true,
+            data: result.data.map(mapDualPartnership),
+            pagination: result.pagination
+        });
     } catch (error) {
         next(error);
     }
@@ -160,8 +171,13 @@ export const getCompanyPartnerships = async (req: Request, res: Response, next: 
 
 export const getUniversityPartnerships = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const partnerships = await partnershipService.getUniversityPartnerships();
-        res.json(partnerships.map(mapDualPartnership));
+        const params = getPaginationParams(req.query);
+        const result = await partnershipService.getUniversityPartnerships(params);
+        res.json({
+            success: true,
+            data: result.data.map(mapDualPartnership),
+            pagination: result.pagination
+        });
     } catch (error) {
         next(error);
     }
