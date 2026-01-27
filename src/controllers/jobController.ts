@@ -7,15 +7,57 @@ import { getCompanyIdForUser } from "../utils/companyUtils";
 import { getPaginationParams } from "../utils/pagination";
 
 /**
- * Get all job positions
- * @route GET /api/jobs
+ * Get job positions (supports optional filtering by dual/non-dual)
+ * @route GET /api/jobs/positions
  * @group Jobs - Operations related to job positions
+ * @param {boolean} isDual.query.optional - Filter by dual/non-dual status (true/false)
  * @returns {object} 200 - Paginated list of positions
  */
 export const getAllPositions = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const params = getPaginationParams(req.query);
-        const result = await jobService.getAll(params);
+        const isDual = req.query.isDual !== undefined ? req.query.isDual === 'true' : undefined;
+        const result = await jobService.getAll(params, isDual);
+        res.json({
+            success: true,
+            data: result.data.map(mapPosition),
+            pagination: result.pagination
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get only dual job positions
+ * @route GET /api/jobs/positions/dual
+ * @group Jobs - Operations related to job positions
+ * @returns {object} 200 - Paginated list of dual positions
+ */
+export const getDualPositions = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const params = getPaginationParams(req.query);
+        const result = await jobService.getAll(params, true);
+        res.json({
+            success: true,
+            data: result.data.map(mapPosition),
+            pagination: result.pagination
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get only non-dual job positions
+ * @route GET /api/jobs/positions/non-dual
+ * @group Jobs - Operations related to job positions
+ * @returns {object} 200 - Paginated list of non-dual positions
+ */
+export const getNonDualPositions = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const params = getPaginationParams(req.query);
+        const result = await jobService.getAll(params, false);
         res.json({
             success: true,
             data: result.data.map(mapPosition),
@@ -68,7 +110,7 @@ export const createTag = async (
 
 /**
  * Create a new job position
- * @route POST /api/jobs
+ * @route POST /api/jobs/positions
  * @group Jobs - Job operations
  * @param {object} position.body.required - Position details
  * @returns {object} 201 - Position created

@@ -30,11 +30,14 @@ export class JobService {
           }
      };
 
-     async getAll(params: Required<PaginationParams>) {
+     async getAll(params: Required<PaginationParams>, isDual?: boolean) {
           const { skip, take } = getPrismaSkipTake(params);
 
           const query = {
-               where: { isActive: true },
+               where: {
+                    isActive: true,
+                    ...(isDual !== undefined ? { isDual } : {})
+               },
                select: {
                     ...this.positionSelect,
                     company: {
