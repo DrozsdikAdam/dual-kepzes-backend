@@ -1,257 +1,151 @@
-import { Request, Response } from "express";
-import prisma from "../config/prisma";
+import { Request, Response, NextFunction } from "express";
+import { notificationService } from "../services/notification.service";
 
-const notificationSelection = {
-     id: true,
-     title: true,
-     message: true,
-     type: true,
-     isRead: true,
-     isArchived: true,
-     sentAt: true,
-}
-
-export const getNotifications = async (req: Request, res: Response) => {
+export const getNotifications = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." })
+               return res.status(401).json({ message: "Nincs jogosultságod." });
           }
 
-          const notifications = await prisma.notification.findMany({
-               where: { userId: userId, isArchived: false },
-               orderBy: { createdAt: "desc" },
-               select: notificationSelection
-          })
-
-          return res.status(200).json(notifications)
+          const notifications = await notificationService.getByUser(userId, false);
+          res.json({ success: true, data: notifications });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az értesítések lekérésekor." })
+          next(error);
      }
-}
+};
 
-export const getNotificationById = async (req: Request, res: Response) => {
+export const getNotificationById = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
           const userId = req.user?.userId;
-
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." })
+               return res.status(401).json({ message: "Nincs jogosultságod." });
           }
 
-          const notification = await prisma.notification.findFirst({
-               where: { id: id, userId: userId },
-               select: notificationSelection
-          })
-
-          if (!notification) {
-               return res.status(404).json({ message: "Nem található értesítés." })
-          }
-
-          return res.status(200).json(notification)
-
+          const notification = await notificationService.getById(id, userId);
+          res.json({ success: true, data: notification });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az értesítés lekérésekor." })
+          next(error);
      }
-}
+};
 
-export const markAsRead = async (req: Request, res: Response) => {
+export const markAsRead = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
           const userId = req.user?.userId;
-
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." })
+               return res.status(401).json({ message: "Nincs jogosultságod." });
           }
 
-          const notification = await prisma.notification.findFirst({
-               where: { id: id, userId: userId }
-          })
-
-          if (!notification) {
-               return res.status(404).json({ message: "Nem található értesítés." })
-          }
-
-          await prisma.notification.update({
-               where: { id: id, userId: userId },
-               data: { isRead: true },
-               select: notificationSelection
-          })
-
-          return res.status(200).json({ message: "Értesítés olvasottnak jelölve." })
+          await notificationService.markAsRead(id, userId);
+          res.json({ success: true, message: "Értékelés sikeresen olvasottnak jelölve." });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az értesítés olvasottnak jelölésekor." })
+          next(error);
      }
-}
+};
 
-export const markAllAsRead = async (req: Request, res: Response) => {
+export const markAllAsRead = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." })
+               return res.status(401).json({ message: "Nincs jogosultságod." });
           }
 
-          await prisma.notification.updateMany({
-               where: { userId: userId },
-               data: { isRead: true },
-          })
-
-          return res.status(200).json({ message: "Az összes értesítés olvasottnak jelölve." })
+          await notificationService.markAllAsRead(userId);
+          res.json({ success: true, message: "Az összes értesítés olvasottnak jelölve." });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az összes értesítés olvasottnak jelölésekor." })
+          next(error);
      }
-}
+};
 
-export const deleteNotification = async (req: Request, res: Response) => {
+export const deleteNotification = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
           const userId = req.user?.userId;
-
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." })
+               return res.status(401).json({ message: "Nincs jogosultságod." });
           }
 
-          const notification = await prisma.notification.findFirst({
-               where: { id: id, userId: userId }
-          })
-
-          if (!notification) {
-               return res.status(404).json({ message: "Nem található értesítés." })
-          }
-
-          await prisma.notification.update({
-               where: { id: id, userId: userId },
-               data: { isArchived: true, deletedAt: new Date() },
-               select: notificationSelection
-          })
-
-          return res.status(200).json({ message: "Értesítés törölve." })
+          await notificationService.delete(id, userId);
+          res.json({ success: true, message: "Értékelés sikeresen törölve." });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az értesítés törlésekor." })
+          next(error);
      }
-}
+};
 
-export const archiveNotification = async (req: Request, res: Response) => {
+export const archiveNotification = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
           const userId = req.user?.userId;
-
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." })
+               return res.status(401).json({ message: "Nincs jogosultságod." });
           }
 
-          const notification = await prisma.notification.findFirst({
-               where: { id: id, userId: userId }
-          })
-
-          if (!notification) {
-               return res.status(404).json({ message: "Nem található értesítés." })
-          }
-
-          await prisma.notification.update({
-               where: { id: id, userId: userId },
-               data: { isArchived: true },
-               select: notificationSelection
-          })
-
-          return res.status(200).json({ message: "Értesítés archiválva." })
+          await notificationService.setArchiveStatus(id, userId, true);
+          res.json({ success: true, message: "Értékelés sikeresen archiválva." });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az archivált értesítések lekérésekor." })
+          next(error);
      }
-}
+};
 
-export const getArchivedNotifications = async (req: Request, res: Response) => {
+export const getArchivedNotifications = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." })
+               return res.status(401).json({ message: "Nincs jogosultságod." });
           }
 
-          const notifications = await prisma.notification.findMany({
-               where: { userId: userId, isArchived: true },
-               orderBy: { createdAt: "desc" },
-               select: notificationSelection
-          })
-
-          return res.status(200).json(notifications)
+          const notifications = await notificationService.getByUser(userId, true);
+          res.json({ success: true, data: notifications });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az archivált értesítések lekérésekor." })
+          next(error);
      }
-}
+};
 
-export const unarchiveNotification = async (req: Request, res: Response) => {
+export const unarchiveNotification = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
-          const userId = req.user?.userId
-
+          const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." })
+               return res.status(401).json({ message: "Nincs jogosultságod." });
           }
 
-          const notification = await prisma.notification.findFirst({
-               where: { id },
-               select: { id: true }
-          })
-
-          if (!notification) {
-               return res.status(404).json({ message: "Nem létező értesítés." })
-          }
-
-          await prisma.notification.update({
-               where: { id: id, userId: userId },
-               data: { isArchived: false },
-               select: notificationSelection
-          })
-
-          return res.status(200).json({ message: "Értesítés visszaállítva." })
+          await notificationService.setArchiveStatus(id, userId, false);
+          res.json({ success: true, message: "Értékelés sikeresen visszaállítva." });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az archivált értesítés visszaállításakor." })
+          next(error);
      }
-}
+};
 
-export const createNotification = async (req: Request, res: Response) => {
+export const createNotification = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const userId = req.user?.userId
-
+          const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." })
+               return res.status(401).json({ message: "Nincs jogosultságod." });
           }
 
-          const { title, message, type, link } = req.body
+          const notification = await notificationService.create({
+               userId,
+               ...req.body
+          });
 
-          if (!title || !message || !type) {
-               return res.status(400).json({ message: "Hiányzó adatok." })
-          }
-
-          const notification = await prisma.notification.create({
-               data: {
-                    userId: userId,
-                    title: title,
-                    message: message,
-                    type: type,
-               },
-               select: notificationSelection
-          })
-
-          return res.status(201).json(notification)
+          res.status(201).json({ success: true, data: notification });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az értesítés létrehozásakor." })
+          next(error);
      }
-}
+};
 
-export const getUnreadNotificationsCount = async (req: Request, res: Response) => {
+export const getUnreadNotificationsCount = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const userId = req.user?.userId
+          const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." })
+               return res.status(401).json({ message: "Nincs jogosultságod." });
           }
 
-          const unreadNotificationsCount = await prisma.notification.count({
-               where: { userId: userId, isRead: false, isArchived: false }
-          })
-
-          return res.status(200).json({ unreadNotificationsCount })
+          const count = await notificationService.getUnreadCount(userId);
+          res.json({ success: true, data: { unreadNotificationsCount: count } });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az olvasatlan értesítések számának lekérésekor." })
+          next(error);
      }
-}
+};
