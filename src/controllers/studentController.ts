@@ -12,7 +12,10 @@ export const getMyProfile = async (req: Request, res: Response, next: NextFuncti
         }
 
         const student = await studentService.getProfile(userId);
-        res.status(200).json(mapStudent(student));
+        res.status(200).json({
+            success: true,
+            data: mapStudent(student)
+        });
     } catch (error) {
         next(error);
     }
@@ -30,7 +33,10 @@ export const getStudentById = async (req: Request, res: Response, next: NextFunc
             details: { viewerId: req.user?.userId }
         });
 
-        res.status(200).json(mapStudent(student));
+        res.status(200).json({
+            success: true,
+            data: mapStudent(student)
+        });
     } catch (error) {
         next(error);
     }

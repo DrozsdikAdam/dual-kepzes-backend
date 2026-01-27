@@ -3,6 +3,8 @@ import {
     createPosition,
     deletePosition,
     getAllPositions,
+    getDualPositions,
+    getNonDualPositions,
     getPositionById,
     updatePosition,
     deactivatePosition,
@@ -20,6 +22,14 @@ const router = Router();
 // Pozíció végpontok
 router.get("/positions",
     getAllPositions
+);
+
+router.get("/positions/dual",
+    getDualPositions
+);
+
+router.get("/positions/non-dual",
+    getNonDualPositions
 );
 
 router.get("/positions/:id",

@@ -7,15 +7,57 @@ import { getCompanyIdForUser } from "../utils/companyUtils";
 import { getPaginationParams } from "../utils/pagination";
 
 /**
- * Get all job positions
- * @route GET /api/jobs
+ * Get job positions (supports optional filtering by dual/non-dual)
+ * @route GET /api/jobs/positions
  * @group Jobs - Operations related to job positions
+ * @param {boolean} isDual.query.optional - Filter by dual/non-dual status (true/false)
  * @returns {object} 200 - Paginated list of positions
  */
 export const getAllPositions = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const params = getPaginationParams(req.query);
-        const result = await jobService.getAll(params);
+        const isDual = req.query.isDual !== undefined ? req.query.isDual === 'true' : undefined;
+        const result = await jobService.getAll(params, isDual);
+        res.json({
+            success: true,
+            data: result.data.map(mapPosition),
+            pagination: result.pagination
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get only dual job positions
+ * @route GET /api/jobs/positions/dual
+ * @group Jobs - Operations related to job positions
+ * @returns {object} 200 - Paginated list of dual positions
+ */
+export const getDualPositions = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const params = getPaginationParams(req.query);
+        const result = await jobService.getAll(params, true);
+        res.json({
+            success: true,
+            data: result.data.map(mapPosition),
+            pagination: result.pagination
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get only non-dual job positions
+ * @route GET /api/jobs/positions/non-dual
+ * @group Jobs - Operations related to job positions
+ * @returns {object} 200 - Paginated list of non-dual positions
+ */
+export const getNonDualPositions = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const params = getPaginationParams(req.query);
+        const result = await jobService.getAll(params, false);
         res.json({
             success: true,
             data: result.data.map(mapPosition),
@@ -30,7 +72,10 @@ export const getPositionById = async (req: Request, res: Response, next: NextFun
     try {
         const { id } = req.params;
         const position = await jobService.getById(id);
-        res.json(mapPosition(position));
+        res.json({
+            success: true,
+            data: mapPosition(position)
+        });
     } catch (error) {
         next(error);
     }
@@ -40,7 +85,10 @@ export const getPositionsByCompanyId = async (req: Request, res: Response, next:
     try {
         const { companyId } = req.params;
         const positions = await jobService.getByCompany(companyId);
-        res.json(positions.map(mapPosition));
+        res.json({
+            success: true,
+            data: positions.map(mapPosition)
+        });
     } catch (error) {
         next(error);
     }
@@ -60,7 +108,11 @@ export const createTag = async (
 ) => {
     try {
         const tag = await jobService.createTag(req.body.name);
-        res.status(201).json(tag);
+        res.status(201).json({
+            success: true,
+            message: "Tag sikeresen létrehozva",
+            data: tag
+        });
     } catch (error) {
         next(error);
     }
@@ -68,7 +120,7 @@ export const createTag = async (
 
 /**
  * Create a new job position
- * @route POST /api/jobs
+ * @route POST /api/jobs/positions
  * @group Jobs - Job operations
  * @param {object} position.body.required - Position details
  * @returns {object} 201 - Position created
@@ -186,7 +238,10 @@ export const reactivatePosition = async (req: Request, res: Response, next: Next
 export const getInactivePositions = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const positions = await jobService.getInactive();
-        res.json(positions.map(mapPosition));
+        res.json({
+            success: true,
+            data: positions.map(mapPosition)
+        });
     } catch (error) {
         next(error);
     }
@@ -200,7 +255,10 @@ export const getMyCompanyPositions = async (req: Request, res: Response, next: N
         }
 
         const positions = await jobService.getByCompany(companyId);
-        res.json(positions.map(mapPosition));
+        res.json({
+            success: true,
+            data: positions.map(mapPosition)
+        });
     } catch (error) {
         next(error);
     }

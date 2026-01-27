@@ -10,7 +10,7 @@ export const getMeCompanyAdmin = async (req: Request, res: Response, next: NextF
           if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
 
           const user = await userService.getById(userId, Role.COMPANY_ADMIN);
-          res.json(user);
+          res.json({ success: true, data: user });
      } catch (error) {
           next(error);
      }
@@ -98,7 +98,7 @@ export const getCompanyAdminById = async (req: Request, res: Response, next: Nex
                details: { viewedEmail: admin.email }
           });
 
-          res.json(admin);
+          res.json({ success: true, data: admin });
      } catch (error) {
           next(error);
      }

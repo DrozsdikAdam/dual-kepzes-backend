@@ -157,7 +157,9 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
-| `GET` | `/` | Minden aktív pozíció listázása. |
+| `GET` | `/` | Aktív pozíciók listázása. (Opcionális: `?isDual=true` vagy `false`) |
+| `GET` | `/dual` | Kizárólag duális pozíciók listázása. |
+| `GET` | `/non-dual` | Kizárólag nem duális pozíciók listázása. |
 | `POST` | `/` | Új pozíció létrehozása. |
 | `GET` | `/:id` | Pozíció részletei. |
 | `PATCH` | `/:id` | Pozíció frissítése. |

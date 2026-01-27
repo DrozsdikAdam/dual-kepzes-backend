@@ -38,10 +38,13 @@ export const getCompanyById = async (req: Request, res: Response, next: NextFunc
           }
 
           if (mappedCompany.positions) {
-               mappedCompany.positions = mappedCompany.positions.map(mapPosition);
+               mappedCompany.positions = mappedCompany.positions.map(mapPosition).filter((p): p is any => p !== null);
           }
 
-          res.json(mappedCompany);
+          res.json({
+               success: true,
+               data: mappedCompany
+          });
      } catch (error) {
           next(error);
      }

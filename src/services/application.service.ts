@@ -1,6 +1,6 @@
 import prisma from '../config/prisma';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../errors/AppError';
-import { ApplicationStatus } from '@prisma/client';
+import { ApplicationStatus, PartnershipStatus } from '@prisma/client';
 import { getCompanyIdForUser } from '../utils/companyUtils';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
 
@@ -124,8 +124,8 @@ export class ApplicationService {
                          data: {
                               studentId: application.studentId,
                               positionId: application.positionId,
-                              status: 'PENDING_MENTOR', // Custom logic could differ here
-                              semester: 'NOT_SET', // Need a way to pass or default this
+                              status: PartnershipStatus.PENDING_MENTOR,
+                              semester: '2023/24/2', // This should ideally be dynamic or passed from request
                               startDate: new Date(),
                          }
                     });

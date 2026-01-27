@@ -1,6 +1,6 @@
 import prisma from '../config/prisma';
 import { NotFoundError, ForbiddenError } from '../errors/AppError';
-import { PartnershipStatus } from '@prisma/client';
+import { PartnershipStatus, ApplicationStatus } from '@prisma/client';
 import { getCompanyIdForUser } from '../utils/companyUtils';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
 
@@ -34,12 +34,12 @@ export class PartnershipService {
                     });
 
                     if (!studentPartnership) {
-                         throw new NotFoundError('Partnerség');
+                         throw new NotFoundError('Partneri kapcsolat');
                     }
 
                     return studentPartnership;
                }
-               throw new NotFoundError('Partnerség');
+               throw new NotFoundError('Partneri kapcsolat');
           }
 
           return partnership;
@@ -62,7 +62,7 @@ export class PartnershipService {
           });
 
           if (!partnershipToUpdate) {
-               throw new NotFoundError('Partnerség');
+               throw new NotFoundError('Partneri kapcsolat');
           }
 
           return await prisma.dualPartnership.update({
@@ -93,7 +93,7 @@ export class PartnershipService {
           });
 
           if (result.count === 0) {
-               throw new NotFoundError('Partnerség');
+               throw new NotFoundError('Partneri kapcsolat');
           }
 
           return true;
@@ -105,7 +105,7 @@ export class PartnershipService {
           });
 
           if (!partnership) {
-               throw new NotFoundError('Partnerség');
+               throw new NotFoundError('Partneri kapcsolat');
           }
 
           return await prisma.dualPartnership.update({
@@ -131,14 +131,14 @@ export class PartnershipService {
           });
 
           if (!partnership) {
-               throw new NotFoundError('Partnerség');
+               throw new NotFoundError('Partneri kapcsolat');
           }
 
           // Verify partnership belongs to company
           const validApplication = await prisma.application.findFirst({
                where: {
                     studentId: partnership.studentId,
-                    status: 'ACCEPTED',
+                    status: ApplicationStatus.ACCEPTED,
                     position: { companyId }
                }
           });

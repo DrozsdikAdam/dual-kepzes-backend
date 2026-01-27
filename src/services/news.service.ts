@@ -2,6 +2,8 @@ import prisma from '../config/prisma';
 import { NotFoundError } from '../errors/AppError';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
 
+import { Role } from '@prisma/client';
+
 export class NewsService {
      private newsSelect = {
           id: true,
@@ -27,7 +29,7 @@ export class NewsService {
           });
      }
 
-     async getAll(params: Required<PaginationParams>, role?: string, isArchived: boolean = false) {
+     async getAll(params: Required<PaginationParams>, role?: Role, isArchived: boolean = false) {
           const { skip, take } = getPrismaSkipTake(params);
           const where = { isArchived, deletedAt: null };
 
@@ -45,13 +47,14 @@ export class NewsService {
                prisma.news.count({ where })
           );
 
-          if (role === 'SYSTEM_ADMIN') {
+          if (role === Role.SYSTEM_ADMIN) {
                return paginated;
           }
 
           paginated.data = paginated.data.filter((item) => {
-               if (item.targetGroup === 'ALL' || item.targetGroup === 'All') return true;
-               if (item.targetGroup === 'STUDENT' && role === 'STUDENT') return true;
+               const target = item.targetGroup?.toUpperCase();
+               if (target === 'ALL') return true;
+               if (target === 'STUDENT' && role === Role.STUDENT) return true;
                return false;
           });
 
