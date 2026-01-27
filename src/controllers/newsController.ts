@@ -1,42 +1,10 @@
-import { Request, Response } from "express"
-import prisma from "../config/prisma"
-import { logAction } from "../utils/logger"
+import { Request, Response, NextFunction } from "express";
+import { newsService } from "../services/news.service";
+import { logAction } from "../utils/logger";
 
-const newsSelector = {
-     id: true,
-     title: true,
-     content: true,
-     isImportant: true,
-     targetGroup: true,
-     tags: true,
-     createdAt: true,
-     isArchived: true
-}
-
-const userNewsSelector = {
-     id: true,
-     title: true,
-     content: true,
-     isImportant: true,
-     targetGroup: true,
-     tags: true,
-     createdAt: true,
-     isArchived: true
-}
-
-export const createNews = async (req: Request, res: Response) => {
+export const createNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const { title, content, isImportant, targetGroup, tags } = req.body;
-
-          const news = await prisma.news.create({
-               data: {
-                    title,
-                    content,
-                    isImportant,
-                    targetGroup,
-                    tags
-               }
-          })
+          const news = await newsService.create(req.body);
 
           await logAction(req, {
                action: "CREATE_NEWS",
@@ -47,248 +15,158 @@ export const createNews = async (req: Request, res: Response) => {
                     title: news.title,
                     targetGroup: news.targetGroup
                }
-          })
+          });
 
-          return res.status(201).json({ message: "Hír sikeresen létrehozva.", news })
-
+          res.status(201).json({
+               success: true,
+               message: "Hír sikeresen létrehozva.",
+               data: news
+          });
      } catch (error) {
-          console.error("Create News Error:", error);
-          return res.status(500).json({ message: "Hiba a hír létrehozásakor." })
+          next(error);
      }
-}
+};
 
-export const getUserNews = async (req: Request, res: Response) => {
+export const getUserNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const newsArray = await prisma.news.findMany({
-               where: { isArchived: false },
-               orderBy: {
-                    createdAt: "desc"
-               },
-               select: userNewsSelector
-          })
-
-          const filterNews = newsArray.filter((news) => {
-               if (news.targetGroup === "ALL") {
-                    return true;
-               }
-               if (news.targetGroup === "STUDENT" && req.user?.role === "STUDENT") {
-                    return true;
-               }
-               return false;
-          })
-
-          return res.json({ news: filterNews })
+          const role = req.user?.role;
+          const news = await newsService.getAll(role, false);
+          res.json({ success: true, data: news });
      } catch (error) {
-          console.error("Get User News Error:", error);
-          return res.status(500).json({ message: "Hiba a hírek lekérdezésekor." })
+          next(error);
      }
-}
+};
 
-export const getUserNewsById = async (req: Request, res: Response) => {
+export const getUserNewsById = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
-
-          const news = await prisma.news.findFirst({
-               where: { id, isArchived: false },
-               select: userNewsSelector
-          })
-
-          if (!news) {
-               return res.status(404).json({ message: "A hír nem található." })
-          }
-
-          return res.json({ news })
+          const news = await newsService.getById(id, false);
+          res.json({ success: true, data: news });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba a hír lekérdezésekor." })
+          next(error);
      }
-}
+};
 
-export const getAdminNews = async (req: Request, res: Response) => {
+export const getAdminNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const news = await prisma.news.findMany({
-               where: { isArchived: false },
-               orderBy: {
-                    createdAt: "desc"
-               },
-               select: newsSelector
-          })
-
-          return res.json({ news })
+          const news = await newsService.getAll('SYSTEM_ADMIN', false);
+          res.json({ success: true, data: news });
      } catch (error) {
-          console.error("Get Admin News Error:", error);
-          return res.status(500).json({ message: "Hiba a hírek lekérdezésekor." })
+          next(error);
      }
-}
+};
 
-export const getAdminNewsById = async (req: Request, res: Response) => {
+export const getAdminNewsById = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
-
-          const news = await prisma.news.findFirst({
-               where: { id },
-               select: newsSelector
-          })
-
-          if (!news) {
-               return res.status(404).json({ message: "A hír nem található." })
-          }
-
-          return res.json({ news })
+          const news = await newsService.getById(id);
+          res.json({ success: true, data: news });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba a hír lekérdezésekor." })
+          next(error);
      }
-}
+};
 
-export const archiveNews = async (req: Request, res: Response) => {
+export const archiveNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
-
-          const news = await prisma.news.update({
-               where: { id },
-               data: {
-                    isArchived: true
-               },
-               select: newsSelector
-          })
+          const news = await newsService.setArchiveStatus(id, true);
 
           await logAction(req, {
                action: "ARCHIVE_NEWS",
                entity: "News",
-               entityId: news.id,
+               entityId: id,
                details: {
                     updatedById: req.user?.userId,
                     title: news.title,
                     targetGroup: news.targetGroup
                }
-          })
+          });
 
-          return res.json({ message: "Hír sikeresen archiválva.", news })
+          res.json({
+               success: true,
+               message: "Hír sikeresen archiválva.",
+               data: news
+          });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba a hír archiválásakor." })
+          next(error);
      }
-}
+};
 
-export const unarchiveNews = async (req: Request, res: Response) => {
+export const unarchiveNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
-          const news = await prisma.news.findFirst({
-               where: { id }
-          })
-
-          if (!news) {
-               return res.status(404).json({ message: "A keresett hír nem található." })
-          }
-
-          const unarchivedNews = await prisma.news.update({
-               where: { id },
-               data: {
-                    isArchived: false
-               }
-          })
+          const news = await newsService.setArchiveStatus(id, false);
 
           await logAction(req, {
                action: "UNARCHIVE_NEWS",
                entity: "News",
-               entityId: unarchivedNews.id,
+               entityId: id,
                details: {
                     updatedById: req.user?.userId,
-                    title: unarchivedNews.title,
-                    targetGroup: unarchivedNews.targetGroup
+                    title: news.title,
+                    targetGroup: news.targetGroup
                }
-          })
+          });
 
-          return res.json({ message: "Hír sikeresen visszaállítva." })
+          res.json({
+               success: true,
+               message: "Hír sikeresen visszaállítva.",
+               data: news
+          });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba a hír archiválásának visszavonásakor." })
+          next(error);
      }
-}
+};
 
-export const updateNews = async (req: Request, res: Response) => {
+export const updateNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
-          const { title, content, isImportant, targetGroup, tags } = req.body;
-
-          const news = await prisma.news.update({
-               where: { id },
-               data: {
-                    title,
-                    content,
-                    isImportant,
-                    targetGroup,
-                    tags
-               },
-               select: newsSelector
-          })
+          const news = await newsService.update(id, req.body);
 
           await logAction(req, {
                action: "UPDATE_NEWS",
                entity: "News",
-               entityId: news.id,
+               entityId: id,
                details: {
                     updatedById: req.user?.userId,
                     title: news.title,
                     targetGroup: news.targetGroup
                }
-          })
+          });
 
-          return res.json({ message: "Hír sikeresen frissítve.", news })
+          res.json({
+               success: true,
+               message: "Hír sikeresen frissítve.",
+               data: news
+          });
      } catch (error) {
-          console.error("Update News Error:", error);
-          return res.status(500).json({ message: "Hiba a hír frissítésekor." })
+          next(error);
      }
-}
+};
 
-export const deleteNews = async (req: Request, res: Response) => {
+export const deleteNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
-
-          const news = await prisma.news.findFirst({
-               where: { id }
-          })
-
-          if (!news) {
-               return res.status(404).json({ message: "A keresett hír nem található." })
-          }
-
-          await prisma.news.update({
-               where: { id },
-               data: {
-                    deletedAt: new Date()
-               }
-          })
+          await newsService.delete(id);
 
           await logAction(req, {
                action: "DELETE_NEWS",
                entity: "News",
-               entityId: news.id,
-               details: {
-                    deletedById: req.user?.userId,
-                    title: news.title,
-                    targetGroup: news.targetGroup
-               }
-          })
+               entityId: id,
+               details: { deletedById: req.user?.userId }
+          });
 
-          return res.json({ message: "Hír sikeresen törölve lett." })
+          res.json({ success: true, message: "Hír sikeresen törölve lett." });
      } catch (error) {
-          console.error("Delete News Error:", error);
-          return res.status(500).json({ message: "Hiba a hír törlésekor." })
+          next(error);
      }
-}
+};
 
-export const getArchivedNews = async (req: Request, res: Response) => {
+export const getArchivedNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const news = await prisma.news.findMany({
-               where: {
-                    isArchived: true
-               },
-               select: newsSelector,
-               orderBy: {
-                    createdAt: "desc"
-               }
-          })
-
-          return res.json({ news })
+          const news = await newsService.getAll('SYSTEM_ADMIN', true);
+          res.json({ success: true, data: news });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba a archivált hírek lekérdezésekor." })
+          next(error);
      }
-}
+};
