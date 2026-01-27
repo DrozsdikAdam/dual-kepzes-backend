@@ -15,6 +15,8 @@ A projekt modern, iparági sztenderd technológiákra épül:
 -   **Autentikáció**: JSON Web Token (JWT) + Bcrypt - Biztonságos token alapú azonosítás és jelszóhashelés a felhasználói fiókok védelmére.
 -   **Háttérfolyamatok**: [BullMQ](https://docs.bullmq.io/) (Redis alapú queue) - Nagy teljesítményű üzenetsor-kezelő az aszinkron feladatok és háttérműveletek megbízható végrehajtásához.
 -   **Email**: Nodemailer (SMTP) - Moduláris email küldő szolgáltatás a rendszerüzenetek és értesítések kézbesítésére.
+-   **Tesztelés**: [Jest](https://jestjs.io/) & [Supertest](https://github.com/ladjs/supertest) - Unit és integrációs tesztek a megbízhatóság érdekében.
+-   **Dokumentáció**: [Swagger/OpenAPI](https://swagger.io/) - Interaktív API dokumentáció és végpont tesztelési felület.
 
 ## 🚀 Előfeltételek
 
@@ -86,6 +88,9 @@ A `package.json`-ben definiált főbb parancsok:
 | `npm run prisma:push` | Adatbázis séma szinkronizálása a `schema.prisma` alapján (fejlesztéshez). |
 | `npm run prisma:format` | Prisma fájlok formázása. |
 | `npm run prisma:studio` | Adatbázis GUI megnyitása a böngészőben. |
+| `npm run test` | Unit és integrációs tesztek futtatása. |
+| `npm run lint` | Kódminőség ellenőrzése (ESLint v9). |
+| `npm run format` | Kód automatikus formázása (Prettier). |
 | `npx prisma db seed` | Adatbázis feltöltése tesztadatokkal (`prisma/seed.ts`). |
 
 ## 🏗 Projekt Struktúra
@@ -105,9 +110,14 @@ prisma/
 └── seed.ts         # Kezdeti adatfeltöltő szkript
 ```
 
-## 🔌 API Dokumentáció
-
 Minden végpont a `/api` prefix alatt érhető el. A legtöbb végponthoz érvényes `Authorization: Bearer <token>` fejléc szükséges.
+
+### 📚 Interaktív Dokumentáció
+Az API Swagger dokumentációja a futó szerveren érhető el:
+👉 `http://localhost:3000/api-docs`
+
+### 📄 Lapozás (Pagination)
+A listázó végpontok egységes válaszstruktúrát és lekérdezési paramétereket használnak. Részleteket az [API_PAGINATION.md](API_PAGINATION.md) fájlban találsz.
 
 ### 🔐 Autentikáció (`/api/auth`)
 

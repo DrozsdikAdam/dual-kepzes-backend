@@ -1,502 +1,178 @@
-import { Request, Response } from "express";
-import prisma from "../config/prisma";
+import { Request, Response, NextFunction } from "express";
+import { applicationService } from "../services/application.service";
 import { logAction } from "../utils/logger";
-import { ApplicationStatus } from "@prisma/client";
 import { mapApplication } from "../utils/mappers";
-import { addEmailToQueue } from "../services/emailQueue";
-import { PartnershipStatus } from "@prisma/client";
-import { getCompanyIdForUser } from "../utils/companyUtils";
+import { getPaginationParams } from "../utils/pagination";
+import prisma from "../config/prisma";
 
-
-const applicationSelect = {
-    id: true,
-    status: true,
-    studentNote: true,
-    companyNote: true,
-    submittedAt: true,
-    position: {
-        select: {
-            id: true,
-            title: true,
-            deadline: true,
-            company: {
-                select: {
-                    id: true,
-                    name: true,
-                    logoUrl: true
-                }
-            }
-        }
-    }
-}
-
-const companyApplicationSelect = {
-    id: true,
-    status: true,
-    studentNote: true,
-    companyNote: true,
-    submittedAt: true,
-    position: {
-        select: {
-            id: true,
-            title: true,
-            deadline: true,
-            company: {
-                select: {
-                    id: true,
-                    name: true,
-                    logoUrl: true
-                }
-            }
-        }
-    },
-    student: {
-        select: {
-            id: true,
-            userId: true,
-
-            // StudentProfile fields
-            mothersName: true,
-            birthDate: true,
-            locations: {
-                select: {
-                    country: true,
-                    zipCode: true,
-                    city: true,
-                    address: true
-                }
-            },
-            highSchool: true,
-            graduationYear: true,
-            neptunCode: true,
-            currentMajor: true,
-            studyMode: true,
-            hasLanguageCert: true,
-
-            // Associated User fields
-            user: {
-                select: {
-                    email: true,
-                    fullName: true,
-                    phoneNumber: true
-                }
-            }
-        }
-    }
-}
-
-const dualPartnershipSelect = {
-    id: true,
-    status: true,
-    contractNumber: true,
-    startDate: true,
-    endDate: true,
-    student: {
-        select: {
-            id: true,
-            neptunCode: true,
-            currentMajor: true,
-            studyMode: true,
-            user: {
-                select: {
-                    fullName: true,
-                    email: true,
-                    phoneNumber: true
-                }
-            }
-        }
-    },
-    uniEmployee: {
-        select: {
-            fullName: true,
-            email: true
-        }
-    },
-    mentor: {
-        select: {
-            id: true,
-            jobTitle: true,
-            companyId: true,
-            user: {
-                select: {
-                    id: true,
-                    fullName: true,
-                    email: true,
-                    phoneNumber: true,
-                }
-            }
-        }
-
-    }
-}
-
-//hallgatói
-
-export const applyToPosition = async (req: Request, res: Response) => {
-    const { positionId, studentNote } = req.body;
-    const userId = req.user!.userId;
-
+export const applyToPosition = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const studentProfile = await prisma.studentProfile.findFirst({
-            where: { userId },
-            select: { id: true }
-        })
+        const { positionId, studentNote } = req.body;
+        const { userId } = req.user!;
 
+        const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
         if (!studentProfile) {
-            return res.status(403).json({ message: "Csak hallgatói profillal jelentkezhet." })
+            return res.status(403).json({ message: "Csak hallgatói profillal lehet jelentkezni." });
         }
 
-        const position = await prisma.position.findFirst({
-            where: { id: positionId },
-            select: { id: true, title: true, isActive: true, deadline: true, company: { select: { id: true, name: true } } }
-        })
-
-        if (!position || !position.isActive) {
-            return res.status(404).json({ message: "A pozíció nem elérhető." })
-        }
-
-        if (position.deadline && new Date() > position.deadline) {
-            return res.status(400).json({ message: "A jelentkezési határidő lejárt." })
-        }
-
-        const application = await prisma.application.create({
-            data: {
-                studentId: studentProfile.id,
-                positionId: positionId,
-                studentNote: studentNote
-            },
-            select: applicationSelect
-        })
+        const application = await applicationService.apply(studentProfile.id, positionId, studentNote);
 
         await logAction(req, {
-            action: "SUBMIT_APPLICATION",
+            action: "APPLY_TO_POSITION",
             entity: "Application",
             entityId: application.id,
-            details: {
-                position: position.title,
-                company: position.company.name,
-                studentId: studentProfile.id
-            }
-        })
-
-        return res.status(201).json({ message: "Sikeres jelentkezés.", application })
-    } catch (error: any) {
-        if (error.code === "P2002") {
-            return res.status(400).json({ message: "Már jelentkezett erre a pozícióra." })
-        }
-        return res.status(500).json({ message: "Hiba történt a jelentkezés során." })
-    }
-
-}
-
-export const getMyApplications = async (req: Request, res: Response) => {
-    try {
-        const studentProfile = await prisma.studentProfile.findFirst({
-            where: { userId: req.user!.userId },
-            select: { id: true }
-        })
-
-        if (!studentProfile) return res.status(404).json({ message: "Hallgatói profil szükséges." })
-
-        const applications = await prisma.application.findMany({
-            where: { studentId: studentProfile.id },
-            select: applicationSelect,
-            orderBy: { submittedAt: "desc" }
-        })
-
-        return res.json(applications)
-
-    } catch (error) {
-        return res.status(500).json({ message: "Hiba a lekérdezés során." })
-    }
-}
-
-export const retractApplication = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const userId = req.user!.userId;
-
-    try {
-        const studentProfile = await prisma.studentProfile.findFirst({
-            where: { userId },
-            select: { id: true }
-        })
-
-        if (!studentProfile) {
-            return res.status(403).json({ message: "Csak hallgatói profillal vonható vissza jelentkezés." })
-        }
-
-        const application = await prisma.application.findFirst({
-            where: { id, studentId: studentProfile.id },
-            select: applicationSelect
-        })
-
-        if (!application) return res.status(404).json({ message: "Nem található jelentkezés vagy nincs jogosultsága." })
-
-        if (application.status !== ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Csak beadott jelentkezéseket lehet visszavonni." })
-
-        if (application.position.deadline && new Date() > application.position.deadline) {
-            return res.status(400).json({ message: "A jelentkezési határidő lejárt, már nem vonható vissza." })
-        }
-
-        const retractedApplication = await prisma.application.update({
-            where: { id },
-            data: {
-                status: ApplicationStatus.RETRACTED
-            }
-        })
-
-        await logAction(req, {
-            action: "RETRACTED_APPLICATION",
-            entity: "Application",
-            entityId: application.id,
-            details: {
-                position: application.position.title,
-                company: application.position.company.name,
-                studentId: studentProfile.id
-            }
-        })
-
-        return res.json(retractedApplication)
-    } catch (error) {
-        return res.status(500).json({ message: "Hiba a visszavonás során." })
-    }
-}
-
-// System admin
-
-export const getApplications = async (req: Request, res: Response) => {
-    try {
-        const applications = await prisma.application.findMany({
-            select: companyApplicationSelect,
-            orderBy: { submittedAt: "desc" }
-        })
-
-        return res.json(applications.map(mapApplication))
-    } catch (error) {
-        return res.status(500).json({ message: "Hiba a lekérdezés során." })
-    }
-}
-
-export const getApplication = async (req: Request, res: Response) => {
-    const { id } = req.params;
-
-    try {
-        const application = await prisma.application.findFirst({
-            where: { id },
-            select: companyApplicationSelect
-        })
-
-        if (!application) return res.status(404).json({ message: "Nem található jelentkezés." })
-
-        return res.json(mapApplication(application))
-    } catch (error) {
-        return res.status(500).json({ message: "Hiba a lekérdezés során." })
-    }
-}
-
-export const updateApplication = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { status, companyNote } = req.body;
-
-    try {
-        const application = await prisma.application.update({
-            where: { id },
-            data: {
-                status,
-                companyNote,
-            }
-        })
-
-        return res.json(application)
-    } catch (error) {
-        return res.status(500).json({ message: "Hiba a módosítás során." })
-    }
-}
-
-//céges
-
-export const evaluateApplication = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { status, companyNote } = req.body;
-    const userId = req.user!.userId;
-
-    try {
-        const companyId = await getCompanyIdForUser(userId);
-
-        if (!companyId) {
-            return res.status(403).json({ message: "Nincs céges jogosultsága." });
-        }
-
-        const application = await prisma.application.findFirst({
-            where: {
-                id,
-                position: {
-                    companyId: companyId
-                }
-            },
-            select: companyApplicationSelect
-        })
-
-        if (!application) return res.status(404).json({ message: "Nem található jelentkezés vagy nincs jogosultsága." })
-
-        if (application.status !== ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Csak beadott jelentkezéseket lehet elbírálni." })
-
-        if (status === ApplicationStatus.SUBMITTED) return res.status(400).json({ message: "Nem lehet BEADOTT státuszra állítani a jelentkezést." })
-
-        const result = await prisma.$transaction(async (tx) => {
-            const updatedApp = await tx.application.update({
-                where: { id },
-                data: {
-                    status,
-                    companyNote,
-                }
-            });
-
-            if (status === ApplicationStatus.ACCEPTED) {
-                const now = new Date();
-                const month = now.getMonth(); // 0-11
-                const year = now.getFullYear();
-
-                let semester = "";
-                // Sept (8) - Jan (0) -> Semester 1
-                if (month >= 8) {
-                    semester = `${year}/${year + 1}/1`;
-                } else if (month <= 0) {
-                    semester = `${year - 1}/${year}/1`;
-                } else {
-                    // Feb (1) - Aug (7) -> Semester 2
-                    semester = `${year - 1}/${year}/2`;
-                }
-
-                // 3.5 years (7 semesters) expiration default
-                const endDate = new Date(now);
-                endDate.setMonth(endDate.getMonth() + 42);
-
-                await tx.dualPartnership.create({
-                    data: {
-                        studentId: application.student.id,
-                        status: PartnershipStatus.PENDING_MENTOR,
-                        startDate: now,
-                        endDate: endDate,
-                        semester: semester,
-                        contractNumber: `D-${year}-${application.student.neptunCode || 'UNK'}`, // Temporary ID generation
-                        positionId: application.position.id
-                    }
-                });
-            }
-
-            return updatedApp;
+            details: { studentId: studentProfile.id, positionId }
         });
 
-        const message = status + "_APPLICATION"
-
-        await logAction(req, {
-            action: message,
-            entity: "Application",
-            entityId: application.id,
-            details: {
-                position: application.position.title,
-                company: application.position.company.name,
-                studentId: application.student.id,
-                evaluatedBy: userId
-            }
-        })
-
-        const notification = await prisma.notification.create({
-            data: {
-                userId: application.student.userId,
-                type: "APPLICATION",
-                title: "A jelentkezésed állapota megváltozott",
-                message: `A jelentkezésed a(z) ${application.position.title} pozícióra a(z) ${application.position.company.name} cégnél ${status} státuszba került.`
-            }
-        })
-
-        /*await addEmailToQueue({
-            notificationId: notification.id,
-            email: application.student.user.email,
-            subject: notification.title,
-            body: notification.message
-        })*/
-        return res.json(result)
+        res.status(201).json({
+            success: true,
+            message: "Sikeres jelentkezés",
+            data: mapApplication(application)
+        });
     } catch (error) {
-        console.error("Evaluation Error:", error);
-        return res.status(500).json({ message: "Hiba az elbírálás során." })
+        next(error);
     }
-}
+};
 
-export const getMyCompanyApplications = async (req: Request, res: Response) => {
-    const userId = req.user!.userId;
-    if (!userId) return res.status(401).json({ message: "Nem található felhasználói azonosító." })
-
+export const getMyApplications = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const companyId = await getCompanyIdForUser(userId);
-
-        if (!companyId) return res.status(404).json({ message: "Nem található cég." })
-
-        const applications = await prisma.application.findMany({
-            where: {
-                position: {
-                    companyId: companyId
-                }
-            },
-            select: companyApplicationSelect,
-            orderBy: { submittedAt: "desc" }
-        })
-
-        return res.json(applications.map(mapApplication))
-    } catch (error) {
-        return res.status(500).json({ message: "Hiba a lekérdezés során." })
-    }
-}
-
-export const updateEvaluation = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { status, companyNote } = req.body;
-    const userId = req.user!.userId;
-
-    try {
-        const companyId = await getCompanyIdForUser(userId);
-
-        if (!companyId) {
-            return res.status(403).json({ message: "Nincs céges jogosultsága." });
+        const { userId } = req.user!;
+        const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
+        if (!studentProfile) {
+            return res.status(403).json({ message: "Nincs hallgatói profilod." });
         }
 
-        const application = await prisma.application.findFirst({
-            where: {
-                id,
-                position: {
-                    companyId: companyId
-                }
-            },
-            select: companyApplicationSelect
-        })
+        const params = getPaginationParams(req.query);
+        const result = await applicationService.getMyApplications(studentProfile.id, params);
+        res.json({
+            success: true,
+            data: result.data.map(mapApplication),
+            pagination: result.pagination
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
-        if (!application) return res.status(404).json({ message: "Nem található jelentkezés vagy nincs jogosultsága." })
+export const retractApplication = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const { userId } = req.user!;
 
-        const updatedApplication = await prisma.application.update({
-            where: { id },
-            data: {
-                status,
-                companyNote
-            }
-        })
+        const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
+        if (!studentProfile) {
+            return res.status(403).json({ message: "Nincs hallgatói profilod." });
+        }
+
+        const application = await applicationService.retract(id, studentProfile.id);
 
         await logAction(req, {
-            action: "UPDATE_EVALUATION",
+            action: "RETRACT_APPLICATION",
             entity: "Application",
-            entityId: application.id,
-            details: {
-                updatedBy: req.user!.userId,
-                position: application.position.title,
-                company: application.position.company.name,
-                studentId: application.student.id
-            }
-        })
+            entityId: id,
+            details: { studentId: studentProfile.id }
+        });
 
-        return res.json(updatedApplication)
+        res.json({
+            success: true,
+            message: "Jelentkezés visszavonva",
+            data: mapApplication(application)
+        });
     } catch (error) {
-        return res.status(500).json({ message: "Hiba a módosítás során." })
+        next(error);
     }
-}
+};
 
+export const getApplications = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const params = getPaginationParams(req.query);
+        const result = await applicationService.getAll(params);
+        res.json({
+            success: true,
+            data: result.data.map(mapApplication),
+            pagination: result.pagination
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
+export const getApplication = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const application = await applicationService.getById(id);
+        res.json(mapApplication(application));
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const updateApplication = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const data = req.body;
+        const application = await applicationService.update(id, data);
+        res.json(mapApplication(application));
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const evaluateApplication = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const { status, companyNote } = req.body;
+        const { userId } = req.user!;
+
+        const application = await applicationService.evaluate(id, userId, status, companyNote);
+
+        await logAction(req, {
+            action: "EVALUATE_APPLICATION",
+            entity: "Application",
+            entityId: id,
+            details: { status, evaluatedBy: userId }
+        });
+
+        res.json({
+            success: true,
+            message: "Sikeres értékelés",
+            data: mapApplication(application)
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getMyCompanyApplications = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { userId } = req.user!;
+        const params = getPaginationParams(req.query);
+        const result = await applicationService.getCompanyApplications(userId, params);
+        res.json({
+            success: true,
+            data: result.data.map(mapApplication),
+            pagination: result.pagination
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const updateEvaluation = async (req: Request, res: Response, next: NextFunction) => {
+    // This could also use evaluation logic
+    try {
+        const { id } = req.params;
+        const { status, companyNote } = req.body;
+        const { userId } = req.user!;
+
+        const application = await applicationService.evaluate(id, userId, status, companyNote);
+
+        res.json({
+            success: true,
+            message: "Értékelés frissítve",
+            data: mapApplication(application)
+        });
+    } catch (error) {
+        next(error);
+    }
+};

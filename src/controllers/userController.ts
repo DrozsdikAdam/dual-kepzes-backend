@@ -1,96 +1,54 @@
-import { Request, Response } from "express";
-import prisma from "../config/prisma";
+import { Request, Response, NextFunction } from "express";
+import { userService } from "../services/user.service";
 import { logAction } from "../utils/logger";
+import { getPaginationParams } from "../utils/pagination";
 
-const userSelect = {
-     id: true,
-     email: true,
-     fullName: true,
-     phoneNumber: true,
-     role: true,
-     isActive: true,
-     deletedAt: true
-};
-
-export const getInactiveUsers = async (req: Request, res: Response) => {
+export const getInactiveUsers = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const inactiveUsers = await prisma.user.findMany({
-               where: {
-                    isActive: false,
-                    deletedAt: null
-               },
-               select: userSelect,
-               orderBy: { fullName: "asc" }
+          const params = getPaginationParams(req.query);
+          const result = await userService.getInactive(params);
+          res.json({
+               success: true,
+               data: result.data,
+               pagination: result.pagination
           });
-
-          return res.json(inactiveUsers);
      } catch (error) {
-          return res.status(500).json({ message: "Hiba az inaktív felhasználók lekérésekor." });
+          next(error);
      }
 };
 
-export const reactivateUser = async (req: Request, res: Response) => {
-     const { id } = req.params;
-
+export const reactivateUser = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const user = await prisma.user.findFirst({
-               where: { id, isActive: false, deletedAt: null }
-          });
-
-          if (!user) {
-               return res.status(404).json({ message: "Nem található inaktív felhasználó ezzel az ID-val." });
-          }
-
-          const updatedUser = await prisma.user.update({
-               where: { id },
-               data: { isActive: true },
-               select: userSelect
-          });
+          const { id } = req.params;
+          const user = await userService.setStatus(id, true);
 
           await logAction(req, {
                action: "REACTIVATE_USER",
                entity: "User",
                entityId: id,
-               details: {
-                    reactivatedBy: req.user?.userId
-               }
+               details: { reactivatedBy: req.user?.userId }
           });
 
-          return res.json({ message: "Felhasználó sikeresen újraaktiválva.", user: updatedUser });
+          res.json({ success: true, message: "Felhasználó sikeresen újraaktiválva.", data: user });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba a felhasználó újraaktiválásakor." });
+          next(error);
      }
 };
 
-export const deactivateUser = async (req: Request, res: Response) => {
-     const { id } = req.params;
-
+export const deactivateUser = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const user = await prisma.user.findFirst({
-               where: { id, deletedAt: null }
-          });
-
-          if (!user) {
-               return res.status(404).json({ message: "Nem található aktív felhasználó ezzel az ID-val." });
-          }
-
-          const updatedUser = await prisma.user.update({
-               where: { id },
-               data: { isActive: false },
-               select: userSelect
-          });
+          const { id } = req.params;
+          const user = await userService.setStatus(id, false);
 
           await logAction(req, {
                action: "DEACTIVATE_USER",
                entity: "User",
                entityId: id,
-               details: {
-                    deactivatedBy: req.user?.userId
-               }
+               details: { deactivatedBy: req.user?.userId }
           });
 
-          return res.json({ message: "Felhasználó sikeresen deaktiválva.", user: updatedUser });
+          res.json({ success: true, message: "Felhasználó sikeresen deaktiválva.", data: user });
      } catch (error) {
-          return res.status(500).json({ message: "Hiba a felhasználó deaktiválásakor." });
+          next(error);
      }
 };

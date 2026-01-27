@@ -6,12 +6,12 @@ import {
      getAdminNews,
      getAdminNewsById,
      getArchivedNews,
-     getUserNews,
+     getAllNews,
      getUserNewsById,
      unarchiveNews,
      updateNews,
 } from "../controllers/newsController";
-import { authenticateToken, isSystemAdmin } from "../middlewares/authMiddleware";
+import { authenticateToken } from "../middlewares/authMiddleware";
 import { validate } from "../middlewares/validateMiddleware";
 import { CreateNewsSchema, UpdateNewsSchema } from "../schemas/newsSchema";
 
@@ -30,7 +30,7 @@ router.patch("/admin/:id/unarchive", unarchiveNews);
 router.delete("/admin/:id", deleteNews);
 
 // User routes
-router.get("/", getUserNews);
+router.get("/", getAllNews);
 router.get("/:id", getUserNewsById);
 
 export default router;

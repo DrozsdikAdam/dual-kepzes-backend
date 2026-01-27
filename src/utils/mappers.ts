@@ -1,10 +1,24 @@
-export const mapCompany = (company: any) => {
+import {
+     Company,
+     Position,
+     StudentProfile,
+     Location,
+     User,
+     CompanyEmployee,
+     Application,
+     DualPartnership
+} from '@prisma/client';
+
+type PartialLocation = Partial<Location>;
+type CompanyWithLocations = Partial<Company> & { location?: PartialLocation[] };
+
+export const mapCompany = (company: CompanyWithLocations | null): any => {
      if (!company) return null;
      const { location, ...rest } = company;
      // Return locations array, mapping each to only include relevant fields
      return {
           ...rest,
-          locations: location ? location.map((loc: any) => ({
+          locations: location ? location.map((loc: PartialLocation) => ({
                id: loc.id,
                country: loc.country,
                zipCode: loc.zipCode,
@@ -14,7 +28,12 @@ export const mapCompany = (company: any) => {
      };
 };
 
-export const mapPosition = (position: any) => {
+type PositionWithRelations = Partial<Position> & {
+     location?: PartialLocation | null,
+     company?: CompanyWithLocations | null
+};
+
+export const mapPosition = (position: PositionWithRelations | null): any => {
      if (!position) return null;
      const loc = position.location;
      const { location, company, ...rest } = position;
@@ -34,7 +53,9 @@ export const mapPosition = (position: any) => {
      };
 };
 
-export const mapStudentProfile = (profile: any) => {
+type ProfileWithLocations = Partial<StudentProfile> & { locations?: PartialLocation[] };
+
+export const mapStudentProfile = (profile: ProfileWithLocations | null): any => {
      if (!profile) return null;
      const mainLocation = profile.locations && profile.locations.length > 0 ? profile.locations[0] : null;
      // Extract locations and locationId to exclude them and flatten properties
@@ -51,20 +72,26 @@ export const mapStudentProfile = (profile: any) => {
      };
 };
 
-export const mapStudent = (user: any) => {
+type UserWithProfile = Partial<User> & { studentProfile?: ProfileWithLocations | null };
+
+export const mapStudent = (user: UserWithProfile | null): any => {
      if (!user) return null;
      const mapped = { ...user };
 
      if (mapped.studentProfile) {
-          mapped.studentProfile = mapStudentProfile(mapped.studentProfile);
+          mapped.studentProfile = mapStudentProfile(mapped.studentProfile) as any;
      }
      return mapped;
 };
 
-export const mapApplication = (application: any) => {
+type ApplicationWithStudent = Partial<Application> & {
+     student?: (Partial<StudentProfile> & { user?: Partial<User> | null }) | null
+};
+
+export const mapApplication = (application: ApplicationWithStudent | null): any => {
      if (!application) return null;
 
-     const mapped = { ...application };
+     const mapped = { ...application } as any;
 
      if (mapped.student) {
           // application.student is the StudentProfile (from the new select)
@@ -82,8 +109,8 @@ export const mapApplication = (application: any) => {
                // The profile data itself
                studentProfile: mapStudentProfile({
                     ...profile,
-                    userId: undefined, // remove redundancy if desired
-                    user: undefined
+                    userId: undefined as any, // remove redundancy if desired
+                    user: undefined as any
                })
           };
      }
@@ -91,10 +118,17 @@ export const mapApplication = (application: any) => {
      return mapped;
 };
 
-export const mapDualPartnership = (partnership: any) => {
+type PartnershipWithRelations = Partial<DualPartnership> & {
+     student?: (Partial<StudentProfile> & { user?: Partial<User> | null }) | null,
+     mentor?: (Partial<CompanyEmployee> & { user?: Partial<User> | null }) | null,
+     position?: (Partial<Position> & { company?: Partial<Company> | null }) | null,
+     uniEmployee?: Partial<User> | null
+};
+
+export const mapDualPartnership = (partnership: PartnershipWithRelations | null): any => {
      if (!partnership) return null;
 
-     const mapped = { ...partnership };
+     const mapped = { ...partnership } as any;
 
      if (mapped.student) {
           // partnership.student is the StudentProfile
@@ -108,7 +142,7 @@ export const mapDualPartnership = (partnership: any) => {
                fullName: user.fullName,
                studentProfile: mapStudentProfile({
                     ...profile,
-                    user: undefined, // Avoid circular reference
+                    user: undefined as any, // Avoid circular reference
                }),
           };
      }
