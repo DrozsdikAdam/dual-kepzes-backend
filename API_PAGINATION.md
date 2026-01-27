@@ -45,16 +45,16 @@ The following optional query parameters can be used on all affected endpoints:
 The parameters are passed as standard URL query strings:
 
 - **Basic request (default 10 items):**
-  `GET /api/jobs`
+  `GET /api/jobs/positions`
 
 - **Requesting a specific page:**
-  `GET /api/jobs?page=2`
+  `GET /api/jobs/positions?page=2`
 
 - **Customizing the number of items per page:**
-  `GET /api/jobs?limit=25`
+  `GET /api/jobs/positions?limit=25`
 
 - **Combining parameters (Page 3, 20 items per page):**
-  `GET /api/jobs?page=3&limit=20`
+  `GET /api/jobs/positions?page=3&limit=20`
 
 ---
 
@@ -63,7 +63,9 @@ The parameters are passed as standard URL query strings:
 The following endpoints have been updated to use this new structure:
 
 ### Jobs & News
-- `GET /api/jobs`
+- `GET /api/jobs/positions` (Supports `?isDual=true|false`)
+- `GET /api/jobs/positions/dual`
+- `GET /api/jobs/positions/non-dual`
 - `GET /api/news`
 
 ### User Management
