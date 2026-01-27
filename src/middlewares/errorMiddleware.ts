@@ -15,14 +15,18 @@ export const errorHandler = (
     }
 
     // A korábbi megoldáshoz hűen konzolra írjuk a hibát
-    console.error("--- SZERVER OLDALI HIBA NAPLÓ ---");
-    console.error(err);
+    const timestamp = new Date().toISOString();
+    console.error(`[${timestamp}] --- SZERVER OLDALI HIBA ---`);
+    console.error(`Method: ${req.method}, URL: ${req.url}`);
+    console.error(`Error Name: ${err.name}`);
+    console.error(`Error Message: ${err.message}`);
     if (err.stack) console.error(err.stack);
 
     // Handle known application errors
     if (err instanceof AppError) {
         return res.status(err.statusCode).json({
             success: false,
+            message: err.message, // Top-level message for UI compatibility
             error: {
                 code: err.code,
                 message: err.message,
@@ -35,6 +39,7 @@ export const errorHandler = (
     if (err instanceof ZodError) {
         return res.status(400).json({
             success: false,
+            message: 'Validációs hiba.',
             error: {
                 code: ErrorCodes.VALIDATION_ERROR,
                 message: 'Validációs hiba.',
@@ -43,12 +48,18 @@ export const errorHandler = (
         });
     }
 
-    // Handle Prisma Client errors (example: unique constraint)
-    if (err.name === 'PrismaClientKnownRequestError' || err.name === 'PrismaClientUnknownRequestError' || err.name === 'PrismaClientInitializationError') {
-        const isConnLimit = err.message?.includes("Max client connections reached") || err.message?.includes("connection limit");
+    // Handle Prisma Client errors (including connection limits)
+    const isPrismaError = err.name?.includes('Prisma') || err.code?.startsWith('P');
+    if (isPrismaError) {
+        const isConnLimit = err.message?.includes("Max client connections reached") ||
+            err.message?.includes("connection limit") ||
+            err.code === 'P2024';
 
         return res.status(isConnLimit ? 503 : 400).json({
             success: false,
+            message: isConnLimit
+                ? 'Az adatbázis jelenleg túlterhelt, kérjük próbálja újra később.'
+                : 'Adatbázis hiba történt.',
             error: {
                 code: isConnLimit ? "DATABASE_CONNECTION_LIMIT" : ErrorCodes.DATABASE_ERROR,
                 message: isConnLimit
@@ -56,7 +67,8 @@ export const errorHandler = (
                     : 'Adatbázis hiba történt.',
                 ...(process.env.NODE_ENV === 'development' && {
                     details: err.meta,
-                    originalError: err.message
+                    originalError: err.message,
+                    code: err.code
                 })
             },
         });
@@ -68,9 +80,10 @@ export const errorHandler = (
 
     res.status(statusCode).json({
         success: false,
+        message: process.env.NODE_ENV === "development" ? message : "Belső szerver hiba történt.",
         error: {
             code: ErrorCodes.INTERNAL_ERROR,
-            message: process.env.NODE_ENV === "development" ? message : (err.message || "Belső szerver hiba"),
+            message: process.env.NODE_ENV === "development" ? message : "Belső szerver hiba történt.",
             ...(process.env.NODE_ENV === "development" && { stack: err.stack })
         }
     });
