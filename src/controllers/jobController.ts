@@ -4,11 +4,17 @@ import { PositionInput, TagInput } from "../schemas/jobSchema";
 import { logAction } from "../utils/logger";
 import { mapPosition } from "../utils/mappers";
 import { getCompanyIdForUser } from "../utils/companyUtils";
+import { getPaginationParams } from "../utils/pagination";
 
 export const getAllPositions = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const positions = await jobService.getAll();
-        res.json(positions.map(mapPosition));
+        const params = getPaginationParams(req.query);
+        const result = await jobService.getAll(params);
+        res.json({
+            success: true,
+            data: result.data.map(mapPosition),
+            pagination: result.pagination
+        });
     } catch (error) {
         next(error);
     }

@@ -1,6 +1,7 @@
 import prisma from '../config/prisma';
-import { NotFoundError, ForbiddenError } from '../errors/AppError';
+import { NotFoundError } from '../errors/AppError';
 import { PositionInput } from '../schemas/jobSchema';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
 
 export class JobService {
      private positionSelect = {
@@ -15,6 +16,8 @@ export class JobService {
                }
           },
           deadline: true,
+          companyId: true,
+          locationId: true,
           isActive: true,
           isDual: true,
           createdAt: true,
@@ -27,8 +30,10 @@ export class JobService {
           }
      };
 
-     async getAll() {
-          return await prisma.position.findMany({
+     async getAll(params: Required<PaginationParams>) {
+          const { skip, take } = getPrismaSkipTake(params);
+
+          const query = {
                where: { isActive: true },
                select: {
                     ...this.positionSelect,
@@ -44,8 +49,14 @@ export class JobService {
                          }
                     }
                },
-               orderBy: { deadline: "asc" }
-          });
+               orderBy: { deadline: "asc" as const }
+          };
+
+          return await paginate(
+               params,
+               prisma.position.findMany({ ...query, skip, take }),
+               prisma.position.count({ where: query.where })
+          );
      }
 
      async getById(id: string) {
