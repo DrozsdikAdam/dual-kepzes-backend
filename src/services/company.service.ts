@@ -1,6 +1,7 @@
 import prisma from '../config/prisma';
 import { NotFoundError, BadRequestError } from '../errors/AppError';
 import { CompanyInput } from '../schemas/jobSchema';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
 
 export class CompanyService {
      private companySelect = {
@@ -25,19 +26,30 @@ export class CompanyService {
           deletedAt: true
      };
 
-     async getAll() {
-          return await prisma.company.findMany({
-               select: {
-                    ...this.companySelect,
-                    _count: {
-                         select: {
-                              positions: {
-                                   where: { deletedAt: null }
+     async getAll(params: Required<PaginationParams>) {
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = { deletedAt: null };
+
+          return await paginate(
+               params,
+               prisma.company.findMany({
+                    where,
+                    select: {
+                         ...this.companySelect,
+                         _count: {
+                              select: {
+                                   positions: {
+                                        where: { deletedAt: null }
+                                   }
                               }
                          }
-                    }
-               }
-          });
+                    },
+                    skip,
+                    take,
+                    orderBy: { name: 'asc' as const }
+               }),
+               prisma.company.count({ where })
+          );
      }
 
      async getById(id: string) {
@@ -187,15 +199,24 @@ export class CompanyService {
           ]);
      }
 
-     async getInactive() {
-          return await prisma.company.findMany({
-               where: {
-                    isActive: false,
-                    deletedAt: null
-               },
-               select: this.companySelect,
-               orderBy: { name: "asc" }
-          });
+     async getInactive(params: Required<PaginationParams>) {
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = {
+               isActive: false,
+               deletedAt: null
+          };
+
+          return await paginate(
+               params,
+               prisma.company.findMany({
+                    where,
+                    select: this.companySelect,
+                    orderBy: { name: "asc" as const },
+                    skip,
+                    take
+               }),
+               prisma.company.count({ where })
+          );
      }
 
      async setStatus(id: string, isActive: boolean) {

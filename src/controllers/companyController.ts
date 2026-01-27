@@ -1,13 +1,20 @@
 import { Request, Response, NextFunction } from "express";
 import { companyService } from "../services/company.service";
+import { NotFoundError } from "../errors/AppError";
 import { logAction } from "../utils/logger";
 import { CompanyInput } from "../schemas/jobSchema";
 import { mapCompany, mapPosition } from "../utils/mappers";
+import { getPaginationParams } from "../utils/pagination";
 
 export const getAllCompanies = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const companies = await companyService.getAll();
-          res.json(companies.map(mapCompany));
+          const params = getPaginationParams(req.query);
+          const result = await companyService.getAll(params);
+          res.json({
+               success: true,
+               data: result.data.map(mapCompany),
+               pagination: result.pagination
+          });
      } catch (error) {
           next(error);
      }
@@ -25,7 +32,11 @@ export const getCompanyById = async (req: Request, res: Response, next: NextFunc
                details: { viewById: req.user?.userId, name: company.name }
           });
 
-          const mappedCompany = mapCompany(company);
+          const mappedCompany = mapCompany(company as any);
+          if (!mappedCompany) {
+               throw new NotFoundError('Cég');
+          }
+
           if (mappedCompany.positions) {
                mappedCompany.positions = mappedCompany.positions.map(mapPosition);
           }
@@ -103,8 +114,13 @@ export const deleteCompany = async (req: Request, res: Response, next: NextFunct
 
 export const getInactiveCompanies = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const inactiveCompanies = await companyService.getInactive();
-          res.json(inactiveCompanies.map(mapCompany));
+          const params = getPaginationParams(req.query);
+          const result = await companyService.getInactive(params);
+          res.json({
+               success: true,
+               data: result.data.map(mapCompany),
+               pagination: result.pagination
+          });
      } catch (error) {
           next(error);
      }
