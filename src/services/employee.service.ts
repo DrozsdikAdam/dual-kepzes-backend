@@ -98,7 +98,7 @@ export class EmployeeService {
           });
 
           if (!partnership) {
-               throw new NotFoundError('Partnerség');
+               throw new NotFoundError('Partneri kapcsolat');
           }
 
           return partnership;

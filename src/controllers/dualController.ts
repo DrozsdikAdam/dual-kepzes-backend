@@ -12,7 +12,10 @@ export const getPartnershipById = async (req: Request, res: Response, next: Next
 
         const partnership = await partnershipService.getById(id, userId);
 
-        res.json(mapDualPartnership(partnership));
+        res.json({
+            success: true,
+            data: mapDualPartnership(partnership)
+        });
     } catch (error) {
         next(error);
     }

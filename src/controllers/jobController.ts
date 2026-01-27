@@ -72,7 +72,10 @@ export const getPositionById = async (req: Request, res: Response, next: NextFun
     try {
         const { id } = req.params;
         const position = await jobService.getById(id);
-        res.json(mapPosition(position));
+        res.json({
+            success: true,
+            data: mapPosition(position)
+        });
     } catch (error) {
         next(error);
     }
@@ -82,7 +85,10 @@ export const getPositionsByCompanyId = async (req: Request, res: Response, next:
     try {
         const { companyId } = req.params;
         const positions = await jobService.getByCompany(companyId);
-        res.json(positions.map(mapPosition));
+        res.json({
+            success: true,
+            data: positions.map(mapPosition)
+        });
     } catch (error) {
         next(error);
     }
@@ -102,7 +108,11 @@ export const createTag = async (
 ) => {
     try {
         const tag = await jobService.createTag(req.body.name);
-        res.status(201).json(tag);
+        res.status(201).json({
+            success: true,
+            message: "Tag sikeresen létrehozva",
+            data: tag
+        });
     } catch (error) {
         next(error);
     }
@@ -228,7 +238,10 @@ export const reactivatePosition = async (req: Request, res: Response, next: Next
 export const getInactivePositions = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const positions = await jobService.getInactive();
-        res.json(positions.map(mapPosition));
+        res.json({
+            success: true,
+            data: positions.map(mapPosition)
+        });
     } catch (error) {
         next(error);
     }
@@ -242,7 +255,10 @@ export const getMyCompanyPositions = async (req: Request, res: Response, next: N
         }
 
         const positions = await jobService.getByCompany(companyId);
-        res.json(positions.map(mapPosition));
+        res.json({
+            success: true,
+            data: positions.map(mapPosition)
+        });
     } catch (error) {
         next(error);
     }

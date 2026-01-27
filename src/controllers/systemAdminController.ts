@@ -12,7 +12,7 @@ export const getMeSystemAdmin = async (req: Request, res: Response, next: NextFu
           }
 
           const user = await userService.getById(userId, Role.SYSTEM_ADMIN);
-          res.json(user);
+          res.json({ success: true, data: user });
      } catch (error) {
           next(error);
      }
@@ -95,7 +95,7 @@ export const getSystemAdminById = async (req: Request, res: Response, next: Next
                details: { viewedById: req.user?.userId, viewedEmail: admin.email }
           });
 
-          res.json(admin);
+          res.json({ success: true, data: admin });
      } catch (error) {
           next(error);
      }

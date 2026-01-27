@@ -12,7 +12,7 @@ export const getMeEmployee = async (req: Request, res: Response, next: NextFunct
         if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
 
         const employee = await employeeService.getProfile(userId);
-        res.json(employee);
+        res.json({ success: true, data: employee });
     } catch (error) {
         next(error);
     }
@@ -80,7 +80,7 @@ export const getEmployeeById = async (req: Request, res: Response, next: NextFun
             details: { viewerId: currentUser.userId }
         });
 
-        res.json(target);
+        res.json({ success: true, data: target });
     } catch (error) {
         next(error);
     }
@@ -180,7 +180,7 @@ export const getMyStudents = async (req: Request, res: Response, next: NextFunct
         if (!userId) return res.status(401).json({ message: "Nincs jogosultságod." });
 
         const partnerships = await employeeService.getMentorStudents(userId);
-        res.json(partnerships);
+        res.json({ success: true, data: partnerships });
     } catch (error) {
         next(error);
     }
@@ -193,7 +193,7 @@ export const getMyPartnershipById = async (req: Request, res: Response, next: Ne
         if (!userId) return res.status(401).json({ message: "Nincs jogosultságod." });
 
         const partnership = await employeeService.getMentorPartnership(userId, id);
-        res.json(partnership);
+        res.json({ success: true, data: partnership });
     } catch (error) {
         next(error);
     }
