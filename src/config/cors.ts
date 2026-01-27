@@ -13,11 +13,15 @@ export const corsOptions: CorsOptions = {
           // Allow requests with no origin (like mobile apps or curl requests)
           if (!origin) return callback(null, true);
 
-          if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+          // Check if origin matches allowed list or Vercel preview patterns
+          const isAllowed = allowedOrigins.includes(origin);
+          const isVercelPreview = origin.startsWith('https://dual-kepzes-frontend') && origin.endsWith('.vercel.app');
+
+          if (isAllowed || isVercelPreview || process.env.NODE_ENV !== 'production') {
                callback(null, true);
           } else {
                // Log the rejected origin to help debugging in production
-               console.error(`CORS rejected origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
+               console.error(`CORS rejected origin: ${origin}. Allowed: ${allowedOrigins.join(', ')} or *.vercel.app previews`);
                callback(new Error('Not allowed by CORS'));
           }
      },
