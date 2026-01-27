@@ -8,165 +8,220 @@ import {
      Application,
      DualPartnership
 } from '@prisma/client';
+import {
+     MappedLocation,
+     MappedCompany,
+     MappedPosition,
+     MappedStudentProfile,
+     MappedStudent,
+     MappedApplication,
+     MappedDualPartnership
+} from '../types/mappers.types';
 
 type PartialLocation = Partial<Location>;
-type CompanyWithLocations = Partial<Company> & { location?: PartialLocation[] };
 
-export const mapCompany = (company: CompanyWithLocations | null): any => {
+export const mapCompany = (company: (Partial<Company> & { location?: PartialLocation[] }) | null): MappedCompany | null => {
      if (!company) return null;
      const { location, ...rest } = company;
-     // Return locations array, mapping each to only include relevant fields
+
      return {
-          ...rest,
+          id: rest.id!,
+          name: rest.name!,
+          taxId: rest.taxId,
+          description: rest.description,
+          contactName: rest.contactName,
+          contactEmail: rest.contactEmail,
+          website: rest.website,
+          logoUrl: rest.logoUrl,
+          isActive: rest.isActive,
+          createdAt: rest.createdAt,
           locations: location ? location.map((loc: PartialLocation) => ({
                id: loc.id,
-               country: loc.country,
-               zipCode: loc.zipCode,
-               city: loc.city,
-               address: loc.address
+               country: loc.country!,
+               zipCode: loc.zipCode!,
+               city: loc.city!,
+               address: loc.address!
           })) : []
      };
 };
 
-type PositionWithRelations = Partial<Position> & {
+export const mapPosition = (position: (Partial<Position> & {
      location?: PartialLocation | null,
-     company?: CompanyWithLocations | null
-};
-
-export const mapPosition = (position: PositionWithRelations | null): any => {
+     company?: (Partial<Company> & { location?: PartialLocation[] }) | null,
+     tags?: Array<{ name: string; category: string }>
+}) | null): MappedPosition | null => {
      if (!position) return null;
-     const loc = position.location;
-     const { location, company, ...rest } = position;
-
-     // Map company if present
-     const mappedCompany = company ? mapCompany(company) : undefined;
+     const { location: loc, company, tags, ...rest } = position;
 
      return {
-          ...rest,
-          company: mappedCompany,
+          id: rest.id!,
+          companyId: rest.companyId!,
+          title: rest.title!,
+          description: rest.description,
+          isDual: rest.isDual ?? true,
+          deadline: rest.deadline,
+          isActive: rest.isActive ?? true,
+          createdAt: rest.createdAt,
+          company: company ? mapCompany(company)! : undefined,
           location: loc ? {
-               zipCode: loc.zipCode,
-               city: loc.city,
-               address: loc.address,
-               country: loc.country // Added country if available in position location
-          } : null
+               id: loc.id,
+               zipCode: loc.zipCode!,
+               city: loc.city!,
+               address: loc.address!,
+               country: loc.country || "Magyarország"
+          } : null,
+          tags: tags
      };
 };
 
-type ProfileWithLocations = Partial<StudentProfile> & { locations?: PartialLocation[] };
-
-export const mapStudentProfile = (profile: ProfileWithLocations | null): any => {
+export const mapStudentProfile = (profile: (Partial<StudentProfile> & { locations?: PartialLocation[] }) | null): MappedStudentProfile | null => {
      if (!profile) return null;
      const mainLocation = profile.locations && profile.locations.length > 0 ? profile.locations[0] : null;
-     // Extract locations and locationId to exclude them and flatten properties
      const { locations, ...rest } = profile;
 
      return {
-          ...rest,
+          id: rest.id!,
+          userId: rest.userId!,
+          mothersName: rest.mothersName!,
+          birthDate: rest.birthDate!,
+          highSchool: rest.highSchool!,
+          graduationYear: rest.graduationYear!,
+          neptunCode: rest.neptunCode,
+          currentMajor: rest.currentMajor!,
+          studyMode: rest.studyMode!,
+          hasLanguageCert: rest.hasLanguageCert ?? false,
           location: mainLocation ? {
-               country: mainLocation.country,
-               zipCode: mainLocation.zipCode,
-               city: mainLocation.city,
-               address: mainLocation.address
+               id: mainLocation.id,
+               country: mainLocation.country!,
+               zipCode: mainLocation.zipCode!,
+               city: mainLocation.city!,
+               address: mainLocation.address!
           } : null
      };
 };
 
-type UserWithProfile = Partial<User> & { studentProfile?: ProfileWithLocations | null };
-
-export const mapStudent = (user: UserWithProfile | null): any => {
+export const mapStudent = (user: (Partial<User> & { studentProfile?: (Partial<StudentProfile> & { locations?: PartialLocation[] }) | null }) | null): MappedStudent | null => {
      if (!user) return null;
-     const mapped = { ...user };
 
-     if (mapped.studentProfile) {
-          mapped.studentProfile = mapStudentProfile(mapped.studentProfile) as any;
-     }
-     return mapped;
+     return {
+          id: user.id!,
+          email: user.email!,
+          fullName: user.fullName!,
+          phoneNumber: user.phoneNumber,
+          role: user.role!,
+          isActive: user.isActive ?? true,
+          studentProfile: user.studentProfile ? mapStudentProfile(user.studentProfile) : null
+     };
 };
 
-type ApplicationWithStudent = Partial<Application> & {
-     student?: (Partial<StudentProfile> & { user?: Partial<User> | null }) | null
-};
-
-export const mapApplication = (application: ApplicationWithStudent | null): any => {
+export const mapApplication = (application: (Partial<Application> & {
+     student?: (Partial<StudentProfile> & {
+          user?: Partial<User> | null,
+          locations?: PartialLocation[]
+     }) | null,
+     position?: (Partial<Position> & {
+          location?: PartialLocation | null,
+          company?: (Partial<Company> & { location?: PartialLocation[] }) | null
+     }) | null
+}) | null): MappedApplication | null => {
      if (!application) return null;
 
-     const mapped = { ...application } as any;
+     const { student: profile, position, ...rest } = application;
+     let mappedStudent: MappedStudent | undefined;
 
-     if (mapped.student) {
-          // application.student is the StudentProfile (from the new select)
-          // We want to format it as a User object with a proper studentProfile inside
-          const profile = mapped.student;
+     if (profile) {
           const user = profile.user || {};
-
-          // Construct the student object (simulating a User)
-          mapped.student = {
-               id: profile.userId, // The generic user ID
-               email: user.email,
-               fullName: user.fullName,
+          mappedStudent = {
+               id: profile.userId!,
+               email: user.email!,
+               fullName: user.fullName!,
                phoneNumber: user.phoneNumber,
-
-               // The profile data itself
-               studentProfile: mapStudentProfile({
-                    ...profile,
-                    userId: undefined as any, // remove redundancy if desired
-                    user: undefined as any
-               })
+               role: user.role || 'STUDENT',
+               isActive: user.isActive ?? true,
+               studentProfile: mapStudentProfile(profile)
           };
      }
 
-     return mapped;
+     return {
+          id: rest.id!,
+          studentId: rest.studentId!,
+          positionId: rest.positionId!,
+          status: rest.status!,
+          companyNote: rest.companyNote,
+          studentNote: rest.studentNote,
+          submittedAt: rest.submittedAt!,
+          student: mappedStudent,
+          position: position ? mapPosition(position)! : undefined
+     };
 };
 
-type PartnershipWithRelations = Partial<DualPartnership> & {
-     student?: (Partial<StudentProfile> & { user?: Partial<User> | null }) | null,
+export const mapDualPartnership = (partnership: (Partial<DualPartnership> & {
+     student?: (Partial<StudentProfile> & {
+          user?: Partial<User> | null,
+          locations?: PartialLocation[]
+     }) | null,
      mentor?: (Partial<CompanyEmployee> & { user?: Partial<User> | null }) | null,
-     position?: (Partial<Position> & { company?: Partial<Company> | null }) | null,
+     position?: (Partial<Position> & { company?: (Partial<Company> & { location?: PartialLocation[] }) | null }) | null,
      uniEmployee?: Partial<User> | null
-};
-
-export const mapDualPartnership = (partnership: PartnershipWithRelations | null): any => {
+}) | null): MappedDualPartnership | null => {
      if (!partnership) return null;
 
-     const mapped = { ...partnership } as any;
+     const { student: profile, mentor, position, uniEmployee, ...rest } = partnership;
 
-     if (mapped.student) {
-          // partnership.student is the StudentProfile
-          // We need to construct a user-like object from it
-          const profile = mapped.student;
+     let mappedStudent: MappedStudent | undefined;
+     if (profile) {
           const user = profile.user || {};
-
-          mapped.student = {
-               id: profile.userId,
-               email: user.email,
-               fullName: user.fullName,
-               studentProfile: mapStudentProfile({
-                    ...profile,
-                    user: undefined as any, // Avoid circular reference
-               }),
+          mappedStudent = {
+               id: profile.userId!,
+               email: user.email!,
+               fullName: user.fullName!,
+               role: user.role || 'STUDENT',
+               isActive: user.isActive ?? true,
+               studentProfile: mapStudentProfile(profile)
           };
      }
 
-     if (mapped.mentor) {
-          const employee = mapped.mentor;
-          const user = employee.user || {};
-          mapped.mentor = {
-               id: employee.userId,
-               email: user.email,
-               fullName: user.fullName,
-               companyId: employee.companyId,
-               jobTitle: employee.jobTitle,
+     let mappedMentor: MappedDualPartnership['mentor'] | undefined;
+     if (mentor) {
+          const user = mentor.user || {};
+          mappedMentor = {
+               id: mentor.userId!,
+               email: user.email!,
+               fullName: user.fullName!,
+               companyId: mentor.companyId!,
+               jobTitle: mentor.jobTitle,
           };
      }
 
-     if (mapped.uniEmployee) {
-          const user = mapped.uniEmployee;
-          mapped.uniEmployee = {
-               id: user.id,
-               email: user.email,
-               fullName: user.fullName,
+     let mappedUniEmployee: MappedDualPartnership['uniEmployee'] | undefined;
+     if (uniEmployee) {
+          mappedUniEmployee = {
+               id: uniEmployee.id!,
+               email: uniEmployee.email!,
+               fullName: uniEmployee.fullName!,
           };
      }
 
-     return mapped;
+     return {
+          id: rest.id!,
+          studentId: rest.studentId!,
+          mentorId: rest.mentorId,
+          uniEmployeeId: rest.uniEmployeeId,
+          positionId: rest.positionId,
+          semester: rest.semester!,
+          contractNumber: rest.contractNumber,
+          status: rest.status!,
+          startDate: rest.startDate!,
+          endDate: rest.endDate,
+          createdAt: rest.createdAt!,
+          student: mappedStudent,
+          mentor: mappedMentor,
+          position: position ? {
+               id: position.id!,
+               title: position.title!,
+               companyId: position.companyId!,
+               company: { name: position.company?.name! }
+          } : undefined,
+          uniEmployee: mappedUniEmployee
+     };
 };
