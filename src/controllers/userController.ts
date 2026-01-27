@@ -1,11 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { userService } from "../services/user.service";
 import { logAction } from "../utils/logger";
+import { getPaginationParams } from "../utils/pagination";
 
 export const getInactiveUsers = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const users = await userService.getInactive();
-          res.json({ success: true, data: users });
+          const params = getPaginationParams(req.query);
+          const result = await userService.getInactive(params);
+          res.json({
+               success: true,
+               data: result.data,
+               pagination: result.pagination
+          });
      } catch (error) {
           next(error);
      }

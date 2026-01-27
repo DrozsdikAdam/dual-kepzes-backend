@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { userService } from "../services/user.service";
 import { logAction } from "../utils/logger";
 import { Role } from "@prisma/client";
+import { getPaginationParams } from "../utils/pagination";
 
 export const getMeCompanyAdmin = async (req: Request, res: Response, next: NextFunction) => {
      try {
@@ -56,15 +57,23 @@ export const deleteMeCompanyAdmin = async (req: Request, res: Response, next: Ne
 
 export const getCompanyAdmins = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const admins = await userService.getAllByRole(Role.COMPANY_ADMIN);
+          const params = getPaginationParams(req.query);
+          const result = await userService.getAllByRole(Role.COMPANY_ADMIN, undefined, params);
+
+          // userService.getAllByRole with params returns PaginationResult
+          const paginated = result as any;
 
           await logAction(req, {
                action: "LIST_COMPANY_ADMINS",
                entity: "User",
-               details: { count: admins.length }
+               details: { count: paginated.data.length, total: paginated.pagination.total }
           });
 
-          res.json(admins);
+          res.json({
+               success: true,
+               data: paginated.data,
+               pagination: paginated.pagination
+          });
      } catch (error) {
           next(error);
      }

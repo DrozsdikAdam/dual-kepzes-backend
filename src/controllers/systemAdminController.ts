@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { userService } from "../services/user.service";
 import { logAction } from "../utils/logger";
 import { Role } from "@prisma/client";
+import { getPaginationParams } from "../utils/pagination";
 
 export const getMeSystemAdmin = async (req: Request, res: Response, next: NextFunction) => {
      try {
@@ -62,15 +63,21 @@ export const deleteMeSystemAdmin = async (req: Request, res: Response, next: Nex
 
 export const getSystemAdmins = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const admins = await userService.getAllByRole(Role.SYSTEM_ADMIN);
+          const params = getPaginationParams(req.query);
+          const result = await userService.getAllByRole(Role.SYSTEM_ADMIN, undefined, params);
+          const paginated = result as any;
 
           await logAction(req, {
                action: "LIST_SYSTEM_ADMINS",
                entity: "User",
-               details: { listById: req.user?.userId, count: admins.length }
+               details: { listById: req.user?.userId, count: paginated.data.length, total: paginated.pagination.total }
           });
 
-          res.json(admins);
+          res.json({
+               success: true,
+               data: paginated.data,
+               pagination: paginated.pagination
+          });
      } catch (error) {
           next(error);
      }
@@ -136,15 +143,21 @@ export const deleteSystemAdmin = async (req: Request, res: Response, next: NextF
 
 export const getAllAdminUsers = async (req: Request, res: Response, next: NextFunction) => {
      try {
-          const admins = await userService.getAllByRole([Role.SYSTEM_ADMIN, Role.COMPANY_ADMIN, Role.UNIVERSITY_USER]);
+          const params = getPaginationParams(req.query);
+          const result = await userService.getAllByRole([Role.SYSTEM_ADMIN, Role.COMPANY_ADMIN, Role.UNIVERSITY_USER], undefined, params);
+          const paginated = result as any;
 
           await logAction(req, {
                action: "LIST_ALL_ADMINS",
                entity: "User",
-               details: { count: admins.length }
+               details: { count: paginated.data.length, total: paginated.pagination.total }
           });
 
-          res.json(admins);
+          res.json({
+               success: true,
+               data: paginated.data,
+               pagination: paginated.pagination
+          });
      } catch (error) {
           next(error);
      }

@@ -121,15 +121,24 @@ export class UserService {
           ]);
      }
 
-     async getInactive() {
-          return await prisma.user.findMany({
-               where: {
-                    isActive: false,
-                    deletedAt: null
-               },
-               select: this.userSelect,
-               orderBy: { fullName: "asc" }
-          });
+     async getInactive(params: Required<PaginationParams>) {
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = {
+               isActive: false,
+               deletedAt: null
+          };
+
+          return await paginate(
+               params,
+               prisma.user.findMany({
+                    where,
+                    select: this.userSelect,
+                    orderBy: { fullName: "asc" as const },
+                    skip,
+                    take
+               }),
+               prisma.user.count({ where })
+          );
      }
 
      async setStatus(id: string, isActive: boolean) {
