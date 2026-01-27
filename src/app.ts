@@ -2,6 +2,8 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 
 import { securityMiddleware } from "./middlewares/securityMiddleware";
+import { sanitizationMiddleware } from "./middlewares/sanitizationMiddleware";
+import { corsOptions } from "./config/cors";
 import {
     apiRateLimiter,
     authRateLimiter,
@@ -27,8 +29,9 @@ const app: Application = express();
 app.set("trust proxy", 1);
 // Global Middlewares
 app.use(securityMiddleware);
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
+app.use(sanitizationMiddleware);
 // Auth Rate Limiter
 app.use("/api/auth", authRoutes);
 // app.use("/api", apiRateLimiter);
