@@ -324,6 +324,12 @@ stateDiagram-v2
         Fully operational
         dual education partnership
     end note
+    
+    style PENDING_MENTOR fill:#ff9800,stroke:#e65100,stroke-width:3px,color:#000
+    style PENDING_UNIVERSITY fill:#2196f3,stroke:#0d47a1,stroke-width:3px,color:#fff
+    style ACTIVE fill:#4caf50,stroke:#1b5e20,stroke-width:3px,color:#fff
+    style TERMINATED fill:#f44336,stroke:#b71c1c,stroke-width:3px,color:#fff
+    style COMPLETED fill:#00897b,stroke:#004d40,stroke-width:3px,color:#fff
 ```
 
 ## 📊 Application to Partnership Process
@@ -357,11 +363,22 @@ flowchart TD
     Complete -->|Terminated| End2([Partnership: TERMINATED])
     Complete -->|Completed| End3([Partnership: COMPLETED])
     
-    style P1 fill:#fff3cd
-    style P2 fill:#cfe2ff
-    style P3 fill:#d1e7dd
-    style End2 fill:#f8d7da
-    style End3 fill:#d1e7dd
+    style Start fill:#9e9e9e,stroke:#424242,stroke-width:2px,color:#fff
+    style Apply fill:#03a9f4,stroke:#01579b,stroke-width:2px,color:#fff
+    style Status fill:#ffc107,stroke:#f57f17,stroke-width:2px,color:#000
+    style Wait fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#000
+    style End1 fill:#f44336,stroke:#b71c1c,stroke-width:3px,color:#fff
+    style CreatePartnership fill:#8bc34a,stroke:#33691e,stroke-width:2px,color:#000
+    style P1 fill:#ff9800,stroke:#e65100,stroke-width:3px,color:#000
+    style AssignMentor fill:#ffc107,stroke:#f57f17,stroke-width:2px,color:#000
+    style P2 fill:#2196f3,stroke:#0d47a1,stroke-width:3px,color:#fff
+    style Notify1 fill:#00bcd4,stroke:#006064,stroke-width:2px,color:#fff
+    style AssignUni fill:#2196f3,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style P3 fill:#4caf50,stroke:#1b5e20,stroke-width:3px,color:#fff
+    style Monitor fill:#8bc34a,stroke:#33691e,stroke-width:2px,color:#000
+    style Complete fill:#cddc39,stroke:#827717,stroke-width:2px,color:#000
+    style End2 fill:#f44336,stroke:#b71c1c,stroke-width:3px,color:#fff
+    style End3 fill:#00897b,stroke:#004d40,stroke-width:3px,color:#fff
 ```
 
 ## 🚀 Deployment Architecture
