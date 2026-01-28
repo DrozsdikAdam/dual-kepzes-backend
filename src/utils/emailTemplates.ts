@@ -1,5 +1,5 @@
 export const generatePasswordResetEmail = (resetUrl: string, fullName: string): string => {
-     return `
+    return `
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -61,7 +61,7 @@ export const generatePasswordResetEmail = (resetUrl: string, fullName: string): 
                                     ⚠️ Fontos biztonsági információ
                                 </p>
                                 <ul style="margin: 0; padding-left: 20px; color: #666666; font-size: 14px; line-height: 1.7;">
-                                    <li>Ez a link <strong>1 óráig érvényes</strong>.</li>
+                                    <li>Ez a link <strong>2 óráig érvényes</strong>.</li>
                                     <li>Ha nem te kérted a jelszó visszaállítást, hagyd figyelmen kívül ezt az emailt.</li>
                                     <li>Ne oszd meg ezt a linket senkivel!</li>
                                 </ul>
