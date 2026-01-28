@@ -121,9 +121,9 @@ export class AuthService {
           const resetToken = generateResetToken();
           const hashedToken = hashToken(resetToken);
 
-          // Token tárolása 1 órás lejárattal
-          const tokenExpiry = new Date();
-          tokenExpiry.setHours(tokenExpiry.getHours() + 1);
+          // Token tárolása 1 órás lejárattal (UTC időben)
+          // Használjunk milliszekundumot a pontosság érdekében
+          const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // +1 óra
 
           await prisma.user.update({
                where: { id: user.id },
