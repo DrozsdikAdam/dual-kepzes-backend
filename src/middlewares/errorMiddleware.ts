@@ -22,6 +22,18 @@ export const errorHandler = (
     console.error(`Error Message: ${err.message}`);
     if (err.stack) console.error(err.stack);
 
+    // Handle JSON syntax errors
+    if (err instanceof SyntaxError && 'body' in err) {
+        return res.status(400).json({
+            success: false,
+            message: 'Érvénytelen JSON formátum.',
+            error: {
+                code: ErrorCodes.BAD_REQUEST,
+                message: 'A kérés törzse érvénytelen JSON adatokat tartalmaz (pl. hiányzó idézőjelek).',
+            },
+        });
+    }
+
     // Handle known application errors
     if (err instanceof AppError) {
         return res.status(err.statusCode).json({
