@@ -22,6 +22,18 @@ export const errorHandler = (
     console.error(`Error Message: ${err.message}`);
     if (err.stack) console.error(err.stack);
 
+    // Handle CORS errors
+    if (err.message === 'Not allowed by CORS') {
+        return res.status(403).json({
+            success: false,
+            message: 'A CORS szabályzat tiltja ezt a kérést az adott forrásból.',
+            error: {
+                code: ErrorCodes.FORBIDDEN,
+                message: 'CORS hiba: Az Origin nem szerepel az engedélyezett listán.',
+            },
+        });
+    }
+
     // Handle JSON syntax errors
     if (err instanceof SyntaxError && 'body' in err) {
         return res.status(400).json({
@@ -96,12 +108,15 @@ export const errorHandler = (
     const statusCode = err.statusCode || 500;
     const message = err.message || "Belső szerver hiba";
 
+    // DEBUG: Eredeti hiba megmutatása a válaszban a könnyebb hibakeresésért (később visszavehetjük)
+    const isProd = process.env.NODE_ENV === "production";
+
     res.status(statusCode).json({
         success: false,
-        message: process.env.NODE_ENV === "development" ? message : "Belső szerver hiba történt.",
+        message: isProd ? `Belső szerver hiba történt. (DEBUG: ${message})` : message,
         error: {
             code: ErrorCodes.INTERNAL_ERROR,
-            message: process.env.NODE_ENV === "development" ? message : "Belső szerver hiba történt.",
+            message: isProd ? `Belső szerver hiba történt. (DEBUG: ${message})` : message,
             ...(process.env.NODE_ENV === "development" && { stack: err.stack })
         }
     });

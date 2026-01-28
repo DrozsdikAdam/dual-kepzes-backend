@@ -6,7 +6,8 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
           'http://localhost:3000',
           'http://localhost:5173',
           'http://localhost:8080',
-          'https://dual-kepzes-frontend.vercel.app'
+          'https://dual-kepzes-frontend.vercel.app',
+          'https://dual-kepzes-backend-production-7c45.up.railway.app'
      ]; // Common dev ports + production frontend
 
 export const corsOptions: CorsOptions = {
