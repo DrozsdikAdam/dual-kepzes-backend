@@ -108,15 +108,12 @@ export const errorHandler = (
     const statusCode = err.statusCode || 500;
     const message = err.message || "Belső szerver hiba";
 
-    // DEBUG: Eredeti hiba megmutatása a válaszban a könnyebb hibakeresésért (később visszavehetjük)
-    const isProd = process.env.NODE_ENV === "production";
-
     res.status(statusCode).json({
         success: false,
-        message: isProd ? `Belső szerver hiba történt. (DEBUG: ${message})` : message,
+        message: process.env.NODE_ENV === "development" ? message : "Belső szerver hiba történt.",
         error: {
             code: ErrorCodes.INTERNAL_ERROR,
-            message: isProd ? `Belső szerver hiba történt. (DEBUG: ${message})` : message,
+            message: process.env.NODE_ENV === "development" ? message : "Belső szerver hiba történt.",
             ...(process.env.NODE_ENV === "development" && { stack: err.stack })
         }
     });
