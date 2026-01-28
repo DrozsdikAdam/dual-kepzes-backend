@@ -55,6 +55,9 @@ A fejlesztői környezet futtatásához szükséges szoftverek:
     # Biztonság
     JWT_SECRET="szuper_titkos_kulcs_min_32_karakter"
 
+    # Frontend URL (jelszó visszaállító linkhez)
+    FRONTEND_URL="http://localhost:3000"
+
     # Email (Mailtrap példa)
     MAILTRAP_USER="your_user"
     MAILTRAP_PASS="your_pass"
@@ -63,6 +66,7 @@ A fejlesztői környezet futtatásához szükséges szoftverek:
     REDIS_HOST="localhost"
     REDIS_PORT=6379
     ```
+
 
 4.  **Adatbázis szinkronizáció**
     Hozd létre a táblákat a Prisma séma alapján:
@@ -491,6 +495,9 @@ curl http://localhost:3000/api/students/me \
 | :--- | :--- | :--- |
 | `POST` | `/register` | Új felhasználó regisztrációja. |
 | `POST` | `/login` | Bejelentkezés és JWT token igénylése. |
+| `POST` | `/request-password-reset` | Jelszó visszaállítás kérése email címmel. |
+| `POST` | `/reset-password` | Új jelszó beállítása tokennel. |
+
 
 ### 👤 Hallgatók (`/api/students`)
 
