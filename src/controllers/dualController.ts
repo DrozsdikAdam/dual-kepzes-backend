@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { partnershipService } from "../services/partnership.service";
+import { notificationService } from "../services/notification.service";
 import { DualPartnershipUpdateRequest } from "../schemas/dualSchema";
 import { logAction } from "../utils/logger";
 import { mapDualPartnership } from "../utils/mappers";
@@ -39,6 +40,15 @@ export const updatePartnership = async (
             entityId: id,
             details: { updatedById: userId, changedFields: Object.keys(data) }
         });
+
+        if (data.status) {
+            await notificationService.create({
+                userId: updated.student.userId,
+                title: "Partnerség státusza megváltozott",
+                message: `A(z) ${updated.position?.company.name || "érintett"} céggel kötött partnerséged státusza megváltozott: ${data.status}`,
+                type: "PARTNERSHIP_STATUS_UPDATE"
+            });
+        }
 
         res.json({
             success: true,
@@ -84,6 +94,13 @@ export const terminatePartnership = async (req: Request, res: Response, next: Ne
             details: { terminatedBy: userId }
         });
 
+        await notificationService.create({
+            userId: updated.student.userId,
+            title: "Partnerség megszakítva",
+            message: `A(z) ${updated.position?.company.name || "érintett"} céggel kötött partnerséged megszakításra került.`,
+            type: "PARTNERSHIP_TERMINATED"
+        });
+
         res.json({
             success: true,
             message: "Partneri kapcsolat megszakítva.",
@@ -109,6 +126,13 @@ export const assignMentor = async (req: Request, res: Response, next: NextFuncti
             details: { assignedMentorId: mentorId, assignedBy: userId }
         });
 
+        await notificationService.create({
+            userId: updated.student.userId,
+            title: "Mentor hozzárendelve",
+            message: `A(z) ${updated.position?.company.name || "érintett"} cégnél kijelöltek számodra egy mentort. A partnerség mostantól az egyetemi jóváhagyásra vár.`,
+            type: "MENTOR_ASSIGNED"
+        });
+
         res.json({
             success: true,
             data: mapDualPartnership(updated)
@@ -131,6 +155,13 @@ export const assignUniversityUser = async (req: Request, res: Response, next: Ne
             entity: "DualPartnership",
             entityId: id,
             details: { assignedUniUserId: uniEmployeeId, assignedBy: userId }
+        });
+
+        await notificationService.create({
+            userId: updated.student.userId,
+            title: "Egyetemi felelős hozzárendelve",
+            message: `A(z) ${updated.position?.company.name || "érintett"} céggel kötött partnerségedhez hozzárendelték az egyetemi felelőst. A partnerség aktívvá vált.`,
+            type: "UNI_USER_ASSIGNED"
         });
 
         res.json({
