@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { authService } from "../services/auth.service";
-import { RegisterInput, LoginInput } from "../schemas/authSchema";
+import { RegisterInput, LoginInput, RequestPasswordResetInput, ResetPasswordInput } from "../schemas/authSchema";
 import { logAction } from "../utils/logger";
 
 export const register = async (req: Request<{}, {}, RegisterInput>, res: Response, next: NextFunction) => {
@@ -50,3 +50,46 @@ export const login = async (req: Request<{}, {}, LoginInput>, res: Response, nex
         next(error);
     }
 };
+
+export const requestPasswordReset = async (req: Request<{}, {}, RequestPasswordResetInput>, res: Response, next: NextFunction) => {
+    try {
+        const { email } = req.body;
+        const result = await authService.requestPasswordReset(email);
+
+        await logAction(req, {
+            action: "PASSWORD_RESET_REQUESTED",
+            entity: "User",
+            entityId: undefined,
+            details: { email }
+        });
+
+        res.json({
+            success: true,
+            message: result.message
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const resetPassword = async (req: Request<{}, {}, ResetPasswordInput>, res: Response, next: NextFunction) => {
+    try {
+        const { token, newPassword } = req.body;
+        const result = await authService.resetPassword(token, newPassword);
+
+        await logAction(req, {
+            action: "PASSWORD_RESET_COMPLETED",
+            entity: "User",
+            entityId: undefined,
+            details: { tokenUsed: true }
+        });
+
+        res.json({
+            success: true,
+            message: result.message
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+

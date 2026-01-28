@@ -65,6 +65,19 @@ export const LoginSchema = z.object({
     })
 });
 
+export const RequestPasswordResetSchema = z.object({
+    body: z.object({
+        email: z.string().trim().email({ message: "Érvénytelen email cím formátum" }),
+    })
+});
+
+export const ResetPasswordSchema = z.object({
+    body: z.object({
+        token: z.string().trim().min(32, { message: "Érvénytelen token formátum" }),
+        newPassword: z.string().trim().regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,64}$/, { message: "A jelszónak legalább 12 karakter hosszúnak kell lennie, és tartalmaznia kell kis- és nagybetűt, számot és speciális karaktert." }),
+    })
+});
+
 export const RegisterSchema = z.object({
     body: z.discriminatedUnion("role", [
         studentSchema,
@@ -77,3 +90,6 @@ export const RegisterSchema = z.object({
 
 export type RegisterInput = z.infer<typeof RegisterSchema>["body"];
 export type LoginInput = z.infer<typeof LoginSchema>["body"];
+export type RequestPasswordResetInput = z.infer<typeof RequestPasswordResetSchema>["body"];
+export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>["body"];
+

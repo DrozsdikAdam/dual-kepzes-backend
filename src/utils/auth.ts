@@ -15,3 +15,13 @@ export const comparePassword = async (password: string, hash: string): Promise<b
 export const generateToken = (userId: string, role: string): string => {
     return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: "24h" })
 }
+
+export const generateResetToken = (): string => {
+    const crypto = require("crypto");
+    return crypto.randomBytes(32).toString("hex");
+}
+
+export const hashToken = (token: string): string => {
+    const crypto = require("crypto");
+    return crypto.createHash("sha256").update(token).digest("hex");
+}
