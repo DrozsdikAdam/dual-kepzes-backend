@@ -159,6 +159,252 @@ erDiagram
 
 **Részletes sémát** lásd: `prisma/schema.prisma` vagy Prisma Studio (`npm run prisma:studio`)
 
+## 🏛️ Rendszer Architektúra
+
+A backend alkalmazás rétegelt architektúrát követ:
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        FE[Frontend Application]
+        Swagger[Swagger UI]
+    end
+    
+    subgraph "API Layer"
+        Router[Express Router]
+        Auth[Auth Middleware]
+        Validation[Validation Middleware]
+        RateLimit[Rate Limiting]
+    end
+    
+    subgraph "Business Logic Layer"
+        Controllers[Controllers]
+        Services[Services]
+    end
+    
+    subgraph "Data Layer"
+        Prisma[Prisma ORM]
+        DB[(PostgreSQL)]
+    end
+    
+    subgraph "External Services"
+        Redis[(Redis - BullMQ)]
+        SMTP[Email Service]
+    end
+    
+    FE -->|HTTP/REST| Router
+    Swagger -->|HTTP/REST| Router
+    Router --> Auth
+    Auth --> Validation
+    Validation --> RateLimit
+    RateLimit --> Controllers
+    Controllers --> Services
+    Services --> Prisma
+    Prisma --> DB
+    Services -.->|Background Jobs| Redis
+    Services -.->|Notifications| SMTP
+```
+
+## 🔄 Request Processing Flow
+
+Egy tipikus API kérés feldolgozásának menete:
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Express
+    participant AuthMW as Auth Middleware
+    participant ValidateMW as Validation MW
+    participant Controller
+    participant Service
+    participant Prisma
+    participant DB as PostgreSQL
+
+    Client->>Express: HTTP Request + JWT Token
+    Express->>AuthMW: Validate Token
+    
+    alt Token Invalid
+        AuthMW-->>Client: 401 Unauthorized
+    else Token Valid
+        AuthMW->>ValidateMW: Proceed with User Context
+        ValidateMW->>ValidateMW: Validate Input (Zod)
+        
+        alt Validation Failed
+            ValidateMW-->>Client: 400 Bad Request
+        else Validation Passed
+            ValidateMW->>Controller: Execute Handler
+            Controller->>Service: Business Logic
+            Service->>Prisma: Database Query
+            Prisma->>DB: SQL Query
+            DB-->>Prisma: Result Set
+            Prisma-->>Service: Typed Data
+            Service-->>Controller: Processed Data
+            Controller-->>Client: 200 OK + JSON Response
+        end
+    end
+```
+
+## 🔐 Autentikációs Flow
+
+JWT token alapú autentikáció működése:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API
+    participant DB
+    participant JWT as JWT Service
+
+    User->>API: POST /api/auth/register
+    API->>DB: Check if email exists
+    
+    alt Email exists
+        DB-->>API: Email already registered
+        API-->>User: 409 Conflict
+    else New user
+        API->>API: Hash password (bcrypt)
+        API->>DB: Create new user
+        DB-->>API: User created
+        API-->>User: 201 Created
+    end
+
+    User->>API: POST /api/auth/login (email, password)
+    API->>DB: Find user by email
+    DB-->>API: User data
+    API->>API: Compare password hash
+    
+    alt Password invalid
+        API-->>User: 401 Unauthorized
+    else Password valid
+        API->>JWT: Generate token (userId, role)
+        JWT-->>API: JWT Token
+        API-->>User: 200 OK + Token
+    end
+
+    User->>API: GET /api/students/me + Bearer Token
+    API->>JWT: Verify & Decode Token
+    JWT-->>API: User ID & Role
+    API->>DB: Fetch user data
+    DB-->>API: User data
+    API-->>User: 200 OK + User Profile
+```
+
+## 🎯 Partnership Status Flow
+
+A duális partnerség életciklusa (státusz átmenetek):
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING_MENTOR: Application ACCEPTED
+
+    PENDING_MENTOR --> PENDING_UNIVERSITY: Mentor Assigned
+    
+    PENDING_UNIVERSITY --> ACTIVE: University User Assigned
+    
+    ACTIVE --> TERMINATED: Partnership Terminated
+    ACTIVE --> COMPLETED: Natural Completion
+    
+    PENDING_MENTOR --> TERMINATED: Early Termination
+    PENDING_UNIVERSITY --> TERMINATED: Early Termination
+    
+    TERMINATED --> [*]
+    COMPLETED --> [*]
+    
+    note right of PENDING_MENTOR
+        Company has accepted
+        the student's application
+    end note
+    
+    note right of PENDING_UNIVERSITY
+        Mentor assigned,
+        awaiting university approval
+    end note
+    
+    note right of ACTIVE
+        Fully operational
+        dual education partnership
+    end note
+```
+
+## 📊 Application to Partnership Process
+
+A jelentkezéstől a partnerségig vezető üzleti folyamat:
+
+```mermaid
+flowchart TD
+    Start([Student Browses Jobs]) --> Apply[Submit Application]
+    Apply --> Status{Application Status}
+    
+    Status -->|PENDING| Wait[Wait for Company Review]
+    Wait --> Status
+    
+    Status -->|REJECTED| End1([Application Closed])
+    
+    Status -->|ACCEPTED| CreatePartnership[Auto-create Partnership]
+    CreatePartnership --> P1[Partnership: PENDING_MENTOR]
+    
+    P1 --> AssignMentor{Company Assigns Mentor?}
+    AssignMentor -->|Yes| P2[Partnership: PENDING_UNIVERSITY]
+    AssignMentor -->|No| P1
+    
+    P2 --> Notify1[Notify System Admins]
+    Notify1 --> AssignUni{University Assigns Supervisor?}
+    AssignUni -->|Yes| P3[Partnership: ACTIVE]
+    AssignUni -->|No| P2
+    
+    P3 --> Monitor[Ongoing Mentorship]
+    Monitor --> Complete{Completion or Termination?}
+    Complete -->|Terminated| End2([Partnership: TERMINATED])
+    Complete -->|Completed| End3([Partnership: COMPLETED])
+    
+    style P1 fill:#fff3cd
+    style P2 fill:#cfe2ff
+    style P3 fill:#d1e7dd
+    style End2 fill:#f8d7da
+    style End3 fill:#d1e7dd
+```
+
+## 🚀 Deployment Architecture
+
+Éles környezet (Railway) architektúrája:
+
+```mermaid
+graph LR
+    subgraph "Railway Platform"
+        subgraph "Backend Service"
+            API[Node.js/Express API]
+            Worker[BullMQ Worker]
+        end
+        
+        subgraph "Databases"
+            PostgreSQL[(PostgreSQL)]
+            Redis[(Redis)]
+        end
+        
+        ENV[Environment Variables]
+    end
+    
+    subgraph "External Services"
+        SMTP[SMTP Email Provider]
+        DNS[Custom Domain/DNS]
+    end
+    
+    Internet((Internet)) --> DNS
+    DNS --> API
+    API --> PostgreSQL
+    API --> Redis
+    Worker --> Redis
+    Worker --> SMTP
+    Worker --> PostgreSQL
+    ENV -.-> API
+    ENV -.-> Worker
+    
+    style API fill:#0066cc,color:#fff
+    style Worker fill:#0066cc,color:#fff
+    style PostgreSQL fill:#336791,color:#fff
+    style Redis fill:#dc382d,color:#fff
+```
+
 ## ⚠️ Hibakezelés
 
 ### Hibakódok
