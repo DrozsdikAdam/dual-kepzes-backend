@@ -105,6 +105,100 @@ export class AuthService {
                }
           };
      }
+
+     async requestPasswordReset(email: string) {
+          const user = await prisma.user.findUnique({
+               where: { email }
+          });
+
+          // Ne áruljon el, hogy létezik-e a felhasználó (biztonsági ok)
+          if (!user) {
+               return { success: true, message: 'Ha a megadott email cím regisztrálva van, elküldtük a jelszó visszaállító linket.' };
+          }
+
+          // Token generálás és hash
+          const { generateResetToken, hashToken } = require('../utils/auth');
+          const resetToken = generateResetToken();
+          const hashedToken = hashToken(resetToken);
+
+          // Token tárolása 1 órás lejárattal
+          const tokenExpiry = new Date();
+          tokenExpiry.setHours(tokenExpiry.getHours() + 1);
+
+          await prisma.user.update({
+               where: { id: user.id },
+               data: {
+                    passwordResetToken: hashedToken,
+                    tokenExpiry: tokenExpiry
+               }
+          });
+
+          // Email küldés
+          const { generatePasswordResetEmail } = require('../utils/emailTemplates');
+          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+          const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+          const emailHtml = generatePasswordResetEmail(resetUrl, user.fullName);
+
+          const { addEmailToQueue } = require('./emailQueue');
+
+          // Notification létrehozása
+          const notification = await prisma.notification.create({
+               data: {
+                    userId: user.id,
+                    title: 'Jelszó visszaállítás',
+                    message: 'Jelszó visszaállítási kérést kaptunk a fiókodhoz.',
+                    type: 'PASSWORD_RESET',
+                    status: 'PENDING'
+               }
+          });
+
+          await addEmailToQueue({
+               notificationId: notification.id,
+               email: user.email,
+               subject: 'Jelszó visszaállítás - Duális Képzés',
+               body: emailHtml
+          });
+
+          return { success: true, message: 'Ha a megadott email cím regisztrálva van, elküldtük a jelszó visszaállító linket.' };
+     }
+
+     async resetPassword(token: string, newPassword: string) {
+          const { hashToken, hashPassword } = require('../utils/auth');
+          const hashedToken = hashToken(token);
+
+          const user = await prisma.user.findFirst({
+               where: {
+                    passwordResetToken: hashedToken,
+                    tokenExpiry: {
+                         gt: new Date() // Token még nem járt le
+                    }
+               }
+          });
+
+          if (!user) {
+               throw new BadRequestError('Érvénytelen vagy lejárt token.');
+          }
+
+          if (!user.isActive) {
+               throw new UnauthorizedError('A felhasználói fiók inaktív.');
+          }
+
+          // Új jelszó hash-elése
+          const hashedPassword = await hashPassword(newPassword);
+
+          // Jelszó frissítése és token törlése
+          await prisma.user.update({
+               where: { id: user.id },
+               data: {
+                    password: hashedPassword,
+                    passwordResetToken: null,
+                    tokenExpiry: null
+               }
+          });
+
+          return { success: true, message: 'Jelszó sikeresen megváltoztatva.' };
+     }
 }
 
 export const authService = new AuthService();
+
