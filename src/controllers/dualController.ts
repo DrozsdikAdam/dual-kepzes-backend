@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { partnershipService } from "../services/partnership.service";
 import { notificationService } from "../services/notification.service";
+import { userService } from "../services/user.service";
+import { Role, PartnershipStatus } from "@prisma/client";
 import { DualPartnershipUpdateRequest } from "../schemas/dualSchema";
 import { logAction } from "../utils/logger";
 import { mapDualPartnership } from "../utils/mappers";
@@ -47,6 +49,27 @@ export const updatePartnership = async (
                 title: "Partnerség státusza megváltozott",
                 message: `A(z) ${updated.position?.company.name || "érintett"} céggel kötött partnerséged státusza megváltozott: ${data.status}`,
                 type: "PARTNERSHIP_STATUS_UPDATE"
+            });
+
+            if (data.status === PartnershipStatus.PENDING_UNIVERSITY) {
+                const universityUsers = await userService.getAllByRole(Role.UNIVERSITY_USER) as any[];
+                for (const uniUser of universityUsers) {
+                    await notificationService.create({
+                        userId: uniUser.id,
+                        title: "Új jóváhagyásra váró partnerség",
+                        message: `Új duális partnerség vár egyetemi jóváhagyásra: ${updated.student.user.fullName} - ${updated.position?.company.name || "Ismeretlen cég"}`,
+                        type: "PARTNERSHIP_PENDING_UNIVERSITY"
+                    });
+                }
+            }
+        }
+
+        if (data.mentorId && updated.mentor) {
+            await notificationService.create({
+                userId: updated.mentor.userId,
+                title: "Új hallgató hozzárendelve",
+                message: `Új hallgatót rendeltek hozzád mentorálásra: ${updated.student.user.fullName}`,
+                type: "STUDENT_ASSIGNED_TO_MENTOR"
             });
         }
 
@@ -132,6 +155,27 @@ export const assignMentor = async (req: Request, res: Response, next: NextFuncti
             message: `A(z) ${updated.position?.company.name || "érintett"} cégnél kijelöltek számodra egy mentort. A partnerség mostantól az egyetemi jóváhagyásra vár.`,
             type: "MENTOR_ASSIGNED"
         });
+
+        // Notify university users as well
+        const universityUsers = await userService.getAllByRole(Role.UNIVERSITY_USER) as any[];
+        for (const uniUser of universityUsers) {
+            await notificationService.create({
+                userId: uniUser.id,
+                title: "Új jóváhagyásra váró partnerség",
+                message: `Új duális partnerség vár egyetemi jóváhagyásra: ${updated.student.user.fullName} - ${updated.position?.company.name || "Ismeretlen cég"}`,
+                type: "PARTNERSHIP_PENDING_UNIVERSITY"
+            });
+        }
+
+        // Notify assigned mentor
+        if (updated.mentor) {
+            await notificationService.create({
+                userId: updated.mentor.userId,
+                title: "Új hallgató hozzárendelve",
+                message: `Új hallgatót rendeltek hozzád mentorálásra: ${updated.student.user.fullName}`,
+                type: "STUDENT_ASSIGNED_TO_MENTOR"
+            });
+        }
 
         res.json({
             success: true,
