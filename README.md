@@ -112,12 +112,115 @@ prisma/
 
 Minden végpont a `/api` prefix alatt érhető el. A legtöbb végponthoz érvényes `Authorization: Bearer <token>` fejléc szükséges.
 
-### 📚 Interaktív Dokumentáció
-Az API Swagger dokumentációja a futó szerveren érhető el:
-👉 `http://localhost:3000/api-docs`
+## 📚 API Dokumentáció
+
+Az összes API végpont **teljes dokumentációja interaktív Swagger felületen** keresztül érhető el:
+
+👉 **Helyi fejlesztés**: `http://localhost:3000/api-docs`  
+👉 **Production**: `https://dual-kepzes-backend-production-7c45.up.railway.app/api-docs`
+
+A Swagger UI lehetőséget ad:
+- ✅ Végpontok részletes leírásának megtekintésére
+- ✅ Sémák és válaszok vizuális megjelenítésére  
+- ✅ Interaktív tesztelésre (Try it out!)
+- ✅ Autentikációs token használatára
 
 ### 📄 Lapozás (Pagination)
 A listázó végpontok egységes válaszstruktúrát és lekérdezési paramétereket használnak. Részleteket az [API_PAGINATION.md](API_PAGINATION.md) fájlban találsz.
+
+## 🔐 Szerepkörök és Jogosultságok
+
+| Szerepkör | Leírás | Főbb jogosultságok |
+|:----------|:-------|:-------------------|
+| `STUDENT` | Hallgató | Saját profil, jelentkezések, partnerségek megtekintése |
+| `COMPANY_EMPLOYEE` | Céges munkavállaló | Cég pozíciói, jelentkezések megtekintése, mentor funkciók |
+| `COMPANY_ADMIN` | Cégadmin | Teljes cégkezelés, jelentkezések értékelése, pozíciók és munkavállalók kezelése |
+| `UNIVERSITY_USER` | Egyetemi kapcsolattartó | Partnerségek jóváhagyása, hallgatók felügyelete |
+| `SYSTEM_ADMIN` | Rendszergazda | Teljes rendszer adminisztráció, minden entitás kezelése |
+
+## 🗄️ Adatbázis Séma Áttekintés
+
+A rendszer fő entitásai és kapcsolataik:
+
+```mermaid
+erDiagram
+    User ||--o| StudentProfile : has
+    User ||--o| CompanyEmployee : has
+    Company ||--o{ CompanyEmployee : employs
+    Company ||--o{ Position : offers
+    Student ||--o{ Application : submits
+    Position ||--o{ Application : receives
+    Application ||--o| DualPartnership : creates
+    DualPartnership }o--|| Student : involves
+    DualPartnership }o--|| Position : involves
+    DualPartnership }o--o| CompanyEmployee : mentor
+    DualPartnership }o--o| UniversityUser : supervisor
+```
+
+**Részletes sémát** lásd: `prisma/schema.prisma` vagy Prisma Studio (`npm run prisma:studio`)
+
+## ⚠️ Hibakezelés
+
+### Hibakódok
+
+| HTTP Státusz | Hibakód | Leírás |
+|:-------------|:--------|:-------|
+| `400` | `INVALID_INPUT` | Hibás bemeneti adatok (validációs hiba) |
+| `400` | `BAD_REQUEST` | Érvénytelen kérés (pl. hibás JSON formátum) |
+| `401` | `UNAUTHORIZED` | Hiányzó vagy érvénytelen token |
+| `403` | `FORBIDDEN` | Nincs jogosultság a művelethez (pl. CORS hiba) |
+| `404` | `NOT_FOUND` | A keresett erőforrás nem található |
+| `409` | `CONFLICT` | Ütköző művelet (pl. duplikált email) |
+| `500` | `INTERNAL_ERROR` | Belső szerverhiba |
+
+### Hibák formátuma
+```json
+{
+  "success": false,
+  "message": "Hiba rövid leírása",
+  "error": {
+    "code": "INVALID_INPUT",
+    "message": "Részletes hibaüzenet",
+    "details": { /* Opcionális részletek */ }
+  }
+}
+```
+
+## 🚀 Quick Start - API Használat
+
+### 1. Regisztráció és bejelentkezés
+```bash
+# Regisztráció
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "hallgato@pelda.hu",
+    "password": "Jelszo123!",
+    "fullName": "Teszt Hallgató",
+    "role": "STUDENT"
+  }'
+
+# Bejelentkezés
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "hallgato@pelda.hu",
+    "password": "Jelszo123!"
+  }'
+```
+
+### 2. Védett végpont hívása
+```bash
+# Saját profil lekérése (helyettesítsd be a kapott tokent)
+curl http://localhost:3000/api/students/me \
+  -H "Authorization: Bearer <your_token_here>"
+```
+
+> **💡 Tipp**: A teljes API végpontokat és sémákat a [Swagger UI](#-api-dokumentáció)-n keresztül is kipróbálhatod!
+
+---
+
+## 📋 API Végpontok Referencia
 
 ### 🔐 Autentikáció (`/api/auth`)
 
