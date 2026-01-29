@@ -112,5 +112,51 @@ export class StatsService {
                averageDurationDays
           };
      }
+
+     async getPositionStats() {
+          const now = new Date();
+          const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+          // 7 napon belül lejáró pozíciók
+          const expiringIn7Days = await prisma.position.count({
+               where: {
+                    isActive: true,
+                    deletedAt: null,
+                    deadline: { gte: now, lte: in7Days }
+               }
+          });
+
+          // Pozíciók tag-ek szerinti bontásban
+          const positionsWithTags = await prisma.position.findMany({
+               where: { isActive: true, deletedAt: null },
+               include: { tags: true }
+          });
+
+          const tagCounts: Record<string, number> = {};
+          positionsWithTags.forEach(pos => {
+               pos.tags.forEach(tag => {
+                    tagCounts[tag.name] = (tagCounts[tag.name] || 0) + 1;
+               });
+          });
+
+          // Jelentkezés nélküli pozíciók
+          const positionsWithApplications = await prisma.application.groupBy({
+               by: ['positionId'],
+               where: { deletedAt: null }
+          });
+          const positionIdsWithApps = new Set(positionsWithApplications.map(p => p.positionId));
+
+          const allActivePositions = await prisma.position.findMany({
+               where: { isActive: true, deletedAt: null },
+               select: { id: true }
+          });
+
+          const withNoApplications = allActivePositions.filter(p => !positionIdsWithApps.has(p.id)).length;
+
+          return {
+               expiringIn7Days,
+               withNoApplications
+          };
+     }
 }
 export const statsService = new StatsService();
