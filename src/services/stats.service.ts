@@ -71,5 +71,46 @@ export class StatsService {
                lastMonthCount
           };
      }
+
+     async getPartnershipStats() {
+          // Státusz szerinti bontás
+          const byStatus = await prisma.dualPartnership.groupBy({
+               by: ['status'],
+               where: { deletedAt: null },
+               _count: { _all: true }
+          });
+
+          // Félév szerinti bontás
+          const bySemester = await prisma.dualPartnership.groupBy({
+               by: ['semester'],
+               where: { deletedAt: null },
+               _count: { _all: true }
+          });
+
+          // Átlagos időtartam (csak befejezett partnerségek)
+          const finishedPartnerships = await prisma.dualPartnership.findMany({
+               where: {
+                    deletedAt: null,
+                    status: PartnershipStatus.FINISHED,
+                    endDate: { not: null }
+               },
+               select: { startDate: true, endDate: true }
+          });
+
+          let averageDurationDays = 0;
+          if (finishedPartnerships.length > 0) {
+               const totalDays = finishedPartnerships.reduce((sum, p) => {
+                    const duration = (p.endDate!.getTime() - p.startDate.getTime()) / (1000 * 60 * 60 * 24);
+                    return sum + duration;
+               }, 0);
+               averageDurationDays = Math.round(totalDays / finishedPartnerships.length);
+          }
+
+          return {
+               byStatus: byStatus.map(s => ({ status: s.status, count: s._count._all })),
+               bySemester: bySemester.map(s => ({ semester: s.semester, count: s._count._all })),
+               averageDurationDays
+          };
+     }
 }
 export const statsService = new StatsService();
