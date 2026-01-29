@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { newsService } from "../services/news.service";
+import { notificationService } from "../services/notification.service";
 import { logAction } from "../utils/logger";
 import { getPaginationParams } from "../utils/pagination";
+import prisma from "../config/prisma";
+import { Role } from "@prisma/client";
 
 export const createNews = async (req: Request, res: Response, next: NextFunction) => {
      try {
@@ -17,6 +20,31 @@ export const createNews = async (req: Request, res: Response, next: NextFunction
                     targetGroup: news.targetGroup
                }
           });
+
+          // Értesítés küldése a célcsoport tagjainak
+          const targetGroup = news.targetGroup?.toUpperCase();
+          let targetUsers: { id: string }[] = [];
+
+          if (targetGroup === "ALL") {
+               targetUsers = await prisma.user.findMany({
+                    where: { isActive: true, deletedAt: null },
+                    select: { id: true }
+               });
+          } else if (targetGroup === "STUDENT") {
+               targetUsers = await prisma.user.findMany({
+                    where: { role: Role.STUDENT, isActive: true, deletedAt: null },
+                    select: { id: true }
+               });
+          }
+
+          for (const user of targetUsers) {
+               await notificationService.create({
+                    userId: user.id,
+                    title: news.isImportant ? "🔔 Fontos hír!" : "Új hír érkezett",
+                    message: news.title,
+                    type: "NEW_NEWS"
+               });
+          }
 
           res.status(201).json({
                success: true,
