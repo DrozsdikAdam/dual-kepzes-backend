@@ -587,7 +587,11 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
-| `GET` | `/` | Rendszerszintű statisztikák lekérése. |
+| `GET` | `/` | Rendszerszintű statisztikák (felhasználók, cégek, pozíciók, partnerségek). |
+| `GET` | `/applications` | Jelentkezési statisztikák (státusz szerinti bontás, konverziós arány, átlag/pozíció, elmúlt 30 nap). |
+| `GET` | `/partnerships` | Partnerségi statisztikák (státusz és félév szerinti bontás, átlagos időtartam). |
+| `GET` | `/positions` | Pozíció statisztikák (7 napon belül lejáró, jelentkezés nélküli pozíciók). |
+| `GET` | `/trends` | Időbeli trendek (regisztrációk, jelentkezések, partnerségek az elmúlt 6 hónapban). |
 
 ### 🤝 Duális Partnerkapcsolatok (`/api/partnerships`)
 
