@@ -8,6 +8,7 @@ export class CompanyService {
           id: true,
           name: true,
           taxId: true,
+          description: true,
           location: {
                select: {
                     id: true,
