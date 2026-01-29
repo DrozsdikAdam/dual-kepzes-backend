@@ -3,6 +3,7 @@ import { NotFoundError, ForbiddenError, BadRequestError } from '../errors/AppErr
 import { ApplicationStatus, PartnershipStatus } from '@prisma/client';
 import { getCompanyIdForUser } from '../utils/companyUtils';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
+import { getCurrentSemester } from '../utils/semester';
 
 export class ApplicationService {
      async apply(studentId: string, positionId: string, studentNote?: string) {
@@ -125,7 +126,7 @@ export class ApplicationService {
                               studentId: application.studentId,
                               positionId: application.positionId,
                               status: PartnershipStatus.PENDING_MENTOR,
-                              semester: '2023/24/2', // This should ideally be dynamic or passed from request
+                              semester: getCurrentSemester(),
                               startDate: new Date(),
                          }
                     });
