@@ -158,5 +158,64 @@ export class StatsService {
                withNoApplications
           };
      }
+
+     async getTrendStats() {
+          const now = new Date();
+          const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+          // Helper: get months array for the last 6 months
+          const months: { start: Date; end: Date; label: string }[] = [];
+          for (let i = 5; i >= 0; i--) {
+               const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+               const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+               const label = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
+               months.push({ start, end, label });
+          }
+
+          // Regisztrációk havonta
+          const registrationsPerMonth = await Promise.all(
+               months.map(async ({ start, end, label }) => {
+                    const count = await prisma.user.count({
+                         where: {
+                              createdAt: { gte: start, lte: end },
+                              deletedAt: null
+                         }
+                    });
+                    return { month: label, count };
+               })
+          );
+
+          // Jelentkezések havonta
+          const applicationsPerMonth = await Promise.all(
+               months.map(async ({ start, end, label }) => {
+                    const count = await prisma.application.count({
+                         where: {
+                              submittedAt: { gte: start, lte: end },
+                              deletedAt: null
+                         }
+                    });
+                    return { month: label, count };
+               })
+          );
+
+          // Partnerségek havonta
+          const partnershipsPerMonth = await Promise.all(
+               months.map(async ({ start, end, label }) => {
+                    const count = await prisma.dualPartnership.count({
+                         where: {
+                              createdAt: { gte: start, lte: end },
+                              deletedAt: null
+                         }
+                    });
+                    return { month: label, count };
+               })
+          );
+
+          return {
+               registrationsPerMonth,
+               applicationsPerMonth,
+               partnershipsPerMonth
+          };
+     }
 }
 export const statsService = new StatsService();
