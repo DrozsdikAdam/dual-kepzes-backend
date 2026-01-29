@@ -179,14 +179,27 @@ export class ApplicationService {
      private getApplicationInclude() {
           return {
                student: {
-                    include: {
+                    select: {
+                         id: true,
+                         userId: true,
                          user: {
                               select: {
                                    email: true,
                                    fullName: true,
-                                   phoneNumber: true
+                                   phoneNumber: true,
+                                   role: true,
+                                   isActive: true
                               }
-                         }
+                         },
+                         mothersName: true,
+                         birthDate: true,
+                         highSchool: true,
+                         graduationYear: true,
+                         neptunCode: true,
+                         currentMajor: true,
+                         studyMode: true,
+                         hasLanguageCert: true,
+                         locations: true
                     }
                },
                position: {
@@ -197,7 +210,8 @@ export class ApplicationService {
                                    name: true,
                                    logoUrl: true
                               }
-                         }
+                         },
+                         location: true
                     }
                }
           };

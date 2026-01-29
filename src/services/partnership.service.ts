@@ -274,21 +274,38 @@ export class PartnershipService {
                status: true,
                startDate: true,
                endDate: true,
+               studentId: true,
+               mentorId: true,
+               uniEmployeeId: true,
+               positionId: true,
                student: {
                     select: {
                          id: true,
                          userId: true,
-                         user: { select: { email: true, fullName: true } },
+                         user: {
+                              select: {
+                                   email: true,
+                                   fullName: true,
+                                   phoneNumber: true,
+                                   role: true,
+                                   isActive: true
+                              }
+                         },
                          mothersName: true,
                          birthDate: true,
                          highSchool: true,
                          graduationYear: true,
                          neptunCode: true,
+                         currentMajor: true,
+                         studyMode: true,
+                         hasLanguageCert: true,
+                         locations: true
                     }
                },
                mentor: {
                     select: {
                          userId: true,
+                         companyId: true,
                          user: { select: { email: true, fullName: true } },
                          company: { select: { id: true, name: true } },
                          jobTitle: true,

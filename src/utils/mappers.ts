@@ -175,6 +175,7 @@ export const mapDualPartnership = (partnership: (Partial<DualPartnership> & {
                id: profile.userId!,
                email: user.email!,
                fullName: user.fullName!,
+               phoneNumber: user.phoneNumber,
                role: user.role || 'STUDENT',
                isActive: user.isActive ?? true,
                studentProfile: mapStudentProfile(profile)
