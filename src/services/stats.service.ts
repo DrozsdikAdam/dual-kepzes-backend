@@ -33,6 +33,43 @@ export class StatsService {
                }))
           };
      }
-}
 
+     async getApplicationStats() {
+          const now = new Date();
+          const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+          // Státusz szerinti bontás
+          const byStatus = await prisma.application.groupBy({
+               by: ['status'],
+               where: { deletedAt: null },
+               _count: { _all: true }
+          });
+
+          // Összes és elfogadott jelentkezés a konverziós rátához
+          const totalApplications = await prisma.application.count({ where: { deletedAt: null } });
+          const acceptedApplications = await prisma.application.count({
+               where: { deletedAt: null, status: 'ACCEPTED' }
+          });
+
+          // Átlagos jelentkezések pozíciónként
+          const activePositions = await prisma.position.count({ where: { isActive: true, deletedAt: null } });
+          const averagePerPosition = activePositions > 0
+               ? Math.round((totalApplications / activePositions) * 100) / 100
+               : 0;
+
+          // Elmúlt 30 nap jelentkezései
+          const lastMonthCount = await prisma.application.count({
+               where: { deletedAt: null, submittedAt: { gte: lastMonth } }
+          });
+
+          return {
+               byStatus: byStatus.map(s => ({ status: s.status, count: s._count._all })),
+               conversionRate: totalApplications > 0
+                    ? Math.round((acceptedApplications / totalApplications) * 10000) / 100
+                    : 0,
+               averagePerPosition,
+               lastMonthCount
+          };
+     }
+}
 export const statsService = new StatsService();
