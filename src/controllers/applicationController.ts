@@ -9,7 +9,7 @@ import { ApplicationStatus, Role } from "@prisma/client";
 
 export const applyToPosition = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { positionId, studentNote } = req.body;
+        const { positionId } = req.body;
         const { userId } = req.user!;
 
         const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
@@ -17,7 +17,7 @@ export const applyToPosition = async (req: Request, res: Response, next: NextFun
             return res.status(403).json({ message: "Csak hallgatói profillal lehet jelentkezni." });
         }
 
-        const application = await applicationService.apply(studentProfile.id, positionId, studentNote);
+        const application = await applicationService.apply(studentProfile.id, positionId);
 
         await logAction(req, {
             action: "APPLY_TO_POSITION",
