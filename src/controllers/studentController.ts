@@ -3,12 +3,13 @@ import { studentService } from "../services/student.service";
 import { logAction } from "../utils/logger";
 import { mapStudent } from "../utils/mappers";
 import { getPaginationParams } from "../utils/pagination";
+import { UnauthorizedError } from "../errors/AppError";
 
 export const getMyProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = req.user?.userId;
         if (!userId) {
-            return res.status(401).json({ message: "Nincs azonosítva a felhasználó." });
+            throw new UnauthorizedError("Nincs azonosítva a felhasználó.");
         }
 
         const student = await studentService.getProfile(userId);
@@ -67,7 +68,7 @@ export const updateMyProfile = async (req: Request, res: Response, next: NextFun
     try {
         const userId = req.user?.userId;
         if (!userId) {
-            return res.status(401).json({ message: "Nincs azonosítva." });
+            throw new UnauthorizedError("Nincs azonosítva.");
         }
 
         const updated = await studentService.updateProfile(userId, req.body);

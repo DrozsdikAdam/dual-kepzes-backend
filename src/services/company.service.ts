@@ -141,7 +141,9 @@ export class CompanyService {
      }
 
      async update(id: string, data: any) {
-          const { locations, ...companyRest } = data;
+          // Restricted field protection
+          const { id: _, taxId: __, ...updateData } = data;
+          const { locations, ...companyRest } = updateData;
           const locationOperations: any = {};
 
           if (locations && locations.length > 0) {

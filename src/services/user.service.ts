@@ -75,7 +75,9 @@ export class UserService {
      }
 
      async update(id: string, data: any, updaterRole: Role) {
-          const { fullName, phoneNumber, isActive, jobTitle } = data;
+          // Restricted field protection
+          const { id: _, role: __, email: ___, ...updateData } = data;
+          const { fullName, phoneNumber, isActive, jobTitle } = updateData;
 
           const user = await prisma.user.findUnique({
                where: { id },

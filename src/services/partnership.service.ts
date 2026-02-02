@@ -65,12 +65,11 @@ export class PartnershipService {
                throw new NotFoundError('Partneri kapcsolat');
           }
 
+          const { id: _, studentId: __, positionId: ___, ...updateData } = data;
+
           return await prisma.dualPartnership.update({
                where: { id },
-               data: {
-                    ...data,
-                    studentId: undefined, // Student cannot be changed
-               },
+               data: updateData,
                select: this.getPartnershipSelect()
           });
      }
