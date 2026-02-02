@@ -8,11 +8,13 @@ import {
      getMyCompanyApplications,
      retractApplication,
      updateApplication,
-     updateEvaluation
+     updateEvaluation,
+     submitApplicationFiles
 } from "../controllers/applicationController";
 import { authenticateToken, isCompanyEmployee, isStudent, isSystemAdmin } from "../middlewares/authMiddleware";
 import { validate } from "../middlewares/validateMiddleware";
 import { CreateApplicationSchema, EvaluateApplicationSchema, UpdateApplicationSchema } from "../schemas/applicationSchema";
+import { uploadConfig } from "../config/upload.config";
 
 const router = Router();
 
@@ -46,6 +48,59 @@ router.use(authenticateToken)
  *         description: Application submitted successfully
  */
 router.post("/", validate(CreateApplicationSchema), applyToPosition)
+
+/**
+ * @swagger
+ * /api/applications/submit-with-files:
+ *   post:
+ *     summary: Submit application with CV and motivation letter files
+ *     description: |
+ *       GDPR-kompatibilis végpont - a fájlok csak memóriában tárolódnak,
+ *       azonnal továbbítódnak emailben a HR-nek, majd törlődnek.
+ *     tags: [Applications]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - positionId
+ *               - cv
+ *               - motivationLetter
+ *             properties:
+ *               positionId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: A pozíció azonosítója
+ *               cv:
+ *                 type: string
+ *                 format: binary
+ *                 description: Önéletrajz (PDF vagy Word, max 25MB)
+ *               motivationLetter:
+ *                 type: string
+ *                 format: binary
+ *                 description: Motivációs levél (PDF vagy Word, max 25MB)
+ *     responses:
+ *       201:
+ *         description: Jelentkezés sikeresen beküldve, dokumentumok továbbítva
+ *       400:
+ *         description: Hiányzó vagy érvénytelen fájlok
+ *       403:
+ *         description: Csak hallgatói profillal lehet jelentkezni
+ *       404:
+ *         description: Pozíció nem található
+ */
+router.post(
+     "/submit-with-files",
+     uploadConfig.fields([
+          { name: "cv", maxCount: 1 },
+          { name: "motivationLetter", maxCount: 1 }
+     ]),
+     submitApplicationFiles
+)
 
 /**
  * @swagger
