@@ -70,7 +70,6 @@ export interface MappedApplication {
      positionId: string;
      status: ApplicationStatus;
      companyNote?: string | null;
-     studentNote?: string | null;
      submittedAt: Date;
      student?: MappedStudent;
      position?: MappedPosition;

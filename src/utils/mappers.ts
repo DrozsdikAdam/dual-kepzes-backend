@@ -152,7 +152,6 @@ export const mapApplication = (application: (Partial<Application> & {
           positionId: rest.positionId!,
           status: rest.status!,
           companyNote: rest.companyNote,
-          studentNote: rest.studentNote,
           submittedAt: rest.submittedAt!,
           student: mappedStudent,
           position: position ? mapPosition(position)! : undefined
