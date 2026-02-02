@@ -6,6 +6,7 @@ import { mapApplication } from "../utils/mappers";
 import { getPaginationParams } from "../utils/pagination";
 import prisma from "../config/prisma";
 import { ApplicationStatus, Role } from "@prisma/client";
+import { mailer } from "../config/mailer";
 
 export const applyToPosition = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -211,6 +212,118 @@ export const updateEvaluation = async (req: Request, res: Response, next: NextFu
         res.json({
             success: true,
             message: "Értékelés frissítve",
+            data: mapApplication(application)
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Fájlok fogadása és azonnali továbbítása HR-nek email-ben.
+ * GDPR-kompatibilis: a fájlok csak memóriában vannak, nem kerülnek tárolásra.
+ */
+export const submitApplicationFiles = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { positionId } = req.body;
+        const { userId } = req.user!;
+
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+        if (!files?.cv?.[0] || !files?.motivationLetter?.[0]) {
+            return res.status(400).json({
+                success: false,
+                message: "CV és motivációs levél csatolása kötelező."
+            });
+        }
+
+        // Diák adatainak lekérése
+        const studentProfile = await prisma.studentProfile.findUnique({
+            where: { userId },
+            include: { user: true }
+        });
+
+        if (!studentProfile) {
+            return res.status(403).json({ message: "Csak hallgatói profillal lehet jelentkezni." });
+        }
+
+        // Pozíció adatainak lekérése
+        const position = await prisma.position.findUnique({
+            where: { id: positionId },
+            include: { company: true }
+        });
+
+        if (!position) {
+            return res.status(404).json({ message: "Pozíció nem található." });
+        }
+
+        // Email küldése a HR-nek a fájlokkal
+        const hrEmail = process.env.HR_EMAIL || "hr@example.com";
+
+        await mailer.sendMail({
+            from: '"Duális Képzés" <no-reply@dualis.hu>',
+            to: hrEmail,
+            subject: `Új jelentkezés: ${studentProfile.user.fullName} - ${position.title}`,
+            text: `
+Új jelentkezés érkezett a duális képzésre!
+
+Jelentkező: ${studentProfile.user.fullName}
+Email: ${studentProfile.user.email}
+Telefon: ${studentProfile.user.phoneNumber}
+Pozíció: ${position.title}
+Cég: ${position.company.name}
+
+A csatolt dokumentumok:
+- CV (önéletrajz)
+- Motivációs levél
+            `,
+            attachments: [
+                {
+                    filename: files.cv[0].originalname,
+                    content: files.cv[0].buffer
+                },
+                {
+                    filename: files.motivationLetter[0].originalname,
+                    content: files.motivationLetter[0].buffer
+                }
+            ]
+        });
+
+        // Jelentkezés létrehozása az adatbázisban (fájlok nélkül)
+        const application = await applicationService.apply(studentProfile.id, positionId);
+
+        await logAction(req, {
+            action: "APPLY_TO_POSITION_WITH_FILES",
+            entity: "Application",
+            entityId: application.id,
+            details: { studentId: studentProfile.id, positionId, filesForwardedToHR: true }
+        });
+
+        // Értesítés küldése a céges adminnak
+        const companyAdmins = await prisma.user.findMany({
+            where: {
+                role: Role.COMPANY_ADMIN,
+                companyEmployee: {
+                    companyId: position.company.id
+                }
+            },
+            select: { id: true }
+        });
+
+        for (const admin of companyAdmins) {
+            await notificationService.create({
+                userId: admin.id,
+                title: "Új jelentkezés érkezett",
+                message: `Új jelentkezés érkezett a(z) ${position.title ?? 'pozíció'} pozícióra: ${studentProfile.user.fullName}`,
+                type: "NEW_APPLICATION"
+            });
+        }
+
+        // A buffer-ek automatikusan törlődnek a garbage collection által
+
+        res.status(201).json({
+            success: true,
+            message: "Sikeres jelentkezés! A dokumentumok továbbítva lettek a HR-nek.",
             data: mapApplication(application)
         });
     } catch (error) {
