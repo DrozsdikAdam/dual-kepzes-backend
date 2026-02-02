@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { notificationService } from "../services/notification.service";
+import { UnauthorizedError } from "../errors/AppError";
 
 export const getNotifications = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." });
+               throw new UnauthorizedError();
           }
 
           const notifications = await notificationService.getByUser(userId, false);
@@ -20,7 +21,7 @@ export const getNotificationById = async (req: Request, res: Response, next: Nex
           const { id } = req.params;
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." });
+               throw new UnauthorizedError();
           }
 
           const notification = await notificationService.getById(id, userId);
@@ -35,7 +36,7 @@ export const markAsRead = async (req: Request, res: Response, next: NextFunction
           const { id } = req.params;
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." });
+               throw new UnauthorizedError();
           }
 
           await notificationService.markAsRead(id, userId);
@@ -49,7 +50,7 @@ export const markAllAsRead = async (req: Request, res: Response, next: NextFunct
      try {
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." });
+               throw new UnauthorizedError();
           }
 
           await notificationService.markAllAsRead(userId);
@@ -64,7 +65,7 @@ export const deleteNotification = async (req: Request, res: Response, next: Next
           const { id } = req.params;
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." });
+               throw new UnauthorizedError();
           }
 
           await notificationService.delete(id, userId);
@@ -79,7 +80,7 @@ export const archiveNotification = async (req: Request, res: Response, next: Nex
           const { id } = req.params;
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." });
+               throw new UnauthorizedError();
           }
 
           await notificationService.setArchiveStatus(id, userId, true);
@@ -93,7 +94,7 @@ export const getArchivedNotifications = async (req: Request, res: Response, next
      try {
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." });
+               throw new UnauthorizedError();
           }
 
           const notifications = await notificationService.getByUser(userId, true);
@@ -108,7 +109,7 @@ export const unarchiveNotification = async (req: Request, res: Response, next: N
           const { id } = req.params;
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." });
+               throw new UnauthorizedError();
           }
 
           await notificationService.setArchiveStatus(id, userId, false);
@@ -122,7 +123,7 @@ export const createNotification = async (req: Request, res: Response, next: Next
      try {
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs jogosultságod." });
+               throw new UnauthorizedError();
           }
 
           const notification = await notificationService.create({

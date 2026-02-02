@@ -3,6 +3,7 @@ import { userService } from "../services/user.service";
 import { logAction } from "../utils/logger";
 import { Role } from "@prisma/client";
 import { getPaginationParams } from "../utils/pagination";
+import { ForbiddenError, UnauthorizedError } from "../errors/AppError";
 
 export const getMeCompanyAdmin = async (req: Request, res: Response, next: NextFunction) => {
      try {
@@ -39,7 +40,7 @@ export const updateMeCompanyAdmin = async (req: Request, res: Response, next: Ne
 export const deleteMeCompanyAdmin = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const userId = req.user?.userId;
-          if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+          if (!userId) throw new UnauthorizedError("Nincs azonosított felhasználó.");
 
           await userService.delete(userId);
 
@@ -111,7 +112,7 @@ export const updateCompanyAdminById = async (req: Request, res: Response, next: 
 
           // Permission: Self or System Admin
           if (id !== currentUser.userId && currentUser.role !== Role.SYSTEM_ADMIN) {
-               return res.status(403).json({ message: "Nincs jogosultságod a módosításhoz." });
+               throw new ForbiddenError("Nincs jogosultságod a módosításhoz.");
           }
 
           const updated = await userService.update(id, req.body, currentUser.role as Role);

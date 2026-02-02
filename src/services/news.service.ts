@@ -78,9 +78,10 @@ export class NewsService {
      }
 
      async update(id: string, data: any) {
+          const { id: _, ...updateData } = data;
           return await prisma.news.update({
                where: { id },
-               data,
+               data: updateData,
                select: this.newsSelect
           });
      }

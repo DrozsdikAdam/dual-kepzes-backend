@@ -2,8 +2,8 @@ import { z } from "zod"
 
 export const CreateApplicationSchema = z.object({
     body: z.object({
-        positionId: z.string().uuid("Érvénytelen pozíció azonosító."),
-        studentNote: z.string().trim().max(500, "A megjegyzés legfeljebb 500 karakter lehet.").optional()
+        positionId: z.string().uuid("Érvénytelen pozíció azonosító.")
+        // studentNote eltávolítva - helyette fájlként tölti fel a motivációs levelet
     })
 })
 

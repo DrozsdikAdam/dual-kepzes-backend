@@ -391,6 +391,34 @@ flowchart TD
     style End3 fill:#00897b,stroke:#004d40,stroke-width:3px,color:#fff
 ```
 
+## 📎 GDPR-Kompatibilis Fájlfeltöltési Folyamat
+
+A CV és motivációs levél feltöltése pass-through módon működik - a fájlok nem kerülnek tárolásra a szerveren:
+
+```mermaid
+sequenceDiagram
+    participant D as Diák (Browser)
+    participant S as Backend Server
+    participant M as Memory Buffer
+    participant E as Email Service
+    participant HR as Céges Admin(ok)
+
+    D->>S: POST /api/applications/submit-with-files
+    Note over D,S: multipart/form-data<br/>cv + motivationLetter + positionId
+    S->>M: Fájlok memóriába (multer)
+    S->>S: Cég adminok lekérése az adatbázisból
+    M->>E: Buffer-ből email attachment
+    E->>HR: Email küldés csatolmányokkal
+    Note over E,HR: Minden céges admin<br/>megkapja az emailt
+    E-->>S: Email elküldve ✓
+    S->>S: Jelentkezés mentése (fájlok nélkül)
+    S->>M: Garbage Collection törli a buffert
+    S-->>D: 201 Created - Sikeres jelentkezés
+```
+
+> [!IMPORTANT]
+> **GDPR megfelelőség**: A fájlok csak a memóriában (RAM) tárolódnak a feldolgozás idejére. Az email küldés után a JavaScript garbage collection automatikusan törli a buffer-eket. Semmilyen fájl nem kerül lemezre vagy adatbázisba.
+
 ## 🚀 Deployment Architecture
 
 Éles környezet (Railway) architektúrája:
@@ -458,6 +486,16 @@ graph LR
   }
 }
 ```
+
+## 🔒 Biztonsági Intézkedések (Szerviz szint)
+
+A rendszer integritásának védelme érdekében a szolgáltatási rétegben (Services) szigorú mezővédelem került bevezetésre. Ez megakadályozza, hogy az `update` műveletek során véletlenül vagy rosszindulatúan módosítsanak olyan érzékeny mezőket, mint:
+
+- **Felhasználók esetén**: `id`, `role`, `email`.
+- **Cégek esetén**: `id`, `taxId`.
+- **Partnerkapcsolatok esetén**: `id`, `studentId`, `positionId`.
+
+Ezeket a mezőket a rendszer automatikusan eltávolítja a bejövő kérésekből a mentés előtt.
 
 ## 🚀 Quick Start - API Használat
 
@@ -569,6 +607,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `GET` | `/admin` | Összes jelentkezés (Admin nézet). | Admin |
 | `GET` | `/admin/:id` | Jelentkezés részletei. | Admin |
 | `PATCH` | `/admin/:id` | Jelentkezés módosítása. | Admin |
+| `POST` | `/submit-with-files` | **[ÚJ]** Jelentkezés CV és motivációs levél fájlok feltöltésével. GDPR-kompatibilis: a fájlok nem kerülnek tárolásra, csak emailben továbbítódnak a céges adminoknak. | Student |
 
 ### 📰 Hírek (`/api/news`)
 

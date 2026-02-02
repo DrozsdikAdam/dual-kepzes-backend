@@ -3,12 +3,13 @@ import { userService } from "../services/user.service";
 import { logAction } from "../utils/logger";
 import { Role } from "@prisma/client";
 import { getPaginationParams } from "../utils/pagination";
+import { UnauthorizedError } from "../errors/AppError";
 
 export const getMeSystemAdmin = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const userId = req.user?.userId;
           if (!userId) {
-               return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+               throw new UnauthorizedError("Nincs azonosított felhasználó.");
           }
 
           const user = await userService.getById(userId, Role.SYSTEM_ADMIN);
@@ -21,7 +22,7 @@ export const getMeSystemAdmin = async (req: Request, res: Response, next: NextFu
 export const updateMeSystemAdmin = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const userId = req.user?.userId;
-          if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+          if (!userId) throw new UnauthorizedError("Nincs azonosított felhasználó.");
 
           const updated = await userService.update(userId, req.body, Role.SYSTEM_ADMIN);
 

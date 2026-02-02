@@ -6,18 +6,20 @@ import { mapApplication } from "../utils/mappers";
 import { getPaginationParams } from "../utils/pagination";
 import prisma from "../config/prisma";
 import { ApplicationStatus, Role } from "@prisma/client";
+import { mailer } from "../config/mailer";
+import { ForbiddenError, NotFoundError } from "../errors/AppError";
 
 export const applyToPosition = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { positionId, studentNote } = req.body;
+        const { positionId } = req.body;
         const { userId } = req.user!;
 
         const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
         if (!studentProfile) {
-            return res.status(403).json({ message: "Csak hallgatói profillal lehet jelentkezni." });
+            throw new ForbiddenError("Csak hallgatói profillal lehet jelentkezni.");
         }
 
-        const application = await applicationService.apply(studentProfile.id, positionId, studentNote);
+        const application = await applicationService.apply(studentProfile.id, positionId);
 
         await logAction(req, {
             action: "APPLY_TO_POSITION",
@@ -26,25 +28,8 @@ export const applyToPosition = async (req: Request, res: Response, next: NextFun
             details: { studentId: studentProfile.id, positionId }
         });
 
-        // Értesítés küldése a céges adminnak az új jelentkezésről
-        const companyAdmins = await prisma.user.findMany({
-            where: {
-                role: Role.COMPANY_ADMIN,
-                companyEmployee: {
-                    companyId: application.position.company.id
-                }
-            },
-            select: { id: true }
-        });
-
-        for (const admin of companyAdmins) {
-            await notificationService.create({
-                userId: admin.id,
-                title: "Új jelentkezés érkezett",
-                message: `Új jelentkezés érkezett a(z) ${application.position.title ?? 'pozíció'} pozícióra: ${application.student.user.fullName}`,
-                type: "NEW_APPLICATION"
-            });
-        }
+        // Értesítések küldése
+        await sendNewApplicationNotifications(application);
 
         res.status(201).json({
             success: true,
@@ -56,12 +41,36 @@ export const applyToPosition = async (req: Request, res: Response, next: NextFun
     }
 };
 
+/**
+ * Segédfüggvény az új jelentkezésről szóló értesítések kiküldéséhez
+ */
+async function sendNewApplicationNotifications(application: any) {
+    const companyAdmins = await prisma.user.findMany({
+        where: {
+            role: Role.COMPANY_ADMIN,
+            companyEmployee: {
+                companyId: application.position.company.id
+            }
+        },
+        select: { id: true }
+    });
+
+    for (const admin of companyAdmins) {
+        await notificationService.create({
+            userId: admin.id,
+            title: "Új jelentkezés érkezett",
+            message: `Új jelentkezés érkezett a(z) ${application.position.title ?? 'pozíció'} pozícióra: ${application.student.user.fullName}`,
+            type: "NEW_APPLICATION"
+        });
+    }
+}
+
 export const getMyApplications = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { userId } = req.user!;
         const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
         if (!studentProfile) {
-            return res.status(403).json({ message: "Nincs hallgatói profilod." });
+            throw new ForbiddenError("Nincs hallgatói profilod.");
         }
 
         const params = getPaginationParams(req.query);
@@ -83,7 +92,7 @@ export const retractApplication = async (req: Request, res: Response, next: Next
 
         const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
         if (!studentProfile) {
-            return res.status(403).json({ message: "Nincs hallgatói profilod." });
+            throw new ForbiddenError("Nincs hallgatói profilod.");
         }
 
         const application = await applicationService.retract(id, studentProfile.id);
@@ -123,7 +132,10 @@ export const getApplication = async (req: Request, res: Response, next: NextFunc
     try {
         const { id } = req.params;
         const application = await applicationService.getById(id);
-        res.json(mapApplication(application));
+        res.json({
+            success: true,
+            data: mapApplication(application)
+        });
     } catch (error) {
         next(error);
     }
@@ -134,7 +146,11 @@ export const updateApplication = async (req: Request, res: Response, next: NextF
         const { id } = req.params;
         const data = req.body;
         const application = await applicationService.update(id, data);
-        res.json(mapApplication(application));
+        res.json({
+            success: true,
+            message: "Jelentkezés frissítve",
+            data: mapApplication(application)
+        });
     } catch (error) {
         next(error);
     }
@@ -211,6 +227,119 @@ export const updateEvaluation = async (req: Request, res: Response, next: NextFu
         res.json({
             success: true,
             message: "Értékelés frissítve",
+            data: mapApplication(application)
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Fájlok fogadása és azonnali továbbítása HR-nek email-ben.
+ * GDPR-kompatibilis: a fájlok csak memóriában vannak, nem kerülnek tárolásra.
+ */
+export const submitApplicationFiles = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { positionId } = req.body;
+        const { userId } = req.user!;
+
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+        if (!files?.cv?.[0] || !files?.motivationLetter?.[0]) {
+            return res.status(400).json({
+                success: false,
+                message: "CV és motivációs levél csatolása kötelező."
+            });
+        }
+
+        // Diák adatainak lekérése
+        const studentProfile = await prisma.studentProfile.findUnique({
+            where: { userId },
+            include: { user: true }
+        });
+
+        if (!studentProfile) {
+            throw new ForbiddenError("Csak hallgatói profillal lehet jelentkezni.");
+        }
+
+        // Pozíció adatainak lekérése
+        const position = await prisma.position.findUnique({
+            where: { id: positionId },
+            include: { company: true }
+        });
+
+        if (!position) {
+            throw new NotFoundError("Pozíció");
+        }
+
+        // Céges adminok email címeinek lekérése
+        const companyAdminUsers = await prisma.user.findMany({
+            where: {
+                role: Role.COMPANY_ADMIN,
+                companyEmployee: {
+                    companyId: position.company.id
+                }
+            },
+            select: { id: true, email: true }
+        });
+
+        if (companyAdminUsers.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "A cégnek nincs regisztrált adminisztrátora, akinek továbbíthatnánk a dokumentumokat."
+            });
+        }
+
+        const adminEmails = companyAdminUsers.map(admin => admin.email);
+
+        // Email küldése a céges adminoknak a fájlokkal
+        await mailer.sendMail({
+            from: '"Duális Képzés" <no-reply@dualis.hu>',
+            to: adminEmails,
+            subject: `Új jelentkezés: ${studentProfile.user.fullName} - ${position.title}`,
+            text: `
+Új jelentkezés érkezett a duális képzésre!
+
+Jelentkező: ${studentProfile.user.fullName}
+Email: ${studentProfile.user.email}
+Telefon: ${studentProfile.user.phoneNumber}
+Pozíció: ${position.title}
+Cég: ${position.company.name}
+
+A csatolt dokumentumok:
+- CV (önéletrajz)
+- Motivációs levél
+            `,
+            attachments: [
+                {
+                    filename: files.cv[0].originalname,
+                    content: files.cv[0].buffer
+                },
+                {
+                    filename: files.motivationLetter[0].originalname,
+                    content: files.motivationLetter[0].buffer
+                }
+            ]
+        });
+
+        // Jelentkezés létrehozása az adatbázisban (fájlok nélkül)
+        const application = await applicationService.apply(studentProfile.id, positionId);
+
+        await logAction(req, {
+            action: "APPLY_TO_POSITION_WITH_FILES",
+            entity: "Application",
+            entityId: application.id,
+            details: { studentId: studentProfile.id, positionId, filesForwardedToHR: true }
+        });
+
+        // Értesítés küldése a céges adminoknak
+        await sendNewApplicationNotifications(application);
+
+        // A buffer-ek automatikusan törlődnek a garbage collection által
+
+        res.status(201).json({
+            success: true,
+            message: "Sikeres jelentkezés! A dokumentumok továbbítva lettek a HR-nek.",
             data: mapApplication(application)
         });
     } catch (error) {

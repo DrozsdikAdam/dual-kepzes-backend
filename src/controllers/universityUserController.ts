@@ -3,14 +3,15 @@ import { userService } from "../services/user.service";
 import { logAction } from "../utils/logger";
 import { Role } from "@prisma/client";
 import { getPaginationParams } from "../utils/pagination";
+import { ForbiddenError, UnauthorizedError } from "../errors/AppError";
 
 export const getMeUniversityUser = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const userId = req.user?.userId;
-          if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+          if (!userId) throw new UnauthorizedError("Nincs azonosított felhasználó.");
 
           const user = await userService.getById(userId, Role.UNIVERSITY_USER);
-          res.json(user);
+          res.json({ success: true, data: user });
      } catch (error) {
           next(error);
      }
@@ -87,7 +88,7 @@ export const getUniversityUserById = async (req: Request, res: Response, next: N
                details: { viewedById: req.user?.userId }
           });
 
-          res.json(user);
+          res.json({ success: true, data: user });
      } catch (error) {
           next(error);
      }
@@ -100,7 +101,7 @@ export const updateUniversityUserById = async (req: Request, res: Response, next
 
           // Check permissions: Self or System Admin
           if (id !== currentUser.userId && currentUser.role !== Role.SYSTEM_ADMIN) {
-               return res.status(403).json({ message: "Nincs jogosultságod a művelet elvégzéséhez." });
+               throw new ForbiddenError("Nincs jogosultságod a művelet elvégzéséhez.");
           }
 
           const updatedUser = await userService.update(id, req.body, currentUser.role as Role);

@@ -5,6 +5,7 @@ import { logAction } from "../utils/logger";
 import { mapPosition } from "../utils/mappers";
 import { getCompanyIdForUser } from "../utils/companyUtils";
 import { getPaginationParams } from "../utils/pagination";
+import { ForbiddenError } from "../errors/AppError";
 
 /**
  * Get job positions (supports optional filtering by dual/non-dual)
@@ -251,7 +252,7 @@ export const getMyCompanyPositions = async (req: Request, res: Response, next: N
     try {
         const companyId = await getCompanyIdForUser(req.user!.userId);
         if (!companyId) {
-            return res.status(403).json({ message: "Nem tartozol egyetlen céghez sem." });
+            throw new ForbiddenError("Nem tartozol egyetlen céghez sem.");
         }
 
         const positions = await jobService.getByCompany(companyId);

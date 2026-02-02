@@ -54,8 +54,7 @@ const options: swaggerJsdoc.Options = {
                          type: 'object',
                          required: ['positionId'],
                          properties: {
-                              positionId: { type: 'string', format: 'uuid' },
-                              studentNote: { type: 'string' }
+                              positionId: { type: 'string', format: 'uuid' }
                          }
                     },
                     EvaluateApplication: {
