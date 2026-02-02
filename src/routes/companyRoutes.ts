@@ -8,7 +8,8 @@ import {
      getCompanyById,
      createCompany,
      updateCompany,
-     deleteCompany
+     deleteCompany,
+     getOwnApplicationCompanies
 } from "../controllers/companyController";
 import { validate } from "../middlewares/validateMiddleware";
 import { CompanyCreateSchema, CompanyUpdateSchema } from "../schemas/jobSchema";
@@ -42,7 +43,19 @@ router.use(authenticateToken);
  */
 router.get("/inactive", getInactiveCompanies);
 
-// Általános CRUD route-ok
+/**
+ * @swagger
+ * /api/companies/own-application:
+ *   get:
+ *     summary: List companies that have their own application platform
+ *     tags: [Companies]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of companies with own application platform
+ */
+router.get("/own-application", getOwnApplicationCompanies);
 
 /**
  * @swagger

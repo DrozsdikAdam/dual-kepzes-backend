@@ -520,6 +520,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `GET` | `/` | Aktív cégek listázása. |
 | `POST` | `/` | Új cég létrehozása. |
 | `GET` | `/inactive` | Inaktív cégek listázása. |
+| `GET` | `/own-application` | Saját jelentkezési felülettel rendelkező cégek listázása. |
 | `GET` | `/:id` | Cég részletei. |
 | `PATCH` | `/:id` | Cég adatainak frissítése. |
 | `DELETE` | `/:id` | Cég törlése (Soft delete). |

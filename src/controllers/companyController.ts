@@ -172,3 +172,17 @@ export const deactivateCompany = async (req: Request, res: Response, next: NextF
           next(error);
      }
 };
+
+export const getOwnApplicationCompanies = async (req: Request, res: Response, next: NextFunction) => {
+     try {
+          const params = getPaginationParams(req.query);
+          const result = await companyService.getOwnApplicationCompanies(params);
+          res.json({
+               success: true,
+               data: result.data.map(mapCompany),
+               pagination: result.pagination
+          });
+     } catch (error) {
+          next(error);
+     }
+};

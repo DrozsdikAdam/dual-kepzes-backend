@@ -236,6 +236,27 @@ export class CompanyService {
                select: this.companySelect
           });
      }
+
+     async getOwnApplicationCompanies(params: Required<PaginationParams>) {
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = {
+               isActive: true,
+               hasOwnApplication: true,
+               deletedAt: null
+          };
+
+          return await paginate(
+               params,
+               prisma.company.findMany({
+                    where,
+                    select: this.companySelect,
+                    skip,
+                    take,
+                    orderBy: { name: 'asc' as const }
+               }),
+               prisma.company.count({ where })
+          );
+     }
 }
 
 export const companyService = new CompanyService();
