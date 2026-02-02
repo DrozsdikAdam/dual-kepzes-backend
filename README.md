@@ -269,8 +269,14 @@ sequenceDiagram
         API->>API: Hash password (bcrypt)
         API->>DB: Create new user
         DB-->>API: User created
-        API-->>User: 201 Created
+        API->>API: Send verification email
+        API-->>User: 201 Created (Verification required)
     end
+
+    User->>API: POST /api/auth/verify-email (token)
+    API->>DB: Check token & verify user
+    DB-->>API: User verified
+    API-->>User: 200 OK
 
     User->>API: POST /api/auth/login (email, password)
     API->>DB: Find user by email
@@ -493,8 +499,10 @@ curl http://localhost:3000/api/students/me \
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
-| `POST` | `/register` | Új felhasználó regisztrációja. |
-| `POST` | `/login` | Bejelentkezés és JWT token igénylése. |
+| `POST` | `/register` | Új felhasználó regisztrációja. (Email megerősítést igényel) |
+| `POST` | `/login` | Bejelentkezés és JWT token igénylése. (Csak megerősített dev-et enged) |
+| `POST` | `/verify-email` | Email cím megerősítése tokennel. |
+| `POST` | `/resend-verification` | Megerősítő email újraküldése. |
 | `POST` | `/request-password-reset` | Jelszó visszaállítás kérése email címmel. |
 | `POST` | `/reset-password` | Új jelszó beállítása tokennel. |
 
