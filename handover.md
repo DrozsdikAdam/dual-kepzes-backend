@@ -301,6 +301,9 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - Profil szerkesztés (Hallgatói és Céges)
 - Szűrés duális/nem duális pozíciókra
 - Alapvető statisztikák
+- **GDPR-kompatibilis fájlfeltöltés** (CV, motivációs levél)
+  - Fájlok csak memóriában, nem kerülnek tárolásra
+  - Automatikus továbbítás céges adminoknak emailben
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
@@ -308,12 +311,10 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - Bővített riportok
 
 ### ❌ Hiányzó/Tervezett Funkciók
-- Email cím megerősítés (Verification)
 - Logout (Token feketelista)
 - Integrációs tesztek
 - Jelentkezési trendek grafikonok
 - Riportok exportálása (CSV/PDF)
-- Dokumentum feltöltés (CV, szerződések)
 
 > 📍 Részletes lista: `CHECKLIST.md`
 
