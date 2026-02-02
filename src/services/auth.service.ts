@@ -25,7 +25,8 @@ export class AuthService {
                          password: hashedPassword,
                          fullName: data.fullName,
                          phoneNumber: data.phoneNumber,
-                         role: data.role
+                         role: data.role,
+                         isEmailVerified: process.env.NODE_ENV === 'development'
                     }
                });
 
@@ -77,7 +78,10 @@ export class AuthService {
                return user;
           });
 
-          await this.sendVerificationEmail(result.id);
+          if (process.env.NODE_ENV !== 'development') {
+               await this.sendVerificationEmail(result.id);
+          }
+
           return result;
      }
 
@@ -99,7 +103,7 @@ export class AuthService {
                throw new UnauthorizedError('A felhasználói fiók inaktív.');
           }
 
-          if (!user.isEmailVerified) {
+          if (process.env.NODE_ENV !== 'development' && !user.isEmailVerified) {
                throw new UnauthorizedError('Kérjük, előbb erősítsd meg az email címedet.');
           }
 
