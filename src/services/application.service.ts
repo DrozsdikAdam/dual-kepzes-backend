@@ -6,7 +6,7 @@ import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/paginati
 import { getCurrentSemester } from '../utils/semester';
 
 export class ApplicationService {
-     async apply(studentId: string, positionId: string, studentNote?: string) {
+     async apply(studentId: string, positionId: string) {
           // Check if position exists and is active
           const position = await prisma.position.findUnique({
                where: { id: positionId }
@@ -34,7 +34,6 @@ export class ApplicationService {
                data: {
                     studentId,
                     positionId,
-                    studentNote,
                     status: ApplicationStatus.SUBMITTED
                },
                include: this.getApplicationInclude()
