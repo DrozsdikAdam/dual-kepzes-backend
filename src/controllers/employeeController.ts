@@ -5,11 +5,12 @@ import { logAction } from "../utils/logger";
 import { Role } from "@prisma/client";
 import { UpdateEmployeeInput } from "../schemas/employeeSchema";
 import { getPaginationParams } from "../utils/pagination";
+import { ForbiddenError, UnauthorizedError } from "../errors/AppError";
 
 export const getMeEmployee = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = req.user?.userId;
-        if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+        if (!userId) throw new UnauthorizedError("Nincs azonosított felhasználó.");
 
         const employee = await employeeService.getProfile(userId);
         res.json({ success: true, data: employee });
@@ -21,7 +22,7 @@ export const getMeEmployee = async (req: Request, res: Response, next: NextFunct
 export const updateMeEmployee = async (req: Request<{}, {}, UpdateEmployeeInput>, res: Response, next: NextFunction) => {
     try {
         const userId = req.user?.userId;
-        if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+        if (!userId) throw new UnauthorizedError("Nincs azonosított felhasználó.");
 
         const updatedUser = await userService.update(userId, req.body, Role.MENTOR); // Assumed role for employee controller
 
@@ -45,7 +46,7 @@ export const updateMeEmployee = async (req: Request<{}, {}, UpdateEmployeeInput>
 export const deleteMeEmployee = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = req.user?.userId;
-        if (!userId) return res.status(401).json({ message: "Nincs azonosított felhasználó." });
+        if (!userId) throw new UnauthorizedError("Nincs azonosított felhasználó.");
 
         await userService.delete(userId);
 
@@ -70,7 +71,7 @@ export const getEmployeeById = async (req: Request, res: Response, next: NextFun
         const requester = await employeeService.getProfile(currentUser.userId);
 
         if (target.companyId !== requester.companyId) {
-            return res.status(403).json({ message: "Nincs jogosultságod a dolgozó adatainak megtekintéséhez." });
+            throw new ForbiddenError("Nincs jogosultságod a dolgozó adatainak megtekintéséhez.");
         }
 
         await logAction(req, {
@@ -144,7 +145,7 @@ export const updateEmployeeById = async (req: Request<{ id: string }, {}, Update
         const isAdminAtSameCompany = currentUser.role === Role.COMPANY_ADMIN && target.companyId === requester.companyId;
 
         if (!isSelf && !isAdminAtSameCompany && currentUser.role !== Role.SYSTEM_ADMIN) {
-            return res.status(403).json({ message: "Nincs jogosultságod más dolgozó adatainak módosításához." });
+            throw new ForbiddenError("Nincs jogosultságod más dolgozó adatainak módosításához.");
         }
 
         const updatedUser = await userService.update(userIdToUpdate, req.body, currentUser.role as Role);
@@ -172,7 +173,7 @@ export const deleteEmployeeById = async (req: Request, res: Response, next: Next
         const requester = await employeeService.getProfile(req.user!.userId);
 
         if (target.companyId !== requester.companyId && req.user!.role !== Role.SYSTEM_ADMIN) {
-            return res.status(403).json({ message: "Csak a saját céged dolgozóit törölheted." });
+            throw new ForbiddenError("Csak a saját céged dolgozóit törölheted.");
         }
 
         await userService.delete(userIdToDelete);
@@ -193,7 +194,7 @@ export const deleteEmployeeById = async (req: Request, res: Response, next: Next
 export const getMyStudents = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = req.user?.userId;
-        if (!userId) return res.status(401).json({ message: "Nincs jogosultságod." });
+        if (!userId) throw new UnauthorizedError("Nincs jogosultságod.");
 
         const partnerships = await employeeService.getMentorStudents(userId);
         res.json({ success: true, data: partnerships });
@@ -206,7 +207,7 @@ export const getMyPartnershipById = async (req: Request, res: Response, next: Ne
     try {
         const userId = req.user?.userId;
         const { id } = req.params;
-        if (!userId) return res.status(401).json({ message: "Nincs jogosultságod." });
+        if (!userId) throw new UnauthorizedError("Nincs jogosultságod.");
 
         const partnership = await employeeService.getMentorPartnership(userId, id);
         res.json({ success: true, data: partnership });

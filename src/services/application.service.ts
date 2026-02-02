@@ -87,9 +87,12 @@ export class ApplicationService {
      }
 
      async update(id: string, data: any) {
+          // Prevent updating restricted fields
+          const { studentId, positionId, id: _, ...rest } = data;
+
           return await prisma.application.update({
                where: { id },
-               data,
+               data: rest,
                include: this.getApplicationInclude()
           });
      }

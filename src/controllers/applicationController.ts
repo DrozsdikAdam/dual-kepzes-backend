@@ -7,6 +7,7 @@ import { getPaginationParams } from "../utils/pagination";
 import prisma from "../config/prisma";
 import { ApplicationStatus, Role } from "@prisma/client";
 import { mailer } from "../config/mailer";
+import { ForbiddenError, NotFoundError } from "../errors/AppError";
 
 export const applyToPosition = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -15,7 +16,7 @@ export const applyToPosition = async (req: Request, res: Response, next: NextFun
 
         const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
         if (!studentProfile) {
-            return res.status(403).json({ message: "Csak hallgatói profillal lehet jelentkezni." });
+            throw new ForbiddenError("Csak hallgatói profillal lehet jelentkezni.");
         }
 
         const application = await applicationService.apply(studentProfile.id, positionId);
@@ -27,25 +28,8 @@ export const applyToPosition = async (req: Request, res: Response, next: NextFun
             details: { studentId: studentProfile.id, positionId }
         });
 
-        // Értesítés küldése a céges adminnak az új jelentkezésről
-        const companyAdmins = await prisma.user.findMany({
-            where: {
-                role: Role.COMPANY_ADMIN,
-                companyEmployee: {
-                    companyId: application.position.company.id
-                }
-            },
-            select: { id: true }
-        });
-
-        for (const admin of companyAdmins) {
-            await notificationService.create({
-                userId: admin.id,
-                title: "Új jelentkezés érkezett",
-                message: `Új jelentkezés érkezett a(z) ${application.position.title ?? 'pozíció'} pozícióra: ${application.student.user.fullName}`,
-                type: "NEW_APPLICATION"
-            });
-        }
+        // Értesítések küldése
+        await sendNewApplicationNotifications(application);
 
         res.status(201).json({
             success: true,
@@ -57,12 +41,36 @@ export const applyToPosition = async (req: Request, res: Response, next: NextFun
     }
 };
 
+/**
+ * Segédfüggvény az új jelentkezésről szóló értesítések kiküldéséhez
+ */
+async function sendNewApplicationNotifications(application: any) {
+    const companyAdmins = await prisma.user.findMany({
+        where: {
+            role: Role.COMPANY_ADMIN,
+            companyEmployee: {
+                companyId: application.position.company.id
+            }
+        },
+        select: { id: true }
+    });
+
+    for (const admin of companyAdmins) {
+        await notificationService.create({
+            userId: admin.id,
+            title: "Új jelentkezés érkezett",
+            message: `Új jelentkezés érkezett a(z) ${application.position.title ?? 'pozíció'} pozícióra: ${application.student.user.fullName}`,
+            type: "NEW_APPLICATION"
+        });
+    }
+}
+
 export const getMyApplications = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { userId } = req.user!;
         const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
         if (!studentProfile) {
-            return res.status(403).json({ message: "Nincs hallgatói profilod." });
+            throw new ForbiddenError("Nincs hallgatói profilod.");
         }
 
         const params = getPaginationParams(req.query);
@@ -84,7 +92,7 @@ export const retractApplication = async (req: Request, res: Response, next: Next
 
         const studentProfile = await prisma.studentProfile.findUnique({ where: { userId } });
         if (!studentProfile) {
-            return res.status(403).json({ message: "Nincs hallgatói profilod." });
+            throw new ForbiddenError("Nincs hallgatói profilod.");
         }
 
         const application = await applicationService.retract(id, studentProfile.id);
@@ -124,7 +132,10 @@ export const getApplication = async (req: Request, res: Response, next: NextFunc
     try {
         const { id } = req.params;
         const application = await applicationService.getById(id);
-        res.json(mapApplication(application));
+        res.json({
+            success: true,
+            data: mapApplication(application)
+        });
     } catch (error) {
         next(error);
     }
@@ -135,7 +146,11 @@ export const updateApplication = async (req: Request, res: Response, next: NextF
         const { id } = req.params;
         const data = req.body;
         const application = await applicationService.update(id, data);
-        res.json(mapApplication(application));
+        res.json({
+            success: true,
+            message: "Jelentkezés frissítve",
+            data: mapApplication(application)
+        });
     } catch (error) {
         next(error);
     }
@@ -244,7 +259,7 @@ export const submitApplicationFiles = async (req: Request, res: Response, next: 
         });
 
         if (!studentProfile) {
-            return res.status(403).json({ message: "Csak hallgatói profillal lehet jelentkezni." });
+            throw new ForbiddenError("Csak hallgatói profillal lehet jelentkezni.");
         }
 
         // Pozíció adatainak lekérése
@@ -254,7 +269,7 @@ export const submitApplicationFiles = async (req: Request, res: Response, next: 
         });
 
         if (!position) {
-            return res.status(404).json({ message: "Pozíció nem található." });
+            throw new NotFoundError("Pozíció");
         }
 
         // Céges adminok email címeinek lekérése
@@ -317,25 +332,8 @@ A csatolt dokumentumok:
             details: { studentId: studentProfile.id, positionId, filesForwardedToHR: true }
         });
 
-        // Értesítés küldése a céges adminnak
-        const companyAdmins = await prisma.user.findMany({
-            where: {
-                role: Role.COMPANY_ADMIN,
-                companyEmployee: {
-                    companyId: position.company.id
-                }
-            },
-            select: { id: true }
-        });
-
-        for (const admin of companyAdmins) {
-            await notificationService.create({
-                userId: admin.id,
-                title: "Új jelentkezés érkezett",
-                message: `Új jelentkezés érkezett a(z) ${position.title ?? 'pozíció'} pozícióra: ${studentProfile.user.fullName}`,
-                type: "NEW_APPLICATION"
-            });
-        }
+        // Értesítés küldése a céges adminoknak
+        await sendNewApplicationNotifications(application);
 
         // A buffer-ek automatikusan törlődnek a garbage collection által
 
