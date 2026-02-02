@@ -257,12 +257,30 @@ export const submitApplicationFiles = async (req: Request, res: Response, next: 
             return res.status(404).json({ message: "Pozíció nem található." });
         }
 
-        // Email küldése a HR-nek a fájlokkal
-        const hrEmail = process.env.HR_EMAIL || "hr@example.com";
+        // Céges adminok email címeinek lekérése
+        const companyAdminUsers = await prisma.user.findMany({
+            where: {
+                role: Role.COMPANY_ADMIN,
+                companyEmployee: {
+                    companyId: position.company.id
+                }
+            },
+            select: { id: true, email: true }
+        });
 
+        if (companyAdminUsers.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "A cégnek nincs regisztrált adminisztrátora, akinek továbbíthatnánk a dokumentumokat."
+            });
+        }
+
+        const adminEmails = companyAdminUsers.map(admin => admin.email);
+
+        // Email küldése a céges adminoknak a fájlokkal
         await mailer.sendMail({
             from: '"Duális Képzés" <no-reply@dualis.hu>',
-            to: hrEmail,
+            to: adminEmails,
             subject: `Új jelentkezés: ${studentProfile.user.fullName} - ${position.title}`,
             text: `
 Új jelentkezés érkezett a duális képzésre!
