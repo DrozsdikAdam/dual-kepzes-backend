@@ -101,7 +101,7 @@ export const verifyEmail = async (req: Request<{}, {}, VerifyEmailInput>, res: R
         await logAction(req, {
             action: "EMAIL_VERIFIED",
             entity: "User",
-            entityId: undefined,
+            entityId: result.userId,
             details: { tokenUsed: true }
         });
 
@@ -122,7 +122,7 @@ export const resendVerification = async (req: Request<{}, {}, ResendVerification
         await logAction(req, {
             action: "RESEND_VERIFICATION_EMAIL",
             entity: "User",
-            entityId: undefined,
+            entityId: result.userId,
             details: { email }
         });
 
