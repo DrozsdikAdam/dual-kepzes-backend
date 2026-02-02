@@ -473,6 +473,13 @@ curl -X POST http://localhost:3000/api/auth/register \
     "role": "STUDENT"
   }'
 
+# Email megerősítés (A kapott tokennel)
+curl -X POST http://localhost:3000/api/auth/verify-email \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2"
+  }'
+
 # Bejelentkezés
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
