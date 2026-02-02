@@ -30,6 +30,7 @@ export const CompanyCreateSchema = z.object({
         description: z.string().optional(),
         logoUrl: z.string().trim().url("Érvénytelen logó URL").optional(),
         website: z.string().trim().url("Érvénytelen weboldal URL").optional(),
+        hasOwnApplication: z.boolean().default(false),
     }),
 });
 

@@ -22,6 +22,7 @@ export class CompanyService {
           contactEmail: true,
           website: true,
           logoUrl: true,
+          hasOwnApplication: true,
           isActive: true,
           createdAt: true,
           deletedAt: true

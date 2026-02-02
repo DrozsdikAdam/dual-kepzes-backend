@@ -17,6 +17,7 @@ export interface MappedCompany {
      contactEmail?: string;
      website?: string | null;
      logoUrl?: string | null;
+     hasOwnApplication?: boolean;
      isActive?: boolean;
      createdAt?: Date;
      locations?: MappedLocation[];

@@ -33,6 +33,7 @@ export const mapCompany = (company: (Partial<Company> & { location?: PartialLoca
           contactEmail: rest.contactEmail,
           website: rest.website,
           logoUrl: rest.logoUrl,
+          hasOwnApplication: rest.hasOwnApplication,
           isActive: rest.isActive,
           createdAt: rest.createdAt,
           locations: location ? location.map((loc: PartialLocation) => ({
