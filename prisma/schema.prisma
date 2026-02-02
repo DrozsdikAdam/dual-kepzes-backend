@@ -69,6 +69,8 @@ model User {
   phoneNumber String
   role        Role
 
+  isEmailVerified Boolean @default(false)
+
   isActive Boolean @default(true)
 
   passwordResetToken String?
