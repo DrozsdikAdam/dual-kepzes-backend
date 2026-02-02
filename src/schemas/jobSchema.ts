@@ -47,12 +47,7 @@ export const PositionCreateSchema = z.object({
         companyId: z.string().uuid(),
         title: z.string().min(3),
         description: z.string().optional(),
-        location: z.object({
-            zipCode: z.string().regex(/^\d{4}$/, "Érvénytelen irányítószám"),
-            city: z.string(),
-            country: z.string().optional(),
-            address: z.string(),
-        }),
+        locationId: z.string().uuid("Érvénytelen helyszín azonosító"),
         isDual: z.boolean().default(false),
         deadline: z.coerce.date().optional().nullable(),
         tags: z.array(

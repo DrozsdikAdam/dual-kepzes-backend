@@ -34,6 +34,7 @@ export interface MappedPosition {
      isActive: boolean;
      createdAt?: Date;
      company?: MappedCompany;
+     locationId?: string | null;
      location?: MappedLocation | null;
      tags?: Array<{ name: string; category: string }>;
 }

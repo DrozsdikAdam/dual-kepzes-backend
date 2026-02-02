@@ -64,6 +64,7 @@ export const mapPosition = (position: (Partial<Position> & {
           isActive: rest.isActive ?? true,
           createdAt: rest.createdAt,
           company: company ? mapCompany(company)! : undefined,
+          locationId: rest.locationId,
           location: loc ? {
                id: loc.id,
                zipCode: loc.zipCode!,

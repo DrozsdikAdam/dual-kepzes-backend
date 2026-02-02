@@ -107,20 +107,26 @@ export class JobService {
      }
 
      async create(data: PositionInput) {
+          // Ellenőrizzük, hogy a helyszín a céghez tartozik-e
+          const location = await prisma.location.findFirst({
+               where: {
+                    id: data.locationId,
+                    companyId: data.companyId
+               }
+          });
+
+          if (!location) {
+               throw new Error("A megadott helyszín nem tartozik ehhez a céghez.");
+          }
+
           return await prisma.position.create({
                data: {
                     title: data.title,
                     description: data.description,
                     deadline: data.deadline,
+                    isDual: data.isDual,
                     company: { connect: { id: data.companyId } },
-                    location: {
-                         create: {
-                              country: data.location?.country || "Magyarország",
-                              zipCode: data.location.zipCode,
-                              city: data.location.city,
-                              address: data.location.address
-                         }
-                    },
+                    location: { connect: { id: data.locationId } },
                     tags: data.tags && data.tags.length > 0 ? {
                          connectOrCreate: data.tags.map((tag) => ({
                               where: { name: tag.name },
@@ -133,19 +139,34 @@ export class JobService {
      }
 
      async update(id: string, data: any) {
-          const { tagNames, location, ...rest } = data;
+          const { tagNames, locationId, ...rest } = data;
+
+          if (locationId) {
+               const position = await prisma.position.findUnique({
+                    where: { id },
+                    select: { companyId: true }
+               });
+
+               if (!position) throw new NotFoundError('Pozíció');
+
+               const location = await prisma.location.findFirst({
+                    where: {
+                         id: locationId,
+                         companyId: position.companyId
+                    }
+               });
+
+               if (!location) {
+                    throw new Error("A megadott helyszín nem tartozik ehhez a céghez.");
+               }
+          }
 
           return await prisma.position.update({
                where: { id },
                data: {
                     ...rest,
-                    location: location ? {
-                         update: {
-                              country: location.country,
-                              zipCode: location.zipCode,
-                              city: location.city,
-                              address: location.address
-                         }
+                    location: locationId ? {
+                         connect: { id: locationId }
                     } : undefined,
                     tags: tagNames ? {
                          set: [],
