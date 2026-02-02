@@ -167,6 +167,8 @@ model Company {
   website      String?
   logoUrl      String?
 
+  hasOwnApplication Boolean @default(false)
+
   isActive  Boolean   @default(true)
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
