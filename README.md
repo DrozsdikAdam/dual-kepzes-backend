@@ -65,6 +65,7 @@ A fejlesztői környezet futtatásához szükséges szoftverek:
     # Redis (Opcionális, BullMQ-hoz)
     REDIS_HOST="localhost"
     REDIS_PORT=6379
+    REDIS_ENABLED="false" # Állítsd true-ra a háttérfolyamatok engedélyezéséhez
     ```
 
 
