@@ -487,6 +487,16 @@ graph LR
 }
 ```
 
+## 🔒 Biztonsági Intézkedések (Szerviz szint)
+
+A rendszer integritásának védelme érdekében a szolgáltatási rétegben (Services) szigorú mezővédelem került bevezetésre. Ez megakadályozza, hogy az `update` műveletek során véletlenül vagy rosszindulatúan módosítsanak olyan érzékeny mezőket, mint:
+
+- **Felhasználók esetén**: `id`, `role`, `email`.
+- **Cégek esetén**: `id`, `taxId`.
+- **Partnerkapcsolatok esetén**: `id`, `studentId`, `positionId`.
+
+Ezeket a mezőket a rendszer automatikusan eltávolítja a bejövő kérésekből a mentés előtt.
+
 ## 🚀 Quick Start - API Használat
 
 ### 1. Regisztráció és bejelentkezés
