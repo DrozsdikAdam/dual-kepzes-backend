@@ -29,8 +29,16 @@ export const CompanyCreateSchema = z.object({
             .email({ message: "Érvénytelen email cím formátum" }),
         description: z.string().optional(),
         logoUrl: z.string().trim().url("Érvénytelen logó URL").optional(),
-        website: z.string().trim().url("Érvénytelen weboldal URL").optional(),
+        website: z.string().trim().url("Érvénytelen weboldal URL").optional().nullable(),
         hasOwnApplication: z.boolean().default(false),
+    }).refine((data) => {
+        if (data.hasOwnApplication && !data.website) {
+            return false;
+        }
+        return true;
+    }, {
+        message: "A weboldal megadása kötelező, ha a cég saját jelentkezési felülettel rendelkezik.",
+        path: ["website"]
     }),
 });
 
