@@ -60,6 +60,7 @@ export interface MappedStudent {
      phoneNumber?: string;
      role: Role;
      isActive: boolean;
+     isEmailVerified: boolean;
      studentProfile?: MappedStudentProfile | null;
 }
 
@@ -92,6 +93,7 @@ export interface MappedDualPartnership {
           id: string;
           email: string;
           fullName: string;
+          isEmailVerified: boolean;
           companyId: string;
           jobTitle?: string | null;
           company?: { name: string };
@@ -106,5 +108,6 @@ export interface MappedDualPartnership {
           id: string;
           email: string;
           fullName: string;
+          isEmailVerified: boolean;
      };
 }

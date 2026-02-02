@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { authService } from "../services/auth.service";
-import { RegisterInput, LoginInput, RequestPasswordResetInput, ResetPasswordInput } from "../schemas/authSchema";
+import { RegisterInput, LoginInput, RequestPasswordResetInput, ResetPasswordInput, VerifyEmailInput, ResendVerificationInput } from "../schemas/authSchema";
 import { logAction } from "../utils/logger";
 
 export const register = async (req: Request<{}, {}, RegisterInput>, res: Response, next: NextFunction) => {
@@ -82,6 +82,48 @@ export const resetPassword = async (req: Request<{}, {}, ResetPasswordInput>, re
             entity: "User",
             entityId: undefined,
             details: { tokenUsed: true }
+        });
+
+        res.json({
+            success: true,
+            message: result.message
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const verifyEmail = async (req: Request<{}, {}, VerifyEmailInput>, res: Response, next: NextFunction) => {
+    try {
+        const { token } = req.body;
+        const result = await authService.verifyEmail(token);
+
+        await logAction(req, {
+            action: "EMAIL_VERIFIED",
+            entity: "User",
+            entityId: result.userId,
+            details: { tokenUsed: true }
+        });
+
+        res.json({
+            success: true,
+            message: result.message
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const resendVerification = async (req: Request<{}, {}, ResendVerificationInput>, res: Response, next: NextFunction) => {
+    try {
+        const { email } = req.body;
+        const result = await authService.resendVerification(email);
+
+        await logAction(req, {
+            action: "RESEND_VERIFICATION_EMAIL",
+            entity: "User",
+            entityId: result.userId,
+            details: { email }
         });
 
         res.json({

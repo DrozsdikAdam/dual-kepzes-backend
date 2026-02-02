@@ -269,8 +269,14 @@ sequenceDiagram
         API->>API: Hash password (bcrypt)
         API->>DB: Create new user
         DB-->>API: User created
-        API-->>User: 201 Created
+        API->>API: Send verification email
+        API-->>User: 201 Created (Verification required)
     end
+
+    User->>API: POST /api/auth/verify-email (token)
+    API->>DB: Check token & verify user
+    DB-->>API: User verified
+    API-->>User: 200 OK
 
     User->>API: POST /api/auth/login (email, password)
     API->>DB: Find user by email
@@ -467,6 +473,13 @@ curl -X POST http://localhost:3000/api/auth/register \
     "role": "STUDENT"
   }'
 
+# Email megerősítés (A kapott tokennel)
+curl -X POST http://localhost:3000/api/auth/verify-email \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2"
+  }'
+
 # Bejelentkezés
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -493,8 +506,10 @@ curl http://localhost:3000/api/students/me \
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
-| `POST` | `/register` | Új felhasználó regisztrációja. |
-| `POST` | `/login` | Bejelentkezés és JWT token igénylése. |
+| `POST` | `/register` | Új felhasználó regisztrációja. (Email megerősítést igényel) |
+| `POST` | `/login` | Bejelentkezés és JWT token igénylése. (Csak megerősített dev-et enged) |
+| `POST` | `/verify-email` | Email cím megerősítése tokennel. |
+| `POST` | `/resend-verification` | Megerősítő email újraküldése. |
 | `POST` | `/request-password-reset` | Jelszó visszaállítás kérése email címmel. |
 | `POST` | `/reset-password` | Új jelszó beállítása tokennel. |
 

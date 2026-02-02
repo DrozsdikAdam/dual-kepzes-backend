@@ -1,8 +1,10 @@
 import prisma from '../config/prisma';
-import { hashPassword, comparePassword, generateToken } from '../utils/auth';
+import { hashPassword, comparePassword, generateToken, generateResetToken, hashToken } from '../utils/auth';
 import { RegisterInput, LoginInput } from '../schemas/authSchema';
 import { BadRequestError, UnauthorizedError } from '../errors/AppError';
 import { Role } from '@prisma/client';
+import { generateVerificationEmail, generatePasswordResetEmail } from '../utils/emailTemplates';
+import { addEmailToQueue } from './emailQueue';
 
 export class AuthService {
      async register(data: RegisterInput) {
@@ -16,14 +18,15 @@ export class AuthService {
 
           const hashedPassword = await hashPassword(data.password);
 
-          return await prisma.$transaction(async (tx) => {
+          const result: any = await prisma.$transaction(async (tx) => {
                const user = await tx.user.create({
                     data: {
                          email: data.email,
                          password: hashedPassword,
                          fullName: data.fullName,
                          phoneNumber: data.phoneNumber,
-                         role: data.role
+                         role: data.role,
+                         isEmailVerified: process.env.NODE_ENV === 'development'
                     }
                });
 
@@ -74,6 +77,12 @@ export class AuthService {
 
                return user;
           });
+
+          if (process.env.NODE_ENV !== 'development') {
+               await this.sendVerificationEmail(result.id);
+          }
+
+          return result;
      }
 
      async login(data: LoginInput) {
@@ -94,6 +103,10 @@ export class AuthService {
                throw new UnauthorizedError('A felhasználói fiók inaktív.');
           }
 
+          if (process.env.NODE_ENV !== 'development' && !user.isEmailVerified) {
+               throw new UnauthorizedError('Kérjük, előbb erősítsd meg az email címedet.');
+          }
+
           const token = generateToken(user.id, user.role);
 
           return {
@@ -104,6 +117,97 @@ export class AuthService {
                     role: user.role
                }
           };
+     }
+
+     async sendVerificationEmail(userId: string) {
+          const user = await prisma.user.findUnique({
+               where: { id: userId }
+          });
+
+          if (!user) throw new BadRequestError('Felhasználó nem található.');
+          if (user.isEmailVerified) throw new BadRequestError('Az email cím már meg van erősítve.');
+
+          const verificationToken = generateResetToken();
+          const hashedToken = hashToken(verificationToken);
+
+          // Token 24 óráig érvényes
+          const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+          await prisma.user.update({
+               where: { id: userId },
+               data: {
+                    verificationToken: hashedToken,
+                    verificationTokenExpiry: expiry
+               }
+          });
+
+          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+          const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
+          const emailHtml = generateVerificationEmail(verificationUrl, user.fullName);
+
+          const notification = await prisma.notification.create({
+               data: {
+                    userId: user.id,
+                    title: 'Email megerősítés',
+                    message: 'Kérjük, erősítsd meg az email címedet a regisztráció befejezéséhez.',
+                    type: 'EMAIL_VERIFICATION',
+                    status: 'PENDING'
+               }
+          });
+
+          await addEmailToQueue({
+               notificationId: notification.id,
+               email: user.email,
+               subject: 'Email megerősítés - Duális Képzés',
+               body: emailHtml
+          });
+
+          return { success: true };
+     }
+
+     async verifyEmail(token: string) {
+          const hashedToken = hashToken(token);
+
+          const user = await prisma.user.findFirst({
+               where: {
+                    verificationToken: hashedToken,
+                    verificationTokenExpiry: { gt: new Date() }
+               }
+          });
+
+          if (!user) {
+               throw new BadRequestError('Érvénytelen vagy lejárt megerősítő token.');
+          }
+
+          await prisma.user.update({
+               where: { id: user.id },
+               data: {
+                    isEmailVerified: true,
+                    verificationToken: null,
+                    verificationTokenExpiry: null
+               }
+          });
+
+          return { success: true, message: 'Email cím sikeresen megerősítve.', userId: user.id };
+     }
+
+     async resendVerification(email: string) {
+          const user = await prisma.user.findUnique({
+               where: { email }
+          });
+
+          if (!user) {
+               // Biztonsági okokból ugyanazt a választ adjuk
+               return { success: true, message: 'Ha a megadott email cím regisztrálva van, elküldtük a megerősítő levelet.' };
+          }
+
+          if (user.isEmailVerified) {
+               throw new BadRequestError('Ez az email cím már meg van erősítve.');
+          }
+
+          await this.sendVerificationEmail(user.id);
+
+          return { success: true, message: 'A megerősítő levelet újra elküldtük.', userId: user.id };
      }
 
      async requestPasswordReset(email: string) {
@@ -117,7 +221,6 @@ export class AuthService {
           }
 
           // Token generálás és hash
-          const { generateResetToken, hashToken } = require('../utils/auth');
           const resetToken = generateResetToken();
           const hashedToken = hashToken(resetToken);
 
@@ -134,12 +237,9 @@ export class AuthService {
           });
 
           // Email küldés
-          const { generatePasswordResetEmail } = require('../utils/emailTemplates');
           const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
           const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
           const emailHtml = generatePasswordResetEmail(resetUrl, user.fullName);
-
-          const { addEmailToQueue } = require('./emailQueue');
 
           // Notification létrehozása
           const notification = await prisma.notification.create({
@@ -163,7 +263,6 @@ export class AuthService {
      }
 
      async resetPassword(token: string, newPassword: string) {
-          const { hashToken, hashPassword } = require('../utils/auth');
           const hashedToken = hashToken(token);
 
           const user = await prisma.user.findFirst({

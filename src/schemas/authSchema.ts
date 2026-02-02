@@ -78,6 +78,18 @@ export const ResetPasswordSchema = z.object({
     })
 });
 
+export const VerifyEmailSchema = z.object({
+    body: z.object({
+        token: z.string().trim().min(32, { message: "Érvénytelen token formátum" }),
+    })
+});
+
+export const ResendVerificationSchema = z.object({
+    body: z.object({
+        email: z.string().trim().email({ message: "Érvénytelen email cím formátum" }),
+    })
+});
+
 export const RegisterSchema = z.object({
     body: z.discriminatedUnion("role", [
         studentSchema,
@@ -92,4 +104,6 @@ export type RegisterInput = z.infer<typeof RegisterSchema>["body"];
 export type LoginInput = z.infer<typeof LoginSchema>["body"];
 export type RequestPasswordResetInput = z.infer<typeof RequestPasswordResetSchema>["body"];
 export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>["body"];
+export type VerifyEmailInput = z.infer<typeof VerifyEmailSchema>["body"];
+export type ResendVerificationInput = z.infer<typeof ResendVerificationSchema>["body"];
 

@@ -112,6 +112,7 @@ export const mapStudent = (user: (Partial<User> & { studentProfile?: (Partial<St
           phoneNumber: user.phoneNumber,
           role: user.role!,
           isActive: user.isActive ?? true,
+          isEmailVerified: user.isEmailVerified ?? false,
           studentProfile: user.studentProfile ? mapStudentProfile(user.studentProfile) : null
      };
 };
@@ -140,6 +141,7 @@ export const mapApplication = (application: (Partial<Application> & {
                phoneNumber: user.phoneNumber,
                role: user.role || 'STUDENT',
                isActive: user.isActive ?? true,
+               isEmailVerified: user.isEmailVerified ?? false,
                studentProfile: mapStudentProfile(profile)
           };
      }
@@ -180,6 +182,7 @@ export const mapDualPartnership = (partnership: (Partial<DualPartnership> & {
                phoneNumber: user.phoneNumber,
                role: user.role || 'STUDENT',
                isActive: user.isActive ?? true,
+               isEmailVerified: user.isEmailVerified ?? false,
                studentProfile: mapStudentProfile(profile)
           };
      }
@@ -191,6 +194,7 @@ export const mapDualPartnership = (partnership: (Partial<DualPartnership> & {
                id: mentor.userId!,
                email: user.email!,
                fullName: user.fullName!,
+               isEmailVerified: user.isEmailVerified ?? false,
                companyId: mentor.companyId!,
                jobTitle: mentor.jobTitle,
           };
@@ -202,6 +206,7 @@ export const mapDualPartnership = (partnership: (Partial<DualPartnership> & {
                id: uniEmployee.id!,
                email: uniEmployee.email!,
                fullName: uniEmployee.fullName!,
+               isEmailVerified: uniEmployee.isEmailVerified ?? false,
           };
      }
 
