@@ -1,7 +1,7 @@
 import { Router } from "express"
-import { register, login, requestPasswordReset, resetPassword } from "../controllers/authController"
+import { register, login, requestPasswordReset, resetPassword, verifyEmail, resendVerification } from "../controllers/authController"
 import { validate } from "../middlewares/validateMiddleware"
-import { RegisterSchema, LoginSchema, RequestPasswordResetSchema, ResetPasswordSchema } from "../schemas/authSchema"
+import { RegisterSchema, LoginSchema, RequestPasswordResetSchema, ResetPasswordSchema, VerifyEmailSchema, ResendVerificationSchema } from "../schemas/authSchema"
 
 const router = Router();
 
@@ -193,5 +193,83 @@ router.post("/request-password-reset", validate(RequestPasswordResetSchema), req
  *                       example: Érvénytelen vagy lejárt token.
  */
 router.post("/reset-password", validate(ResetPasswordSchema), resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/verify-email:
+ *   post:
+ *     summary: Verify user email
+ *     description: Verifies the user's email address using the token received via email.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 minLength: 32
+ *                 example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
+ *                 description: Verification token received via email
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Email cím sikeresen megerősítve.
+ *       400:
+ *         description: Invalid or expired token
+ */
+router.post("/verify-email", validate(VerifyEmailSchema), verifyEmail);
+
+/**
+ * @swagger
+ * /api/auth/resend-verification:
+ *   post:
+ *     summary: Resend verification email
+ *     description: Resends the email verification link to the user.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *                 description: Email address of the user
+ *     responses:
+ *       200:
+ *         description: Verification email resent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: A megerősítő levelet újra elküldtük.
+ */
+router.post("/resend-verification", validate(ResendVerificationSchema), resendVerification);
 
 export default router;
