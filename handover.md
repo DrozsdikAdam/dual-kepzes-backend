@@ -301,7 +301,7 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - Profil szerkesztés (Hallgatói és Céges)
 - Szűrés duális/nem duális pozíciókra
 - Alapvető statisztikák
-- **GDPR-kompatibilis fájlfeltöltés** (CV, motivációs levél)
+- **GDPR-kompatibilis fájlfeltöltés** (CV kötelező, motivációs levél opcionális)
   - Fájlok csak memóriában, nem kerülnek tárolásra
   - Automatikus továbbítás céges adminoknak emailben
 - **Kikapcsolt email megerősítés**

@@ -245,10 +245,10 @@ export const submitApplicationFiles = async (req: Request, res: Response, next: 
 
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-        if (!files?.cv?.[0] || !files?.motivationLetter?.[0]) {
+        if (!files?.cv?.[0]) {
             return res.status(400).json({
                 success: false,
-                message: "CV és motivációs levél csatolása kötelező."
+                message: "Önéletrajz (CV) csatolása kötelező."
             });
         }
 
@@ -293,6 +293,22 @@ export const submitApplicationFiles = async (req: Request, res: Response, next: 
         const adminEmails = companyAdminUsers.map(admin => admin.email);
 
         // Email küldése a céges adminoknak a fájlokkal
+        const attachments = [
+            {
+                filename: files.cv[0].originalname,
+                content: files.cv[0].buffer
+            }
+        ];
+
+        if (files.motivationLetter?.[0]) {
+            attachments.push({
+                filename: files.motivationLetter[0].originalname,
+                content: files.motivationLetter[0].buffer
+            });
+        }
+
+        console.log(`[SUBMIT_FILES] Attachment méretek: CV: ${files.cv[0].size} bytes, Motivation: ${files.motivationLetter?.[0]?.size || 0} bytes`);
+
         await mailer.sendMail({
             from: '"Duális Képzés" <no-reply@dualis.hu>',
             to: adminEmails,
@@ -307,19 +323,9 @@ Pozíció: ${position.title}
 Cég: ${position.company.name}
 
 A csatolt dokumentumok:
-- CV (önéletrajz)
-- Motivációs levél
+- CV (önéletrajz)${files.motivationLetter?.[0] ? "\n- Motivációs levél" : ""}
             `,
-            attachments: [
-                {
-                    filename: files.cv[0].originalname,
-                    content: files.cv[0].buffer
-                },
-                {
-                    filename: files.motivationLetter[0].originalname,
-                    content: files.motivationLetter[0].buffer
-                }
-            ]
+            attachments
         });
 
         // Jelentkezés létrehozása az adatbázisban (fájlok nélkül)

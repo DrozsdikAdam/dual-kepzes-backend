@@ -69,7 +69,6 @@ router.post("/", validate(CreateApplicationSchema), applyToPosition)
  *             required:
  *               - positionId
  *               - cv
- *               - motivationLetter
  *             properties:
  *               positionId:
  *                 type: string
@@ -82,7 +81,7 @@ router.post("/", validate(CreateApplicationSchema), applyToPosition)
  *               motivationLetter:
  *                 type: string
  *                 format: binary
- *                 description: Motivációs levél (PDF vagy Word, max 25MB)
+ *                 description: Motivációs levél (PDF vagy Word, max 25MB, opcionális)
  *     responses:
  *       201:
  *         description: Jelentkezés sikeresen beküldve, dokumentumok továbbítva
