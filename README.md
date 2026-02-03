@@ -149,17 +149,65 @@ A rendszer fő entitásai és kapcsolataik:
 
 ```mermaid
 erDiagram
+    User {
+        string id PK
+        string email UK
+        string fullName
+        string phoneNumber
+        Role role
+        boolean isActive
+    }
+    StudentProfile {
+        string id PK
+        string mothersName
+        datetime birthDate
+        string graduationYear
+        string currentMajor
+    }
+    Company {
+        string id PK
+        string name
+        string taxId UK
+        string description
+        string contactName
+        string contactEmail
+    }
+    CompanyEmployee {
+        string id PK
+        string jobTitle
+    }
+    Position {
+        string id PK
+        string title
+        boolean isDual
+        datetime deadline
+        boolean isActive
+    }
+    Application {
+        string id PK
+        ApplicationStatus status
+        datetime submittedAt
+    }
+    DualPartnership {
+        string id PK
+        string semester
+        string contractNumber
+        PartnershipStatus status
+        datetime startDate
+        datetime endDate
+    }
+
     User ||--o| StudentProfile : has
     User ||--o| CompanyEmployee : has
     Company ||--o{ CompanyEmployee : employs
     Company ||--o{ Position : offers
-    Student ||--o{ Application : submits
+    StudentProfile ||--o{ Application : submits
     Position ||--o{ Application : receives
     Application ||--o| DualPartnership : creates
-    DualPartnership }o--|| Student : involves
+    DualPartnership }o--|| StudentProfile : involves
     DualPartnership }o--|| Position : involves
     DualPartnership }o--o| CompanyEmployee : mentor
-    DualPartnership }o--o| UniversityUser : supervisor
+    DualPartnership }o--o| User : supervisor
 ```
 
 **Részletes sémát** lásd: `prisma/schema.prisma` vagy Prisma Studio (`npm run prisma:studio`)

@@ -17,7 +17,8 @@ A rendszer Prisma ORM-et használ PostgreSQL-lel.
 ## 3. Üzenetküldő sor és Gyorsítótár (Message Queue / Cache)
 A rendszer háttérfolyamatokhoz (pl. e-mailek kiküldése, naplózás feldolgozása) külső szolgáltatást igényel.
 - **Megjegyzés**: A fejlesztés **Redis** (v6.0+) alapú technológiára épült (BullMQ könyvtárral). 
-- **Szolgáltatás**: Redis Server ajánlott.
+- **Szolgáltatás**: Redis Server ajánlott (v6.0+). 
+- **Példák**: [Upstash](https://upstash.com/) (Serverless), [Redis Cloud](https://redis.io/cloud/), [Dragonfly](https://www.dragonflydb.io/), [KeyDB](https://docs.keydb.dev/).
 - **Konfiguráció**:
   - `REDIS_HOST`, `REDIS_PORT` (alapértelmezett: 6379), `REDIS_PASSWORD` (ha van).
   - `REDIS_ENABLED`: Éles környezetben `true` értékre állítandó.
