@@ -292,7 +292,6 @@ export const submitApplicationFiles = async (req: Request, res: Response, next: 
 
         const adminEmails = companyAdminUsers.map(admin => admin.email);
 
-        // Email küldése a céges adminoknak a fájlokkal
         const attachments = [
             {
                 filename: files.cv[0].originalname,
@@ -309,7 +308,12 @@ export const submitApplicationFiles = async (req: Request, res: Response, next: 
 
         console.log(`[SUBMIT_FILES] Attachment méretek: CV: ${files.cv[0].size} bytes, Motivation: ${files.motivationLetter?.[0]?.size || 0} bytes`);
 
-        await mailer.sendMail({
+        // Jelentkezés létrehozása az adatbázisban (fájlok nélkül)
+        const application = await applicationService.apply(studentProfile.id, positionId);
+
+        // Email küldése a céges adminoknak a fájlokkal - HÁTTÉRBEN (nincs await)
+        // Megjegyzés: mialatt fut, a response-t már elküldjük.
+        mailer.sendMail({
             from: '"Duális Képzés" <no-reply@dualis.hu>',
             to: adminEmails,
             subject: `Új jelentkezés: ${studentProfile.user.fullName} - ${position.title}`,
@@ -326,10 +330,9 @@ A csatolt dokumentumok:
 - CV (önéletrajz)${files.motivationLetter?.[0] ? "\n- Motivációs levél" : ""}
             `,
             attachments
+        }).catch((err: any) => {
+            console.error(`[BACKGROUND_EMAIL_ERROR] Hiba az email küldése közben (${application.id}):`, err);
         });
-
-        // Jelentkezés létrehozása az adatbázisban (fájlok nélkül)
-        const application = await applicationService.apply(studentProfile.id, positionId);
 
         await logAction(req, {
             action: "APPLY_TO_POSITION_WITH_FILES",
