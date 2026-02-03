@@ -54,7 +54,7 @@ export class NewsService {
           paginated.data = paginated.data.filter((item) => {
                const target = item.targetGroup?.toUpperCase();
                if (target === 'ALL') return true;
-               if (target === 'STUDENT' && role === Role.STUDENT) return true;
+               if (target === role) return true;
                return false;
           });
 

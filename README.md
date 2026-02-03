@@ -614,9 +614,9 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
-| `GET` | `/` | Hírek listázása (hallgatóknak/felhasználóknak). |
+| `GET` | `/` | Hírek listázása (hallgatóknak/felhasználóknak). Szerepkör alapú szűréssel. |
 | `GET` | `/:id` | Hír részletei. |
-| `POST` | `/admin` | Hír létrehozása (Admin). |
+| `POST` | `/admin` | Hír létrehozása (Admin). Megcélozható vele mindenki (`ALL`) vagy konkrét szerepkörök (`STUDENT`, `MENTOR`, stb.). |
 | `GET` | `/admin` | Hírek kezelése (Admin lista). |
 | `GET` | `/admin/archived` | Archivált hírek. |
 | `PATCH` | `/admin/:id` | Hír szerkesztése. |

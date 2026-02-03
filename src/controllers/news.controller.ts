@@ -30,9 +30,9 @@ export const createNews = async (req: Request, res: Response, next: NextFunction
                     where: { isActive: true, deletedAt: null },
                     select: { id: true }
                });
-          } else if (targetGroup === "STUDENT") {
+          } else if (Object.values(Role).includes(targetGroup as Role)) {
                targetUsers = await prisma.user.findMany({
-                    where: { role: Role.STUDENT, isActive: true, deletedAt: null },
+                    where: { role: targetGroup as Role, isActive: true, deletedAt: null },
                     select: { id: true }
                });
           }

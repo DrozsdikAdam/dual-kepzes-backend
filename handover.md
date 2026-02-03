@@ -1,6 +1,6 @@
 # 🎓 Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-02  
+> **Utolsó frissítés**: 2026-02-03  
 > **Projekt státusz**: Production-ready
 
 ---
@@ -307,6 +307,8 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - **GDPR-kompatibilis fájlfeltöltés** (CV kötelező, motivációs levél opcionális)
   - Fájlok csak memóriában, nem kerülnek tárolásra
   - Automatikus továbbítás céges adminoknak emailben
+- **Globális konvenció váltás**: A fájlrendszer átállítva camelCase with dots (`nameType.type.ts`) struktúrára a jobb olvashatóság érdekében.
+- **Bővített hírcsatornák**: A hírek mostantól minden felhasználói szerepkörre (Student, Mentor, UniUser, stb.) külön is megcélozhatóak.
 - **Kikapcsolt email megerősítés**
   - A regisztráció után a felhasználók azonnal be tudnak jelentkezni megerősítés nélkül.
   - Az automatikus megerősítő email küldése kikapcsolva.
