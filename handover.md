@@ -304,6 +304,9 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - **GDPR-kompatibilis fájlfeltöltés** (CV, motivációs levél)
   - Fájlok csak memóriában, nem kerülnek tárolásra
   - Automatikus továbbítás céges adminoknak emailben
+- **Kikapcsolt email megerősítés**
+  - A regisztráció után a felhasználók azonnal be tudnak jelentkezni megerősítés nélkül.
+  - Az automatikus megerősítő email küldése kikapcsolva.
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)

@@ -26,7 +26,7 @@ export class AuthService {
                          fullName: data.fullName,
                          phoneNumber: data.phoneNumber,
                          role: data.role,
-                         isEmailVerified: process.env.NODE_ENV === 'development'
+                         isEmailVerified: true
                     }
                });
 
@@ -78,9 +78,13 @@ export class AuthService {
                return user;
           });
 
+
+          // Verification email sending disabled as per request
+          /*
           if (process.env.NODE_ENV !== 'development') {
                await this.sendVerificationEmail(result.id);
           }
+          */
 
           return result;
      }
@@ -103,9 +107,11 @@ export class AuthService {
                throw new UnauthorizedError('A felhasználói fiók inaktív.');
           }
 
+          /*
           if (process.env.NODE_ENV !== 'development' && !user.isEmailVerified) {
                throw new UnauthorizedError('Kérjük, előbb erősítsd meg az email címedet.');
           }
+          */
 
           const token = generateToken(user.id, user.role);
 
