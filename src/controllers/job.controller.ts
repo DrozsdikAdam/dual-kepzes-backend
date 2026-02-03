@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { jobService } from "../services/job.service";
-import { PositionInput, TagInput } from "../schemas/jobSchema";
-import { logAction } from "../utils/logger";
-import { mapPosition } from "../utils/mappers";
-import { getCompanyIdForUser } from "../utils/companyUtils";
-import { getPaginationParams } from "../utils/pagination";
+import { PositionInput, TagInput } from "../schemas/job.schema";
+import { logAction } from "../utils/logger.util";
+import { mapPosition } from "../utils/mapper.util";
+import { getCompanyIdForUser } from "../utils/company.util";
+import { getPaginationParams } from "../utils/pagination.util";
 import { ForbiddenError } from "../errors/AppError";
 
 /**

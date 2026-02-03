@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { userService } from "../services/user.service";
-import { logAction } from "../utils/logger";
-import { getPaginationParams } from "../utils/pagination";
+import { logAction } from "../utils/logger.util";
+import { getPaginationParams } from "../utils/pagination.util";
 import { UnauthorizedError } from "../errors/AppError";
 
 export const getInactiveUsers = async (req: Request, res: Response, next: NextFunction) => {

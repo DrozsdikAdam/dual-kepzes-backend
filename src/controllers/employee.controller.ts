@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { employeeService } from "../services/employee.service";
 import { userService } from "../services/user.service";
-import { logAction } from "../utils/logger";
+import { logAction } from "../utils/logger.util";
 import { Role } from "@prisma/client";
-import { UpdateEmployeeInput } from "../schemas/employeeSchema";
-import { getPaginationParams } from "../utils/pagination";
+import { UpdateEmployeeInput } from "../schemas/employee.schema";
+import { getPaginationParams } from "../utils/pagination.util";
 import { ForbiddenError, UnauthorizedError } from "../errors/AppError";
 
 export const getMeEmployee = async (req: Request, res: Response, next: NextFunction) => {

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authenticateToken } from "../middlewares/authMiddleware";
-import { getInactiveUsers, reactivateUser, deactivateUser } from "../controllers/userController";
+import { authenticateToken } from "../middlewares/auth.middleware";
+import { getInactiveUsers, reactivateUser, deactivateUser } from "../controllers/user.controller";
 
 const router = Router();
 

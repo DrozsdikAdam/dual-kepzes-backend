@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { newsService } from "../services/news.service";
 import { notificationService } from "../services/notification.service";
-import { logAction } from "../utils/logger";
-import { getPaginationParams } from "../utils/pagination";
+import { logAction } from "../utils/logger.util";
+import { getPaginationParams } from "../utils/pagination.util";
 import prisma from "../config/prisma";
 import { Role } from "@prisma/client";
 

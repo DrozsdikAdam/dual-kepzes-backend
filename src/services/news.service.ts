@@ -1,6 +1,6 @@
 import prisma from '../config/prisma';
 import { NotFoundError } from '../errors/AppError';
-import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 
 import { Role } from '@prisma/client';
 

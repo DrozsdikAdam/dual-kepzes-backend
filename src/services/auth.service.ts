@@ -1,10 +1,10 @@
 import prisma from '../config/prisma';
-import { hashPassword, comparePassword, generateToken, generateResetToken, hashToken } from '../utils/auth';
-import { RegisterInput, LoginInput } from '../schemas/authSchema';
+import { hashPassword, comparePassword, generateToken, generateResetToken, hashToken } from '../utils/auth.util';
+import { RegisterInput, LoginInput } from '../schemas/auth.schema';
 import { BadRequestError, UnauthorizedError } from '../errors/AppError';
 import { Role } from '@prisma/client';
-import { generateVerificationEmail, generatePasswordResetEmail } from '../utils/emailTemplates';
-import { addEmailToQueue } from './emailQueue';
+import { generateVerificationEmail, generatePasswordResetEmail } from '../utils/email.util';
+import { addEmailToQueue } from './email.queue';
 
 export class AuthService {
      async register(data: RegisterInput) {

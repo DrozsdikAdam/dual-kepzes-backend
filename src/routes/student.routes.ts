@@ -1,6 +1,6 @@
 import { Router } from "express"
-import { authenticateToken } from "../middlewares/authMiddleware";
-import { validate } from "../middlewares/validateMiddleware";
+import { authenticateToken } from "../middlewares/auth.middleware";
+import { validate } from "../middlewares/validate.middleware";
 import {
     getAllStudents,
     getMyProfile,
@@ -9,8 +9,8 @@ import {
     getStudentById,
     deleteMyProfile,
     deleteStudentById
-} from "../controllers/studentController";
-import { MyProfileUpdateSchema, StudentUpdateSchema } from "../schemas/studentSchema";
+} from "../controllers/student.controller";
+import { MyProfileUpdateSchema, StudentUpdateSchema } from "../schemas/student.schema";
 
 const router = Router();
 

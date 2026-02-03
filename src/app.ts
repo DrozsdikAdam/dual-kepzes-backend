@@ -3,29 +3,29 @@ import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 
-import { securityMiddleware } from "./middlewares/securityMiddleware";
-import { sanitizationMiddleware } from "./middlewares/sanitizationMiddleware";
+import { securityMiddleware } from "./middlewares/security.middleware";
+import { sanitizationMiddleware } from "./middlewares/sanitization.middleware";
 import { corsOptions } from "./config/cors";
 import {
     apiRateLimiter,
     authRateLimiter,
-} from "./middlewares/rateLimitMiddleware";
-import { errorHandler } from "./middlewares/errorMiddleware";
+} from "./middlewares/rateLimit.middleware";
+import { errorHandler } from "./middlewares/error.middleware";
 
-import authRoutes from "./routes/authRoutes";
-import jobRoutes from "./routes/jobRoutes";
-import studentRoutes from "./routes/studentRoutes";
-import statsRoutes from "./routes/statsRoutes";
-import systemAdminRoutes from "./routes/systemAdminRoutes";
-import universityUserRoutes from "./routes/universityUserRoutes";
-import companyAdminRoutes from "./routes/companyAdminRoutes";
-import genericUserRoutes from "./routes/userRoutes";
-import companyRoutes from "./routes/companyRoutes";
-import employeeRoutes from "./routes/employeeRoutes";
-import applicationRoutes from "./routes/applicationRoutes";
-import newsRoutes from "./routes/newsRoutes";
-import notificationRoutes from "./routes/notificationRoutes";
-import dualRoutes from "./routes/dualRoutes";
+import authRoutes from "./routes/auth.routes";
+import jobRoutes from "./routes/job.routes";
+import studentRoutes from "./routes/student.routes";
+import statsRoutes from "./routes/stats.routes";
+import systemAdminRoutes from "./routes/systemAdmin.routes";
+import universityUserRoutes from "./routes/universityUser.routes";
+import companyAdminRoutes from "./routes/companyAdmin.routes";
+import genericUserRoutes from "./routes/user.routes";
+import companyRoutes from "./routes/company.routes";
+import employeeRoutes from "./routes/employee.routes";
+import applicationRoutes from "./routes/application.routes";
+import newsRoutes from "./routes/news.routes";
+import notificationRoutes from "./routes/notification.routes";
+import dualRoutes from "./routes/dual.routes";
 
 const app: Application = express();
 app.set("trust proxy", 1);

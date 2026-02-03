@@ -1,7 +1,7 @@
 import prisma from '../config/prisma';
 import { NotFoundError } from '../errors/AppError';
-import { PositionInput } from '../schemas/jobSchema';
-import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
+import { PositionInput } from '../schemas/job.schema';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 
 export class JobService {
      private positionSelect = {

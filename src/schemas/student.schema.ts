@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { studentSchema } from "./authSchema";
+import { studentSchema } from "./auth.schema";
 
 export const StudentUpdateSchema = z.object({
     params: z.object({

@@ -10,10 +10,10 @@ import {
      getUserNewsById,
      unarchiveNews,
      updateNews,
-} from "../controllers/newsController";
-import { authenticateToken } from "../middlewares/authMiddleware";
-import { validate } from "../middlewares/validateMiddleware";
-import { CreateNewsSchema, UpdateNewsSchema } from "../schemas/newsSchema";
+} from "../controllers/news.controller";
+import { authenticateToken } from "../middlewares/auth.middleware";
+import { validate } from "../middlewares/validate.middleware";
+import { CreateNewsSchema, UpdateNewsSchema } from "../schemas/news.schema";
 
 const router = Router();
 

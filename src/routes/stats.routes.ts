@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { authenticateToken } from "../middlewares/authMiddleware";
+import { authenticateToken } from "../middlewares/auth.middleware";
 import {
      getSystemStats,
      getApplicationStats,
      getPartnershipStats,
      getPositionStats,
      getTrendStats
-} from "../controllers/statsController";
+} from "../controllers/stats.controller";
 
 const router = Router();
 

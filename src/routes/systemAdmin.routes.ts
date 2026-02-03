@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { validate } from "../middlewares/validateMiddleware"
+import { validate } from "../middlewares/validate.middleware"
 import {
      getSystemAdminById,
      getSystemAdmins,
@@ -9,9 +9,9 @@ import {
      updateMeSystemAdmin,
      deleteMeSystemAdmin,
      getAllAdminUsers
-} from "../controllers/systemAdminController"
-import { SystemAdminUpdateSchema } from "../schemas/systemAdminSchema"
-import { authenticateToken } from "../middlewares/authMiddleware"
+} from "../controllers/systemAdmin.controller"
+import { SystemAdminUpdateSchema } from "../schemas/systemAdmin.schema"
+import { authenticateToken } from "../middlewares/auth.middleware"
 
 const router = Router()
 

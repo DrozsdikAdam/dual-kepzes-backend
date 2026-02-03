@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticateToken } from "../middlewares/authMiddleware";
+import { authenticateToken } from "../middlewares/auth.middleware";
 import {
      getInactiveCompanies,
      reactivateCompany,
@@ -10,9 +10,9 @@ import {
      updateCompany,
      deleteCompany,
      getOwnApplicationCompanies
-} from "../controllers/companyController";
-import { validate } from "../middlewares/validateMiddleware";
-import { CompanyCreateSchema, CompanyUpdateSchema } from "../schemas/jobSchema";
+} from "../controllers/company.controller";
+import { validate } from "../middlewares/validate.middleware";
+import { CompanyCreateSchema, CompanyUpdateSchema } from "../schemas/job.schema";
 
 const router = Router();
 

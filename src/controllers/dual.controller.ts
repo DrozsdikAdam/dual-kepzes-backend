@@ -3,10 +3,11 @@ import { partnershipService } from "../services/partnership.service";
 import { notificationService } from "../services/notification.service";
 import { userService } from "../services/user.service";
 import { Role, PartnershipStatus } from "@prisma/client";
-import { DualPartnershipUpdateRequest } from "../schemas/dualSchema";
-import { logAction } from "../utils/logger";
-import { mapDualPartnership } from "../utils/mappers";
-import { getPaginationParams } from "../utils/pagination";
+import { DualPartnershipUpdateRequest } from "../schemas/dual.schema";
+import { logAction } from "../utils/logger.util";
+import { mapDualPartnership } from "../utils/mapper.util";
+import { getPaginationParams } from "../utils/pagination.util";
+import { getCurrentSemester } from "../utils/semester.util";
 
 export const getPartnershipById = async (req: Request, res: Response, next: NextFunction) => {
     try {

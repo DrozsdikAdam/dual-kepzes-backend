@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { studentService } from "../services/student.service";
-import { logAction } from "../utils/logger";
-import { mapStudent } from "../utils/mappers";
-import { getPaginationParams } from "../utils/pagination";
+import { logAction } from "../utils/logger.util";
+import { mapStudent } from "../utils/mapper.util";
+import { getPaginationParams } from "../utils/pagination.util";
 import { UnauthorizedError } from "../errors/AppError";
 
 export const getMyProfile = async (req: Request, res: Response, next: NextFunction) => {

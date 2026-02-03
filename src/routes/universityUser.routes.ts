@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticateToken } from "../middlewares/authMiddleware";
+import { authenticateToken } from "../middlewares/auth.middleware";
 import {
      getUniversityUserById,
      getUniversityUsers,
@@ -8,9 +8,9 @@ import {
      getMeUniversityUser,
      updateMeUniversityUser,
      deleteMeUniversityUser
-} from "../controllers/universityUserController";
-import { validate } from "../middlewares/validateMiddleware";
-import { UniversityUserUpdateSchema } from "../schemas/universityUserSchema";
+} from "../controllers/universityUser.controller";
+import { validate } from "../middlewares/validate.middleware";
+import { UniversityUserUpdateSchema } from "../schemas/universityUser.schema";
 
 const router = Router();
 

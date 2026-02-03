@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { companyService } from "../services/company.service";
 import { NotFoundError } from "../errors/AppError";
-import { logAction } from "../utils/logger";
-import { CompanyInput } from "../schemas/jobSchema";
-import { mapCompany, mapPosition } from "../utils/mappers";
-import { getPaginationParams } from "../utils/pagination";
+import { logAction } from "../utils/logger.util";
+import { CompanyInput } from "../schemas/job.schema";
+import { mapCompany, mapPosition } from "../utils/mapper.util";
+import { getPaginationParams } from "../utils/pagination.util";
 
 export const getAllCompanies = async (req: Request, res: Response, next: NextFunction) => {
      try {

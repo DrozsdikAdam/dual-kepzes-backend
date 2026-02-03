@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { validate } from "../middlewares/validateMiddleware"
+import { validate } from "../middlewares/validate.middleware"
 import {
      getCompanyAdminById,
      getCompanyAdmins,
@@ -9,9 +9,9 @@ import {
      updateMeCompanyAdmin,
      deleteMeCompanyAdmin,
      restoreCompanyAdmin
-} from "../controllers/companyAdminController"
-import { CompanyAdminUpdateSchema } from "../schemas/companyAdminSchema"
-import { authenticateToken } from "../middlewares/authMiddleware"
+} from "../controllers/companyAdmin.controller"
+import { CompanyAdminUpdateSchema } from "../schemas/companyAdmin.schema"
+import { authenticateToken } from "../middlewares/auth.middleware"
 
 const router = Router()
 

@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { applicationService } from "../services/application.service";
 import { notificationService } from "../services/notification.service";
-import { logAction } from "../utils/logger";
-import { mapApplication } from "../utils/mappers";
-import { getPaginationParams } from "../utils/pagination";
+import { logAction } from "../utils/logger.util";
+import { mapApplication } from "../utils/mapper.util";
+import { getPaginationParams } from "../utils/pagination.util";
 import prisma from "../config/prisma";
 import { ApplicationStatus, Role } from "@prisma/client";
 import { mailer } from "../config/mailer";

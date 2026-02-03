@@ -10,19 +10,19 @@ import {
     getStudentPartnerships,
     getCompanyPartnerships,
     getUniversityPartnerships
-} from "../controllers/dualController";
-import { validate } from "../middlewares/validateMiddleware";
+} from "../controllers/dual.controller";
+import { validate } from "../middlewares/validate.middleware";
 import {
     AssignMentorSchema,
     AssignUniversityUserSchema,
     DualPartnershipUpdateSchema,
-} from "../schemas/dualSchema";
+} from "../schemas/dual.schema";
 import {
     authenticateToken,
     isCompanyEmployee,
     isStudent,
     isUniversityStaff
-} from "../middlewares/authMiddleware";
+} from "../middlewares/auth.middleware";
 
 const router = Router();
 

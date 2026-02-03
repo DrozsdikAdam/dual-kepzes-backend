@@ -1,9 +1,9 @@
 import prisma from '../config/prisma';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../errors/AppError';
 import { ApplicationStatus, PartnershipStatus } from '@prisma/client';
-import { getCompanyIdForUser } from '../utils/companyUtils';
-import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
-import { getCurrentSemester } from '../utils/semester';
+import { getCompanyIdForUser } from '../utils/company.util';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
+import { getCurrentSemester } from '../utils/semester.util';
 
 export class ApplicationService {
      async apply(studentId: string, positionId: string) {

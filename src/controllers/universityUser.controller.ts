@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { userService } from "../services/user.service";
-import { logAction } from "../utils/logger";
+import { logAction } from "../utils/logger.util";
 import { Role } from "@prisma/client";
-import { getPaginationParams } from "../utils/pagination";
+import { getPaginationParams } from "../utils/pagination.util";
 import { ForbiddenError, UnauthorizedError } from "../errors/AppError";
 
 export const getMeUniversityUser = async (req: Request, res: Response, next: NextFunction) => {

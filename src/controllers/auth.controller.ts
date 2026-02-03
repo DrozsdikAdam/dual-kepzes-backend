@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { authService } from "../services/auth.service";
-import { RegisterInput, LoginInput, RequestPasswordResetInput, ResetPasswordInput, VerifyEmailInput, ResendVerificationInput } from "../schemas/authSchema";
-import { logAction } from "../utils/logger";
+import { RegisterInput, LoginInput, RequestPasswordResetInput, ResetPasswordInput, VerifyEmailInput, ResendVerificationInput } from "../schemas/auth.schema";
+import { logAction } from "../utils/logger.util";
 
 export const register = async (req: Request<{}, {}, RegisterInput>, res: Response, next: NextFunction) => {
     try {

@@ -1,7 +1,7 @@
 import prisma from '../config/prisma';
 import { NotFoundError, BadRequestError } from '../errors/AppError';
-import { CompanyInput } from '../schemas/jobSchema';
-import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
+import { CompanyInput } from '../schemas/job.schema';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 
 export class CompanyService {
      private companySelect = {

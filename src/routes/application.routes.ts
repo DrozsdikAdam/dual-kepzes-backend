@@ -10,10 +10,10 @@ import {
      updateApplication,
      updateEvaluation,
      submitApplicationFiles
-} from "../controllers/applicationController";
-import { authenticateToken, isCompanyEmployee, isStudent, isSystemAdmin } from "../middlewares/authMiddleware";
-import { validate } from "../middlewares/validateMiddleware";
-import { CreateApplicationSchema, EvaluateApplicationSchema, UpdateApplicationSchema } from "../schemas/applicationSchema";
+} from "../controllers/application.controller";
+import { authenticateToken, isCompanyEmployee, isStudent, isSystemAdmin } from "../middlewares/auth.middleware";
+import { validate } from "../middlewares/validate.middleware";
+import { CreateApplicationSchema, EvaluateApplicationSchema, UpdateApplicationSchema } from "../schemas/application.schema";
 import { uploadConfig } from "../config/upload.config";
 
 const router = Router();

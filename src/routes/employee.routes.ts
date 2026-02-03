@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { deleteEmployeeById, getCompanyEmployees, getEmployeeById, updateEmployeeById, getMeEmployee, updateMeEmployee, deleteMeEmployee, getMyStudents, getMyPartnershipById, getCompanyMentors } from "../controllers/employeeController";
-import { UpdateEmployeeSchema } from "../schemas/employeeSchema";
-import { validate } from "../middlewares/validateMiddleware";
-import { authenticateToken } from "../middlewares/authMiddleware";
+import { deleteEmployeeById, getCompanyEmployees, getEmployeeById, updateEmployeeById, getMeEmployee, updateMeEmployee, deleteMeEmployee, getMyStudents, getMyPartnershipById, getCompanyMentors } from "../controllers/employee.controller";
+import { UpdateEmployeeSchema } from "../schemas/employee.schema";
+import { validate } from "../middlewares/validate.middleware";
+import { authenticateToken } from "../middlewares/auth.middleware";
 
 const router = Router();
 

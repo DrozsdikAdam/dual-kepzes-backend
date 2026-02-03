@@ -9,13 +9,13 @@ import {
     updatePosition,
     deactivatePosition,
     getPositionsByCompanyId
-} from "../controllers/jobController";
-import { validate } from "../middlewares/validateMiddleware";
+} from "../controllers/job.controller";
+import { validate } from "../middlewares/validate.middleware";
 import {
     PositionCreateSchema,
     PositionUpdateSchema,
-} from "../schemas/jobSchema";
-import { authenticateToken } from "../middlewares/authMiddleware";
+} from "../schemas/job.schema";
+import { authenticateToken } from "../middlewares/auth.middleware";
 
 const router = Router();
 

@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import app from "./app";
-import "./services/emailWorker";
+import "./services/email.worker";
 
 const PORT = process.env.PORT || 3000;
 

@@ -1,8 +1,8 @@
 import prisma from '../config/prisma';
 import { NotFoundError, ForbiddenError } from '../errors/AppError';
 import { PartnershipStatus, ApplicationStatus } from '@prisma/client';
-import { getCompanyIdForUser } from '../utils/companyUtils';
-import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination';
+import { getCompanyIdForUser } from '../utils/company.util';
+import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 
 export class PartnershipService {
      async getById(partnershipId: string, userId: string) {
