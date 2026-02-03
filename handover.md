@@ -68,6 +68,9 @@ SMTP_USER="smtp_user"
 SMTP_PASS="smtp_pass"
 SMTP_HOST="sandbox.smtp.mailtrap.io"
 SMTP_PORT=2525
+
+# Globális email kapcsoló (true/false)
+EMAILS_ENABLED=false
 ```
 
 ### Redis (BullMQ - Háttérfolyamatok)
