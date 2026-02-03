@@ -125,7 +125,6 @@ npm run prisma:format
 - **DualPartnership** - Duális partneri kapcsolatok
 - **Notification** - Értesítések
 - **News** - Hírek/közlemények
-- **Document** - Feltöltött dokumentumok
 - **AuditLog** - Audit napló
 
 ### Felhasználói Szerepkörök (Role enum)

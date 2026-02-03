@@ -235,15 +235,6 @@ erDiagram
         datetime startDate
         datetime endDate
     }
-    Document {
-        string id PK
-        string ownerId FK
-        DocumentType type
-        string filePath
-        string originalName
-        string mimeType
-        datetime uploadedAt
-    }
     Notification {
         string id PK
         string userId FK
@@ -288,7 +279,6 @@ erDiagram
     StudentProfile ||--o{ Location : "lives at"
     StudentProfile ||--o{ Application : "submits"
     StudentProfile ||--o{ DualPartnership : "participates"
-    StudentProfile ||--o{ Document : "owns"
     
     CompanyEmployee ||--o{ DualPartnership : "mentors"
     

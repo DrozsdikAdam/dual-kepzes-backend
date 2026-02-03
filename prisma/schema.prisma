@@ -38,17 +38,6 @@ enum LogStatus {
   REJECTED
 }
 
-enum DocumentType {
-  CV
-  MOTIVATION
-  LANGUAGE_CERT
-  DIPLOMA
-  SCHOOL_CERT
-  LOG_EXPORT
-  PPT
-  OTHER
-}
-
 enum PartnershipStatus {
   PENDING_MENTOR
   PENDING_UNIVERSITY
@@ -111,7 +100,6 @@ model StudentProfile {
 
   deletedAt DateTime?
 
-  documents    Document[]
   applications Application[]
   partnerships DualPartnership[]
 }
@@ -272,21 +260,6 @@ model DualPartnership {
 // ---------------------------------------------------------
 // DOKUMENTUMOK ÉS NAPLÓ
 // ---------------------------------------------------------
-
-model Document {
-  id String @id @default(uuid())
-
-  ownerId String
-  student StudentProfile @relation(fields: [ownerId], references: [id])
-
-  type         DocumentType
-  filePath     String
-  originalName String
-  mimeType     String?
-
-  uploadedAt DateTime  @default(now())
-  deletedAt  DateTime?
-}
 
 // ---------------------------------------------------------
 // RENDSZER ÉS BIZTONSÁG
