@@ -152,17 +152,26 @@ erDiagram
     User {
         string id PK
         string email UK
+        string password
         string fullName
         string phoneNumber
         Role role
+        boolean isEmailVerified
         boolean isActive
+        datetime createdAt
+        datetime updatedAt
     }
     StudentProfile {
         string id PK
+        string userId FK
         string mothersName
         datetime birthDate
-        string graduationYear
+        string highSchool
+        int graduationYear
+        string neptunCode
         string currentMajor
+        string studyMode
+        boolean hasLanguageCert
     }
     Company {
         string id PK
@@ -171,43 +180,125 @@ erDiagram
         string description
         string contactName
         string contactEmail
+        string website
+        string logoUrl
+        boolean hasOwnApplication
+        boolean isActive
     }
     CompanyEmployee {
         string id PK
+        string userId FK
+        string companyId FK
         string jobTitle
+    }
+    Location {
+        string id PK
+        string country
+        string zipCode
+        string city
+        string address
+        string companyId FK
+        string studentProfileId FK
     }
     Position {
         string id PK
+        string companyId FK
         string title
+        string description
         boolean isDual
         datetime deadline
         boolean isActive
+        string locationId FK
+    }
+    Tag {
+        string id PK
+        string name UK
+        string category
     }
     Application {
         string id PK
+        string studentId FK
+        string positionId FK
         ApplicationStatus status
+        string companyNote
         datetime submittedAt
     }
     DualPartnership {
         string id PK
+        string studentId FK
+        string mentorId FK
+        string uniEmployeeId FK
+        string positionId FK
         string semester
         string contractNumber
         PartnershipStatus status
         datetime startDate
         datetime endDate
     }
+    Document {
+        string id PK
+        string ownerId FK
+        DocumentType type
+        string filePath
+        string originalName
+        string mimeType
+        datetime uploadedAt
+    }
+    Notification {
+        string id PK
+        string userId FK
+        string title
+        string message
+        string type
+        boolean isRead
+        string status
+        datetime sentAt
+        boolean isArchived
+    }
+    AuditLog {
+        string id PK
+        string userId FK
+        string action
+        string entity
+        string entityId
+        json details
+        datetime timestamp
+    }
+    News {
+        string id PK
+        string title
+        string content
+        boolean isImportant
+        string targetGroup
+        string_array tags
+        boolean isArchived
+        datetime createdAt
+    }
 
-    User ||--o| StudentProfile : has
-    User ||--o| CompanyEmployee : has
-    Company ||--o{ CompanyEmployee : employs
-    Company ||--o{ Position : offers
-    StudentProfile ||--o{ Application : submits
-    Position ||--o{ Application : receives
-    Application ||--o| DualPartnership : creates
-    DualPartnership }o--|| StudentProfile : involves
-    DualPartnership }o--|| Position : involves
-    DualPartnership }o--o| CompanyEmployee : mentor
-    DualPartnership }o--o| User : supervisor
+    User ||--o| StudentProfile : "has profile"
+    User ||--o| CompanyEmployee : "is employee"
+    User ||--o{ Notification : "receives"
+    User ||--o{ AuditLog : "triggers"
+    User ||--o{ DualPartnership : "uni supervisor"
+    
+    Company ||--o{ CompanyEmployee : "employs"
+    Company ||--o{ Position : "offers"
+    Company ||--o{ Location : "has branches"
+    
+    StudentProfile ||--o{ Location : "lives at"
+    StudentProfile ||--o{ Application : "submits"
+    StudentProfile ||--o{ DualPartnership : "participates"
+    StudentProfile ||--o{ Document : "owns"
+    
+    CompanyEmployee ||--o{ DualPartnership : "mentors"
+    
+    Position ||--o{ Application : "receives"
+    Position ||--o{ DualPartnership : "linked to"
+    Position }o--o{ Tag : "tagged with"
+    
+    Location ||--o{ Position : "is at"
+    
+    Application ||--o| DualPartnership : "promoted to"
 ```
 
 **Részletes sémát** lásd: `prisma/schema.prisma` vagy Prisma Studio (`npm run prisma:studio`)
