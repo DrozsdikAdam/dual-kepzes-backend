@@ -1,6 +1,6 @@
 # 🎓 Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-03  
+> **Utolsó frissítés**: 2026-02-04  
 > **Projekt státusz**: Production-ready
 
 ---
@@ -311,6 +311,9 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - **Kikapcsolt email megerősítés**
   - A regisztráció után a felhasználók azonnal be tudnak jelentkezni megerősítés nélkül.
   - Az automatikus megerősítő email küldése kikapcsolva.
+- **Feltételes hallgatói validáció**
+  - Ha `isInHighSchool = true`: `firstChoice` és `secondChoice` kötelező, `neptunCode` opcionális
+  - Ha `hasLanguageCert = true`: `language` és `languageLevel` kötelező
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
