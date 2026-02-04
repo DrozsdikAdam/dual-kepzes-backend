@@ -52,8 +52,8 @@ export class AuthService {
                                    studyMode: data.studyMode!,
                                    hasLanguageCert: Boolean(data.hasLanguageCert),
                                    isInHighSchool: Boolean(data.isInHighSchool),
-                                   firstChoice: data.firstChoice,
-                                   secondChoice: data.secondChoice,
+                                   firstChoiceId: data.firstChoiceId,
+                                   secondChoiceId: data.secondChoiceId,
                                    language: data.language,
                                    languageLevel: data.languageLevel
                               }

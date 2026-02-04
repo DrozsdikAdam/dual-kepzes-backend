@@ -38,27 +38,27 @@ export const studentSchema = baseUserSchema.extend({
 
     // Új mezők
     isInHighSchool: z.boolean().default(false),
-    firstChoice: z.string().trim().min(1).optional(),
-    secondChoice: z.string().trim().min(1).optional(),
+    firstChoiceId: z.string().uuid("Érvénytelen szak azonosító").optional(),
+    secondChoiceId: z.string().uuid("Érvénytelen szak azonosító").optional(),
 
     hasLanguageCert: z.boolean(),
     language: z.string().trim().min(1).optional(),
     languageLevel: z.string().trim().min(1).optional(),
 }).superRefine((data, ctx) => {
-    // Ha középiskolás, akkor firstChoice és secondChoice kötelező
+    // Ha középiskolás, akkor firstChoiceId és secondChoiceId kötelező
     if (data.isInHighSchool) {
-        if (!data.firstChoice) {
+        if (!data.firstChoiceId) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
                 message: "Első választás kötelező középiskolások számára.",
-                path: ["firstChoice"]
+                path: ["firstChoiceId"]
             });
         }
-        if (!data.secondChoice) {
+        if (!data.secondChoiceId) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
                 message: "Második választás kötelező középiskolások számára.",
-                path: ["secondChoice"]
+                path: ["secondChoiceId"]
             });
         }
     }

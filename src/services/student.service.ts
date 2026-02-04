@@ -27,12 +27,34 @@ export class StudentService {
                     highSchool: true,
                     graduationYear: true,
                     neptunCode: true,
+                    majorId: true,
+                    major: {
+                         select: {
+                              id: true,
+                              name: true,
+                              language: true
+                         }
+                    },
                     currentMajor: true,
                     studyMode: true,
                     hasLanguageCert: true,
                     isInHighSchool: true,
-                    firstChoice: true,
-                    secondChoice: true,
+                    firstChoiceId: true,
+                    firstChoice: {
+                         select: {
+                              id: true,
+                              name: true,
+                              language: true
+                         }
+                    },
+                    secondChoiceId: true,
+                    secondChoice: {
+                         select: {
+                              id: true,
+                              name: true,
+                              language: true
+                         }
+                    },
                     language: true,
                     languageLevel: true
                }
