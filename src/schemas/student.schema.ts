@@ -10,7 +10,7 @@ export const StudentUpdateSchema = z.object({
         fullName: z.string().min(2).optional(),
         phoneNumber: z.string().optional(),
 
-        // Profil adatok (StudentProfile) - Ezeket hozzá kell adni!
+        // Profil adatok (StudentProfile)
         currentMajor: z.string().optional(),
         neptunCode: z.string().optional(),
         mothersName: z.string().optional(),
@@ -23,6 +23,14 @@ export const StudentUpdateSchema = z.object({
             city: z.string().optional(),
             address: z.string().optional(),
         }).optional(),
+
+        // Új mezők
+        isInHighSchool: z.boolean().optional(),
+        firstChoice: z.string().optional(),
+        secondChoice: z.string().optional(),
+        hasLanguageCert: z.boolean().optional(),
+        language: z.string().optional(),
+        languageLevel: z.string().optional(),
     })
 });
 

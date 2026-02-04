@@ -29,7 +29,12 @@ export class StudentService {
                     neptunCode: true,
                     currentMajor: true,
                     studyMode: true,
-                    hasLanguageCert: true
+                    hasLanguageCert: true,
+                    isInHighSchool: true,
+                    firstChoice: true,
+                    secondChoice: true,
+                    language: true,
+                    languageLevel: true
                }
           }
      };

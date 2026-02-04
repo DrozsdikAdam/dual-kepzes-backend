@@ -172,6 +172,11 @@ erDiagram
         string currentMajor
         string studyMode
         boolean hasLanguageCert
+        boolean isInHighSchool
+        string firstChoice
+        string secondChoice
+        string language
+        string languageLevel
     }
     Company {
         string id PK

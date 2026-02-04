@@ -98,6 +98,15 @@ model StudentProfile {
   studyMode       String
   hasLanguageCert Boolean    @default(false)
 
+  isInHighSchool Boolean @default(false)
+  firstChoice    String?
+  secondChoice   String?
+
+  language      String?
+  languageLevel String?
+
+  isAvailableForWork Boolean @default(false)
+
   deletedAt DateTime?
 
   applications Application[]
@@ -256,10 +265,6 @@ model DualPartnership {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 }
-
-// ---------------------------------------------------------
-// DOKUMENTUMOK ÉS NAPLÓ
-// ---------------------------------------------------------
 
 // ---------------------------------------------------------
 // RENDSZER ÉS BIZTONSÁG

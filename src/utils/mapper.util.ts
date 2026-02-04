@@ -92,6 +92,11 @@ export const mapStudentProfile = (profile: (Partial<StudentProfile> & { location
           currentMajor: rest.currentMajor!,
           studyMode: rest.studyMode!,
           hasLanguageCert: rest.hasLanguageCert ?? false,
+          isInHighSchool: rest.isInHighSchool ?? false,
+          firstChoice: rest.firstChoice,
+          secondChoice: rest.secondChoice,
+          language: rest.language,
+          languageLevel: rest.languageLevel,
           location: mainLocation ? {
                id: mainLocation.id,
                country: mainLocation.country!,

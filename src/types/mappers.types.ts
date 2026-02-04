@@ -50,6 +50,11 @@ export interface MappedStudentProfile {
      currentMajor: string;
      studyMode: string;
      hasLanguageCert: boolean;
+     isInHighSchool: boolean;
+     firstChoice?: string | null;
+     secondChoice?: string | null;
+     language?: string | null;
+     languageLevel?: string | null;
      location?: MappedLocation | null;
 }
 
