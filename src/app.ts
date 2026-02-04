@@ -26,6 +26,7 @@ import applicationRoutes from "./routes/application.routes";
 import newsRoutes from "./routes/news.routes";
 import notificationRoutes from "./routes/notification.routes";
 import dualRoutes from "./routes/dual.routes";
+import majorRoutes from "./routes/major.routes";
 
 const app: Application = express();
 app.set("trust proxy", 1);
@@ -66,6 +67,9 @@ app.use("/api/notifications", notificationRoutes);
 
 //partnership endpoints
 app.use("/api/partnerships", dualRoutes);
+
+//major endpoints
+app.use("/api/majors", majorRoutes);
 
 // Test Route
 app.get("/", (req: Request, res: Response) => {
