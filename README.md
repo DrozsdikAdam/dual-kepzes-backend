@@ -270,6 +270,11 @@ erDiagram
         boolean isArchived
         datetime createdAt
     }
+    Major {
+        string id PK
+        string name
+        string language
+    }
 
     User ||--o| StudentProfile : "has profile"
     User ||--o| CompanyEmployee : "is employee"
@@ -284,6 +289,9 @@ erDiagram
     StudentProfile ||--o{ Location : "lives at"
     StudentProfile ||--o{ Application : "submits"
     StudentProfile ||--o{ DualPartnership : "participates"
+    StudentProfile }o--o| Major : "current major"
+    StudentProfile }o--o| Major : "first choice"
+    StudentProfile }o--o| Major : "second choice"
     
     CompanyEmployee ||--o{ DualPartnership : "mentors"
     
@@ -799,6 +807,18 @@ A partnerség automatikusan létrejön `PENDING_MENTOR` státusszal, amikor a c�
 | `PATCH` | `/:id/assign-university-user` | Egyetemi felelős hozzárendelése (Admin). |
 | `PATCH` | `/:id/terminate` | Partnerkapcsolat megszakítása (Terminated státusz). |
 | `DELETE` | `/:id` | Partnerkapcsolat törlése (Soft delete). |
+
+### 📚 Szakok (`/api/majors`)
+
+A képzési szakok (Major) kezelése. A hallgatói profil szakválasztáshoz kapcsolódik.
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Összes szak listázása. | Publikus |
+| `GET` | `/:id` | Szak részletei ID alapján. | Publikus |
+| `POST` | `/` | Új szak létrehozása. | Auth |
+| `PATCH` | `/:id` | Szak frissítése. | Auth |
+| `DELETE` | `/:id` | Szak törlése. | Auth |
 
 ### 🏢 Cég Adminisztrátorok (`/api/company-admins`)
 
