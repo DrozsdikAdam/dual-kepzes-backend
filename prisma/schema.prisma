@@ -94,13 +94,17 @@ model StudentProfile {
   highSchool      String
   graduationYear  Int
   neptunCode      String?
+  majorId         String?
+  major           Major?     @relation("CurrentMajor", fields: [majorId], references: [id])
   currentMajor    String
   studyMode       String
   hasLanguageCert Boolean    @default(false)
 
   isInHighSchool Boolean @default(false)
-  firstChoice    String?
-  secondChoice   String?
+  firstChoiceId  String?
+  firstChoice    Major?  @relation("FirstChoice", fields: [firstChoiceId], references: [id])
+  secondChoiceId String?
+  secondChoice   Major?  @relation("SecondChoice", fields: [secondChoiceId], references: [id])
 
   language      String?
   languageLevel String?
@@ -155,6 +159,11 @@ model Major {
   id       String @id @default(uuid())
   name     String
   language String
+
+  // Kapcsolatok - hallgatók akik ezt a szakot választották
+  studentsWithMajor        StudentProfile[] @relation("CurrentMajor")
+  studentsWithFirstChoice  StudentProfile[] @relation("FirstChoice")
+  studentsWithSecondChoice StudentProfile[] @relation("SecondChoice")
 }
 
 // ---------------------------------------------------------
