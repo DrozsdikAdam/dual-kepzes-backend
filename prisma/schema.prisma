@@ -151,6 +151,12 @@ model Location {
   updatedAt DateTime @updatedAt
 }
 
+model Major {
+  id       String @id @default(uuid())
+  name     String
+  language String
+}
+
 // ---------------------------------------------------------
 // CÉGEK ÉS POZÍCIÓK
 // ---------------------------------------------------------
