@@ -50,7 +50,12 @@ export class AuthService {
                                    neptunCode: data.neptunCode,
                                    currentMajor: data.currentMajor!,
                                    studyMode: data.studyMode!,
-                                   hasLanguageCert: Boolean(data.hasLanguageCert)
+                                   hasLanguageCert: Boolean(data.hasLanguageCert),
+                                   isInHighSchool: Boolean(data.isInHighSchool),
+                                   firstChoice: data.firstChoice,
+                                   secondChoice: data.secondChoice,
+                                   language: data.language,
+                                   languageLevel: data.languageLevel
                               }
                          });
                          break;

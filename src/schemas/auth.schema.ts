@@ -35,7 +35,51 @@ export const studentSchema = baseUserSchema.extend({
     currentMajor: z.string().trim().min(1),
     studyMode: z.enum(["NAPPALI", "LEVELEZŐ"]),
     graduationYear: z.number().min(2000, { message: "Érvénytelen érettségi év" }).max(new Date().getFullYear() + 1, { message: "Érvénytelen érettségi év" }),
-    hasLanguageCert: z.boolean()
+
+    // Új mezők
+    isInHighSchool: z.boolean().default(false),
+    firstChoice: z.string().trim().min(1).optional(),
+    secondChoice: z.string().trim().min(1).optional(),
+
+    hasLanguageCert: z.boolean(),
+    language: z.string().trim().min(1).optional(),
+    languageLevel: z.string().trim().min(1).optional(),
+}).superRefine((data, ctx) => {
+    // Ha középiskolás, akkor firstChoice és secondChoice kötelező
+    if (data.isInHighSchool) {
+        if (!data.firstChoice) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Első választás kötelező középiskolások számára.",
+                path: ["firstChoice"]
+            });
+        }
+        if (!data.secondChoice) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Második választás kötelező középiskolások számára.",
+                path: ["secondChoice"]
+            });
+        }
+    }
+
+    // Ha van nyelvvizsga, akkor language és languageLevel kötelező
+    if (data.hasLanguageCert) {
+        if (!data.language) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Nyelv megadása kötelező, ha van nyelvvizsga.",
+                path: ["language"]
+            });
+        }
+        if (!data.languageLevel) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Nyelvvizsga szint megadása kötelező.",
+                path: ["languageLevel"]
+            });
+        }
+    }
 });
 
 export const mentorSchema = baseUserSchema.extend({
