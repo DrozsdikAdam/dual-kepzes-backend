@@ -67,6 +67,15 @@ model User {
   passwordResetToken String?
   tokenExpiry        DateTime?
 
+  isInHighSchool Boolean @default(false)
+  firstChoice    String?
+  secondChoice   String?
+
+  language      String?
+  languageLevel String?
+
+  isAvailableForWork Boolean @default(false)
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
@@ -256,10 +265,6 @@ model DualPartnership {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 }
-
-// ---------------------------------------------------------
-// DOKUMENTUMOK ÉS NAPLÓ
-// ---------------------------------------------------------
 
 // ---------------------------------------------------------
 // RENDSZER ÉS BIZTONSÁG
