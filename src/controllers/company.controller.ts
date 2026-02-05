@@ -5,6 +5,7 @@ import { notificationService } from "../services/notification.service";
 import { NotFoundError } from "../errors/AppError";
 import { logAction } from "../utils/logger.util";
 import { CompanyInput } from "../schemas/job.schema";
+import { CompanyWithAdminInput } from "../schemas/company.schema";
 import { mapCompany, mapPosition } from "../utils/mapper.util";
 import { getPaginationParams } from "../utils/pagination.util";
 import { Role } from "@prisma/client";
@@ -73,6 +74,42 @@ export const createCompany = async (
                message: "Sikeres cég létrehozás",
                data: mapCompany(newCompany)
           });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const createCompanyWithAdmin = async (
+     req: Request<{}, {}, CompanyWithAdminInput>,
+     res: Response,
+     next: NextFunction
+) => {
+     try {
+          const newCompany = await companyService.createWithAdmin(req.body);
+
+          await logAction(req, {
+               action: "CREATE_COMPANY_WITH_ADMIN",
+               entity: "Company",
+               entityId: newCompany!.id,
+               details: { createdById: req.user?.userId, name: newCompany!.name, taxId: newCompany!.taxId }
+          });
+
+          res.status(201).json({
+               success: true,
+               message: "Cég és admin sikeresen létrehozva",
+               data: mapCompany(newCompany)
+          });
+
+          // Értesítés a rendszergazdáknak
+          const admins = (await userService.getAllByRole(Role.SYSTEM_ADMIN)) as any[];
+          for (const admin of admins) {
+               await notificationService.create({
+                    userId: admin.id,
+                    title: "Új cég regisztráció",
+                    message: `Új cég került rögzítésre: "${newCompany!.name}" (adószám: ${newCompany!.taxId}).`,
+                    type: "COMPANY_CREATE"
+               });
+          }
      } catch (error) {
           next(error);
      }

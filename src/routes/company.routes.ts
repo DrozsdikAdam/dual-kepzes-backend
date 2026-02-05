@@ -7,12 +7,14 @@ import {
      getAllCompanies,
      getCompanyById,
      createCompany,
+     createCompanyWithAdmin,
      updateCompany,
      deleteCompany,
      getOwnApplicationCompanies
 } from "../controllers/company.controller";
 import { validate } from "../middlewares/validate.middleware";
 import { CompanyCreateSchema, CompanyUpdateSchema } from "../schemas/job.schema";
+import { CompanyWithAdminCreateSchema } from "../schemas/company.schema";
 
 const router = Router();
 
@@ -93,6 +95,43 @@ router.post(
      "/",
      validate(CompanyCreateSchema),
      createCompany
+);
+
+/**
+ * @swagger
+ * /api/companies/with-admin:
+ *   post:
+ *     summary: Create a new company and its admin user in one request (Admin)
+ *     tags: [Companies]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [company, admin]
+ *             properties:
+ *               company:
+ *                 $ref: '#/components/schemas/CreateCompany'
+ *               admin:
+ *                 type: object
+ *                 required: [email, password, fullName, phoneNumber]
+ *                 properties:
+ *                   email: { type: string }
+ *                   password: { type: string }
+ *                   fullName: { type: string }
+ *                   phoneNumber: { type: string }
+ *                   jobTitle: { type: string }
+ *     responses:
+ *       201:
+ *         description: Company and admin created successfully
+ */
+router.post(
+     "/with-admin",
+     validate(CompanyWithAdminCreateSchema),
+     createCompanyWithAdmin
 );
 
 /**
