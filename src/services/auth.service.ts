@@ -48,7 +48,6 @@ export class AuthService {
                                    highSchool: data.highSchool!,
                                    graduationYear: data.graduationYear!,
                                    neptunCode: data.neptunCode,
-                                   currentMajor: data.currentMajor!,
                                    studyMode: data.studyMode!,
                                    hasLanguageCert: Boolean(data.hasLanguageCert),
                                    isInHighSchool: Boolean(data.isInHighSchool),

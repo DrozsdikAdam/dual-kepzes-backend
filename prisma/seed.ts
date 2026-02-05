@@ -66,7 +66,6 @@ async function main() {
                     highSchool: 'Tóth Árpád Gimnázium',
                     graduationYear: 2019,
                     neptunCode: 'ABC123',
-                    currentMajor: 'Mérnökinformatikus BSc',
                     studyMode: 'NAPPALI',
                     hasLanguageCert: true,
                 },

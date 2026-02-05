@@ -199,7 +199,6 @@ export class ApplicationService {
                          highSchool: true,
                          graduationYear: true,
                          neptunCode: true,
-                         currentMajor: true,
                          studyMode: true,
                          hasLanguageCert: true,
                          locations: true

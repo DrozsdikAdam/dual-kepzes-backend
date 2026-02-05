@@ -35,7 +35,6 @@ export class StudentService {
                               language: true
                          }
                     },
-                    currentMajor: true,
                     studyMode: true,
                     hasLanguageCert: true,
                     isInHighSchool: true,

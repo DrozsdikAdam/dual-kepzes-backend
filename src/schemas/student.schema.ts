@@ -11,7 +11,6 @@ export const StudentUpdateSchema = z.object({
         phoneNumber: z.string().optional(),
 
         // Profil adatok (StudentProfile)
-        currentMajor: z.string().optional(),
         neptunCode: z.string().optional(),
         mothersName: z.string().optional(),
         highSchool: z.string().optional(),

@@ -96,7 +96,6 @@ model StudentProfile {
   neptunCode      String?
   majorId         String?
   major           Major?     @relation("CurrentMajor", fields: [majorId], references: [id])
-  currentMajor    String
   studyMode       String
   hasLanguageCert Boolean    @default(false)
 

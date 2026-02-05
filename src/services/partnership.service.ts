@@ -295,7 +295,6 @@ export class PartnershipService {
                          highSchool: true,
                          graduationYear: true,
                          neptunCode: true,
-                         currentMajor: true,
                          studyMode: true,
                          hasLanguageCert: true,
                          locations: true

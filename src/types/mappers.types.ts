@@ -54,7 +54,6 @@ export interface MappedStudentProfile {
      graduationYear: number;
      neptunCode?: string | null;
      major?: MappedMajor | null;
-     currentMajor: string;
      studyMode: string;
      hasLanguageCert: boolean;
      isInHighSchool: boolean;

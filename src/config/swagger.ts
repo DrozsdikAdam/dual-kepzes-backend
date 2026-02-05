@@ -184,7 +184,6 @@ const options: swaggerJsdoc.Options = {
                          properties: {
                               fullName: { type: 'string' },
                               phoneNumber: { type: 'string' },
-                              currentMajor: { type: 'string' },
                               neptunCode: { type: 'string' },
                               mothersName: { type: 'string' },
                               highSchool: { type: 'string' },

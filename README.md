@@ -169,7 +169,7 @@ erDiagram
         string highSchool
         int graduationYear
         string neptunCode
-        string currentMajor
+        string majorId FK
         string studyMode
         boolean hasLanguageCert
         boolean isInHighSchool

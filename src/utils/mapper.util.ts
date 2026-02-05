@@ -106,7 +106,6 @@ export const mapStudentProfile = (profile: (Partial<StudentProfile> & {
           graduationYear: rest.graduationYear!,
           neptunCode: rest.neptunCode,
           major: mapMajor(major || null),
-          currentMajor: rest.currentMajor!,
           studyMode: rest.studyMode!,
           hasLanguageCert: rest.hasLanguageCert ?? false,
           isInHighSchool: rest.isInHighSchool ?? false,
