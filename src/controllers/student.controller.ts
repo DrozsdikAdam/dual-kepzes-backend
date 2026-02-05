@@ -3,7 +3,7 @@ import { studentService } from "../services/student.service";
 import { logAction } from "../utils/logger.util";
 import { mapStudent } from "../utils/mapper.util";
 import { getPaginationParams } from "../utils/pagination.util";
-import { UnauthorizedError } from "../errors/AppError";
+import { UnauthorizedError, BadRequestError } from "../errors/AppError";
 
 export const getMyProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -150,6 +150,34 @@ export const deleteStudentById = async (req: Request, res: Response, next: NextF
         });
 
         res.json({ success: true, message: "A hallgatói profil sikeresen törölve." });
+    } catch (error) {
+        next(error);
+    }
+};
+export const transitionToUniversity = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) {
+            throw new UnauthorizedError("Nincs azonosítva.");
+        }
+
+        const updated = await studentService.transitionToUniversity(userId, req.body);
+
+        await logAction(req, {
+            action: "STUDENT_UNIVERSITY_TRANSITION",
+            entity: "User",
+            entityId: userId,
+            details: {
+                neptunCode: req.body.neptunCode,
+                majorId: req.body.majorId
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Sikeresen átváltottál egyetemi profilra!",
+            data: mapStudent(updated)
+        });
     } catch (error) {
         next(error);
     }
