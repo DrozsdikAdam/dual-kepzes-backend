@@ -76,10 +76,26 @@ export const mapPosition = (position: (Partial<Position> & {
      };
 };
 
-export const mapStudentProfile = (profile: (Partial<StudentProfile> & { locations?: PartialLocation[] }) | null): MappedStudentProfile | null => {
+type PartialMajor = { id?: string; name?: string; language?: string } | null;
+
+export const mapMajor = (major: PartialMajor): { id: string; name: string; language: string } | null => {
+     if (!major || !major.id) return null;
+     return {
+          id: major.id,
+          name: major.name || '',
+          language: major.language || ''
+     };
+};
+
+export const mapStudentProfile = (profile: (Partial<StudentProfile> & {
+     locations?: PartialLocation[];
+     major?: PartialMajor;
+     firstChoice?: PartialMajor;
+     secondChoice?: PartialMajor;
+}) | null): MappedStudentProfile | null => {
      if (!profile) return null;
      const mainLocation = profile.locations && profile.locations.length > 0 ? profile.locations[0] : null;
-     const { locations, ...rest } = profile;
+     const { locations, major, firstChoice, secondChoice, ...rest } = profile;
 
      return {
           id: rest.id!,
@@ -89,12 +105,12 @@ export const mapStudentProfile = (profile: (Partial<StudentProfile> & { location
           highSchool: rest.highSchool!,
           graduationYear: rest.graduationYear!,
           neptunCode: rest.neptunCode,
-          currentMajor: rest.currentMajor!,
+          major: mapMajor(major || null),
           studyMode: rest.studyMode!,
           hasLanguageCert: rest.hasLanguageCert ?? false,
           isInHighSchool: rest.isInHighSchool ?? false,
-          firstChoice: rest.firstChoice,
-          secondChoice: rest.secondChoice,
+          firstChoice: mapMajor(firstChoice || null),
+          secondChoice: mapMajor(secondChoice || null),
           language: rest.language,
           languageLevel: rest.languageLevel,
           location: mainLocation ? {

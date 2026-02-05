@@ -11,7 +11,6 @@ export const StudentUpdateSchema = z.object({
         phoneNumber: z.string().optional(),
 
         // Profil adatok (StudentProfile)
-        currentMajor: z.string().optional(),
         neptunCode: z.string().optional(),
         mothersName: z.string().optional(),
         highSchool: z.string().optional(),
@@ -26,8 +25,9 @@ export const StudentUpdateSchema = z.object({
 
         // Új mezők
         isInHighSchool: z.boolean().optional(),
-        firstChoice: z.string().optional(),
-        secondChoice: z.string().optional(),
+        majorId: z.string().uuid().optional(),
+        firstChoiceId: z.string().uuid().optional(),
+        secondChoiceId: z.string().uuid().optional(),
         hasLanguageCert: z.boolean().optional(),
         language: z.string().optional(),
         languageLevel: z.string().optional(),

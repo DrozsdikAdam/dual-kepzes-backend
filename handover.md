@@ -312,8 +312,11 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
   - A regisztráció után a felhasználók azonnal be tudnak jelentkezni megerősítés nélkül.
   - Az automatikus megerősítő email küldése kikapcsolva.
 - **Feltételes hallgatói validáció**
-  - Ha `isInHighSchool = true`: `firstChoice` és `secondChoice` kötelező, `neptunCode` opcionális
+  - Ha `isInHighSchool = true`: `firstChoiceId` és `secondChoiceId` kötelező, `neptunCode` opcionális
   - Ha `hasLanguageCert = true`: `language` és `languageLevel` kötelező
+- **Szak (Major) kezelés** - CRUD műveletek `/api/majors` végponton:
+  - Szakok listázása, létrehozása, frissítése, törlése
+  - StudentProfile kapcsolat: `majorId`, `firstChoiceId`, `secondChoiceId` → Major táblára hivatkozik
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)

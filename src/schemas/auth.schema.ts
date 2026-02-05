@@ -32,33 +32,33 @@ export const studentSchema = baseUserSchema.extend({
     }).optional(),
     highSchool: z.string().trim().min(1),
     neptunCode: z.string().trim().length(6, { message: "A neptun kód pontosan 6 karakter hosszú." }).optional(),
-    currentMajor: z.string().trim().min(1),
+    majorId: z.string().uuid("Érvénytelen szak azonosító").optional(),
     studyMode: z.enum(["NAPPALI", "LEVELEZŐ"]),
     graduationYear: z.number().min(2000, { message: "Érvénytelen érettségi év" }).max(new Date().getFullYear() + 1, { message: "Érvénytelen érettségi év" }),
 
     // Új mezők
     isInHighSchool: z.boolean().default(false),
-    firstChoice: z.string().trim().min(1).optional(),
-    secondChoice: z.string().trim().min(1).optional(),
+    firstChoiceId: z.string().uuid("Érvénytelen szak azonosító").optional(),
+    secondChoiceId: z.string().uuid("Érvénytelen szak azonosító").optional(),
 
     hasLanguageCert: z.boolean(),
     language: z.string().trim().min(1).optional(),
     languageLevel: z.string().trim().min(1).optional(),
 }).superRefine((data, ctx) => {
-    // Ha középiskolás, akkor firstChoice és secondChoice kötelező
+    // Ha középiskolás, akkor firstChoiceId és secondChoiceId kötelező
     if (data.isInHighSchool) {
-        if (!data.firstChoice) {
+        if (!data.firstChoiceId) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
                 message: "Első választás kötelező középiskolások számára.",
-                path: ["firstChoice"]
+                path: ["firstChoiceId"]
             });
         }
-        if (!data.secondChoice) {
+        if (!data.secondChoiceId) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
                 message: "Második választás kötelező középiskolások számára.",
-                path: ["secondChoice"]
+                path: ["secondChoiceId"]
             });
         }
     }

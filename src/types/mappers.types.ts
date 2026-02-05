@@ -1,5 +1,11 @@
 import { Role, ApplicationStatus, PartnershipStatus } from '@prisma/client';
 
+export interface MappedMajor {
+     id: string;
+     name: string;
+     language: string;
+}
+
 export interface MappedLocation {
      id?: string;
      country: string;
@@ -47,12 +53,12 @@ export interface MappedStudentProfile {
      highSchool: string;
      graduationYear: number;
      neptunCode?: string | null;
-     currentMajor: string;
+     major?: MappedMajor | null;
      studyMode: string;
      hasLanguageCert: boolean;
      isInHighSchool: boolean;
-     firstChoice?: string | null;
-     secondChoice?: string | null;
+     firstChoice?: MappedMajor | null;
+     secondChoice?: MappedMajor | null;
      language?: string | null;
      languageLevel?: string | null;
      location?: MappedLocation | null;

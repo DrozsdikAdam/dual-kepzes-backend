@@ -29,7 +29,6 @@ export class EmployeeService {
                select: {
                     id: true,
                     neptunCode: true,
-                    currentMajor: true,
                     studyMode: true,
                     user: {
                          select: {
