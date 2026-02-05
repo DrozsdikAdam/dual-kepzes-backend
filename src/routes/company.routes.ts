@@ -27,6 +27,46 @@ const router = Router();
  */
 
 // Minden routehoz szükséges a bejelentkezés
+
+
+/**
+ * @swagger
+ * /api/companies/with-admin:
+ *   post:
+ *     summary: Create a new company and its admin user in one request (Admin)
+ *     tags: [Companies]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [company, admin]
+ *             properties:
+ *               company:
+ *                 $ref: '#/components/schemas/CreateCompany'
+ *               admin:
+ *                 type: object
+ *                 required: [email, password, fullName, phoneNumber]
+ *                 properties:
+ *                   email: { type: string }
+ *                   password: { type: string }
+ *                   fullName: { type: string }
+ *                   phoneNumber: { type: string }
+ *                   jobTitle: { type: string }
+ *     responses:
+ *       201:
+ *         description: Company and admin created successfully
+ */
+router.post(
+     "/with-admin",
+     validate(CompanyWithAdminCreateSchema),
+     createCompanyWithAdmin
+);
+
+
 router.use(authenticateToken);
 
 // Specifikus route-ok (id előtt kell lenniük)
@@ -97,42 +137,7 @@ router.post(
      createCompany
 );
 
-/**
- * @swagger
- * /api/companies/with-admin:
- *   post:
- *     summary: Create a new company and its admin user in one request (Admin)
- *     tags: [Companies]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [company, admin]
- *             properties:
- *               company:
- *                 $ref: '#/components/schemas/CreateCompany'
- *               admin:
- *                 type: object
- *                 required: [email, password, fullName, phoneNumber]
- *                 properties:
- *                   email: { type: string }
- *                   password: { type: string }
- *                   fullName: { type: string }
- *                   phoneNumber: { type: string }
- *                   jobTitle: { type: string }
- *     responses:
- *       201:
- *         description: Company and admin created successfully
- */
-router.post(
-     "/with-admin",
-     validate(CompanyWithAdminCreateSchema),
-     createCompanyWithAdmin
-);
+
 
 /**
  * @swagger
