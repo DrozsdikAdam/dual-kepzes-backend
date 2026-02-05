@@ -1,10 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { companyService } from "../services/company.service";
+import { userService } from "../services/user.service";
+import { notificationService } from "../services/notification.service";
 import { NotFoundError } from "../errors/AppError";
 import { logAction } from "../utils/logger.util";
 import { CompanyInput } from "../schemas/job.schema";
 import { mapCompany, mapPosition } from "../utils/mapper.util";
 import { getPaginationParams } from "../utils/pagination.util";
+import { Role } from "@prisma/client";
 
 export const getAllCompanies = async (req: Request, res: Response, next: NextFunction) => {
      try {
@@ -92,6 +95,17 @@ export const updateCompany = async (req: Request, res: Response, next: NextFunct
                message: "Cég adatai frissítve",
                data: mapCompany(updated)
           });
+
+          // Értesítés a rendszergazdáknak
+          const admins = (await userService.getAllByRole(Role.SYSTEM_ADMIN)) as any[];
+          for (const admin of admins) {
+               await notificationService.create({
+                    userId: admin.id,
+                    title: "Cégadatok változása",
+                    message: `A(z) "${updated.name}" cég adatai frissültek.`,
+                    type: "COMPANY_UPDATE"
+               });
+          }
      } catch (error) {
           next(error);
      }
@@ -146,6 +160,17 @@ export const reactivateCompany = async (req: Request, res: Response, next: NextF
                message: "Cég sikeresen újraaktiválva.",
                data: mapCompany(updatedCompany)
           });
+
+          // Értesítés a rendszergazdáknak
+          const admins = (await userService.getAllByRole(Role.SYSTEM_ADMIN)) as any[];
+          for (const admin of admins) {
+               await notificationService.create({
+                    userId: admin.id,
+                    title: "Cég újraaktiválva",
+                    message: `A(z) "${updatedCompany.name}" cég újraaktiválásra került.`,
+                    type: "COMPANY_STATUS"
+               });
+          }
      } catch (error) {
           next(error);
      }
@@ -168,6 +193,17 @@ export const deactivateCompany = async (req: Request, res: Response, next: NextF
                message: "Cég sikeresen deaktiválva.",
                data: mapCompany(updatedCompany)
           });
+
+          // Értesítés a rendszergazdáknak
+          const admins = (await userService.getAllByRole(Role.SYSTEM_ADMIN)) as any[];
+          for (const admin of admins) {
+               await notificationService.create({
+                    userId: admin.id,
+                    title: "Cég deaktiválva",
+                    message: `A(z) "${updatedCompany.name}" cég deaktiválásra került.`,
+                    type: "COMPANY_STATUS"
+               });
+          }
      } catch (error) {
           next(error);
      }
