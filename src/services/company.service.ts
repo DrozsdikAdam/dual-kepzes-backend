@@ -1,7 +1,10 @@
 import prisma from '../config/prisma';
 import { NotFoundError, BadRequestError } from '../errors/AppError';
 import { CompanyInput } from '../schemas/job.schema';
+import { CompanyWithAdminInput } from '../schemas/company.schema';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
+import { hashPassword } from '../utils/auth.util';
+import { Role } from '@prisma/client';
 
 export class CompanyService {
      private companySelect = {
@@ -137,6 +140,73 @@ export class CompanyService {
                     },
                },
                select: this.companySelect
+          });
+     }
+
+     async createWithAdmin(data: CompanyWithAdminInput) {
+          const { company: companyInput, admin: adminInput } = data;
+
+          // Ellenőrzések tranzakción kívül az adatok érvényességéhez
+          const existingCompany = await prisma.company.findUnique({
+               where: { taxId: companyInput.taxId },
+          });
+
+          if (existingCompany) {
+               throw new BadRequestError('Már létezik cég a megadott adószámmal.');
+          }
+
+          const existingUser = await prisma.user.findUnique({
+               where: { email: adminInput.email }
+          });
+
+          if (existingUser) {
+               throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
+          }
+
+          const { locations, ...companyData } = companyInput;
+          const hashedPassword = await hashPassword(adminInput.password);
+
+          return await prisma.$transaction(async (tx) => {
+               // 1. Cég létrehozása
+               const company = await tx.company.create({
+                    data: {
+                         ...companyData,
+                         location: {
+                              create: locations ? locations.map(loc => ({
+                                   country: loc.country || "Magyarország",
+                                   zipCode: loc.zipCode ? String(loc.zipCode) : "",
+                                   city: loc.city || "",
+                                   address: loc.address || ""
+                              })) : []
+                         },
+                    }
+               });
+
+               // 2. Felhasználó létrehozása
+               const user = await tx.user.create({
+                    data: {
+                         email: adminInput.email,
+                         password: hashedPassword,
+                         fullName: adminInput.fullName,
+                         phoneNumber: adminInput.phoneNumber,
+                         role: Role.COMPANY_ADMIN,
+                         isEmailVerified: true // Alapértelmezetten megerősített admin creation-nél
+                    }
+               });
+
+               // 3. Kapcsolat létrehozása (CompanyEmployee)
+               await tx.companyEmployee.create({
+                    data: {
+                         userId: user.id,
+                         companyId: company.id,
+                         jobTitle: adminInput.jobTitle
+                    }
+               });
+
+               return tx.company.findUnique({
+                    where: { id: company.id },
+                    select: this.companySelect
+               });
           });
      }
 
