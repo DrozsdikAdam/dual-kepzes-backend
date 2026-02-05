@@ -8,9 +8,10 @@ import {
     updateStudentById,
     getStudentById,
     deleteMyProfile,
-    deleteStudentById
+    deleteStudentById,
+    transitionToUniversity
 } from "../controllers/student.controller";
-import { MyProfileUpdateSchema, StudentUpdateSchema } from "../schemas/student.schema";
+import { MyProfileUpdateSchema, StudentUpdateSchema, UniversityTransitionSchema } from "../schemas/student.schema";
 
 const router = Router();
 
@@ -82,6 +83,37 @@ router.patch("/me", authenticateToken, validate(MyProfileUpdateSchema), updateMy
  *         description: Profile deleted successfully
  */
 router.delete("/me", authenticateToken, deleteMyProfile)
+
+/**
+ * @swagger
+ * /api/students/me/university-transition:
+ *   patch:
+ *     summary: Transition from high school profile to university profile
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - neptunCode
+ *               - majorId
+ *             properties:
+ *               neptunCode:
+ *                 type: string
+ *               majorId:
+ *                 type: string
+ *                 format: uuid
+ *               graduationYear:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Transitioned to university profile successfully
+ */
+router.patch("/me/university-transition", authenticateToken, validate(UniversityTransitionSchema), transitionToUniversity);
 
 /**
  * @swagger
