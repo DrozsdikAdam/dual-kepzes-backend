@@ -5,6 +5,7 @@ import { BadRequestError, UnauthorizedError } from '../errors/AppError';
 import { Role } from '@prisma/client';
 import { generateVerificationEmail, generatePasswordResetEmail } from '../utils/email.util';
 import { addEmailToQueue } from './email.queue';
+import { notificationService } from './notification.service';
 
 export class AuthService {
      async register(data: RegisterInput) {
@@ -166,12 +167,14 @@ export class AuthService {
                }
           });
 
-          await addEmailToQueue({
-               notificationId: notification.id,
-               email: user.email,
-               subject: 'Email megerősítés - Duális Képzés',
-               body: emailHtml
-          });
+          if (notificationService.shouldSendEmail(user.role, 'EMAIL_VERIFICATION')) {
+               await addEmailToQueue({
+                    notificationId: notification.id,
+                    email: user.email,
+                    subject: 'Email megerősítés - Duális Képzés',
+                    body: emailHtml
+               });
+          }
 
           return { success: true };
      }
@@ -263,12 +266,14 @@ export class AuthService {
                }
           });
 
-          await addEmailToQueue({
-               notificationId: notification.id,
-               email: user.email,
-               subject: 'Jelszó visszaállítás - Duális Képzés',
-               body: emailHtml
-          });
+          if (notificationService.shouldSendEmail(user.role, 'PASSWORD_RESET')) {
+               await addEmailToQueue({
+                    notificationId: notification.id,
+                    email: user.email,
+                    subject: 'Jelszó visszaállítás - Duális Képzés',
+                    body: emailHtml
+               });
+          }
 
           return { success: true, message: 'Ha a megadott email cím regisztrálva van, elküldtük a jelszó visszaállító linket.' };
      }

@@ -1,6 +1,6 @@
 # 🎓 Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-05  
+> **Utolsó frissítés**: 2026-02-05 (System Admin Email Policy implementálva)  
 > **Projekt státusz**: Production-ready
 
 ---
@@ -319,6 +319,7 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
   - StudentProfile kapcsolat: `majorId`, `firstChoiceId`, `secondChoiceId` → Major táblára hivatkozik
 - **Bővített statisztikák**: Teljes körű API statisztikák elérhetőek a `/api/stats` alatt (Jelentkezések, Partnerségek, Pozíciók, Trendek).
 - **Konvenció szerinti félév kezelés**: A duális partnerségeknél a félévek egységes "YYYY/YY/S" formátumban kerülnek rögzítésre.
+- **Rendszergazdai email policy**: A `SYSTEM_ADMIN` felhasználók csak jelszó-visszaállítást és verifikációs emaileket kapnak, más értesítéseknél kimaradnak a levéllistából (adatbiztonsági és kényelmi okokból).
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
@@ -328,7 +329,6 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 ### ❌ Hiányzó/Tervezett Funkciók
 - Logout (Token feketelista)
 - Integrációs tesztek
-- Jelentkezési trendek grafikonok
 - Riportok exportálása (CSV/PDF)
 
 > 📍 Részletes lista: `CHECKLIST.md`

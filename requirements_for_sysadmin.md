@@ -29,6 +29,7 @@ Szükséges a regisztrációhoz, jelszó-visszaállításhoz és automatikus ér
 - **SMTP Port**: (általában 587 TLS-hez vagy 465 SSL-hez).
 - **Hitelesítés**: Felhasználónév és jelszó.
 - **Küldő címe**: Az e-mail cím, amit a rendszer feladóként használ.
+- **Rendszergazdai szűrés**: A `SYSTEM_ADMIN` szerepkörű felhasználók biztonsági és kényelmi okokból **csak** a jelszó-visszaállítással és email-megerősítéssel kapcsolatos leveleket kapják meg. Minden más automatikus értesítésnél (pl. új hírek) alapértelmezetten ki vannak zárva a levéllistából.
 
 ## 5. Biztonság és Azonosítás
 - **JWT Titok** (`JWT_SECRET`): Egy hosszú, véletlenszerű karakterlánc a tokenek aláírásához.

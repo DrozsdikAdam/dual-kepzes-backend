@@ -1,5 +1,6 @@
 import prisma from '../config/prisma';
 import { NotFoundError } from '../errors/AppError';
+import { Role } from '@prisma/client';
 
 export class NotificationService {
      private notificationSelect = {
@@ -80,6 +81,21 @@ export class NotificationService {
           return await prisma.notification.count({
                where: { userId, isRead: false, isArchived: false }
           });
+     }
+
+     /**
+      * Determins if an automated email should be sent to a user based on their role and notification type.
+      * @param role The user's role
+      * @param type The notification type
+      * @returns boolean
+      */
+     shouldSendEmail(role: Role, type: string): boolean {
+          if (role === Role.SYSTEM_ADMIN) {
+               // System Admins only receive critical account emails
+               return ['EMAIL_VERIFICATION', 'PASSWORD_RESET'].includes(type);
+          }
+          // All other roles receive all emails by default
+          return true;
      }
 }
 

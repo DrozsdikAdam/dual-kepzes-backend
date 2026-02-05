@@ -142,6 +142,7 @@ A listázó végpontok egységes válaszstruktúrát és lekérdezési paraméte
 | `COMPANY_ADMIN` | Cégadmin | Teljes cégkezelés, jelentkezések értékelése, pozíciók és munkavállalók kezelése |
 | `UNIVERSITY_USER` | Egyetemi kapcsolattartó | Partnerségek jóváhagyása, hallgatók felügyelete |
 | `SYSTEM_ADMIN` | Rendszergazda | Teljes rendszer adminisztráció, minden entitás kezelése |
+| | | **Email policy**: Csak biztonsági emaileket (PW reset, Verification) kap. |
 
 ## 🗄️ Adatbázis Séma Áttekintés
 
