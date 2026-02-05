@@ -278,32 +278,31 @@ erDiagram
         string language
     }
 
+    %% Mag / Fő folyamat (Center)
+    StudentProfile ||--o{ Application : "submits"
+    Position ||--o{ Application : "receives"
+    Application ||--o| DualPartnership : "promoted to"
+    
+    %% Felhasználói oldal (Left/Top)
     User ||--o| StudentProfile : "has profile"
-    User ||--o| CompanyEmployee : "is employee"
     User ||--o{ Notification : "receives"
     User ||--o{ AuditLog : "triggers"
-    User ||--o{ DualPartnership : "uni supervisor"
     
-    Company ||--o{ CompanyEmployee : "employs"
+    %% Céges oldal (Right/Bottom)
     Company ||--o{ Position : "offers"
-    Company ||--o{ Location : "has branches"
-    
-    StudentProfile ||--o{ Location : "lives at"
-    StudentProfile ||--o{ Application : "submits"
-    StudentProfile ||--o{ DualPartnership : "participates"
-    StudentProfile }o--o| Major : "current major"
-    StudentProfile }o--o| Major : "first choice major"
-    StudentProfile }o--o| Major : "second choice major"
-    
-    CompanyEmployee ||--o{ DualPartnership : "mentors"
-    
-    Position ||--o{ Application : "receives"
-    Position ||--o{ DualPartnership : "linked to"
-    Position }o--o{ Tag : "tagged with"
-    
+    Company ||--o{ CompanyEmployee : "employs"
     Location ||--o{ Position : "is at"
     
-    Application ||--o| DualPartnership : "promoted to"
+    %% Összekötő és kiegészítő adatok
+    DualPartnership }o--|| StudentProfile : "participates"
+    DualPartnership }o--|| Position : "linked to"
+    DualPartnership }o--|| CompanyEmployee : "mentors"
+    DualPartnership }o--|| User : "uni supervisor"
+    
+    Company ||--o{ Location : "has branches"
+    StudentProfile ||--o{ Location : "lives at"
+    StudentProfile }o--o| Major : "major mapping"
+    Position }o--o{ Tag : "tagged with"
 ```
 
 **Részletes sémát** lásd: `prisma/schema.prisma` vagy Prisma Studio (`npm run prisma:studio`)
