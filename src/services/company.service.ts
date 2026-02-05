@@ -179,7 +179,8 @@ export class CompanyService {
                                    address: loc.address || ""
                               })) : []
                          },
-                    }
+                    },
+                    select: this.companySelect
                });
 
                // 2. Felhasználó létrehozása
@@ -203,10 +204,7 @@ export class CompanyService {
                     }
                });
 
-               return tx.company.findUnique({
-                    where: { id: company.id },
-                    select: this.companySelect
-               });
+               return company;
           });
      }
 
