@@ -45,5 +45,14 @@ export const MyProfileUpdateSchema = z.object({
 });
 
 
+export const UniversityTransitionSchema = z.object({
+    body: z.object({
+        neptunCode: z.string().min(6, "A Neptun kód legalább 6 karakter kell legyen"),
+        majorId: z.string().uuid("Érvénytelen szak azonosító"),
+        graduationYear: z.number().int().min(1900).max(2100).optional()
+    })
+});
+
 export type StudentUpdateInput = z.infer<typeof StudentUpdateSchema>["body"];
 export type MyProfileUpdateInput = z.infer<typeof MyProfileUpdateSchema>["body"];
+export type UniversityTransitionInput = z.infer<typeof UniversityTransitionSchema>["body"];
