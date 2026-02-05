@@ -135,6 +135,25 @@ export class StudentService {
           });
      }
 
+     async transitionToUniversity(userId: string, data: any) {
+          return await prisma.user.update({
+               where: { id: userId },
+               data: {
+                    studentProfile: {
+                         update: {
+                              neptunCode: data.neptunCode,
+                              majorId: data.majorId,
+                              graduationYear: data.graduationYear,
+                              isInHighSchool: false,
+                              firstChoiceId: null,
+                              secondChoiceId: null
+                         }
+                    }
+               },
+               select: this.studentSelect
+          });
+     }
+
      private prepareLocationUpdate(existingLocation: any, newLocation: any) {
           if (!newLocation) return undefined;
 
