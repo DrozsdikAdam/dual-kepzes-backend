@@ -716,6 +716,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | :--- | :--- | :--- |
 | `GET` | `/` | Aktív cégek listázása. |
 | `POST` | `/` | Új cég létrehozása. |
+| `POST` | `/with-admin` | Új cég és hozzá tartozó cégadmin létrehozása egy lépésben (Admin). |
 | `GET` | `/inactive` | Inaktív cégek listázása. |
 | `GET` | `/own-application` | Saját jelentkezési felülettel rendelkező cégek listázása. |
 | `GET` | `/:id` | Cég részletei. |

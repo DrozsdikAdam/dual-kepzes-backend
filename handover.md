@@ -1,6 +1,6 @@
 # 🎓 Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-05 (System Admin Email Policy implementálva)  
+> **Utolsó frissítés**: 2026-02-05 (Cég és Admin együttes létrehozása implementálva)  
 > **Projekt státusz**: Production-ready
 
 ---
@@ -322,6 +322,7 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - **Rendszergazdai email policy**: A `SYSTEM_ADMIN` felhasználók csak jelszó-visszaállítást és verifikációs emaileket kapnak, más értesítéseknél kimaradnak a levéllistából (adatbiztonsági és kényelmi okokból).
 - **Profil váltás (Középiskola -> Egyetem)**: Dedikált végpont a hallgatók számára az egyetemi adatok (Neptun, Szak) rögzítésére és a státuszváltásra (Rendszergazdai értesítéssel).
 - **Adminisztrátori kontroll**: A rendszergazdák automatikus értesítést kapnak minden cégadat-módosításról, aktiválásról vagy deaktiválásról.
+- **Kombinált cég és admin létrehozás**: Új végpont (`/api/companies/with-admin`) a cég és a hozzá tartozó adminisztrátor egy tranzakcióban történő rögzítésére (Rendszergazdai értesítéssel).
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
@@ -362,4 +363,4 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 
 ---
 
-> 📝 **Megjegyzés**: Ez a dokumentáció a projekt 2026-02-02-i állapotát tükrözi. Kérd az aktualizálását, ha jelentős változások történnek.
+> 📝 **Megjegyzés**: Ez a dokumentáció a projekt 2026-02-05-i állapotát tükrözi. Kérd az aktualizálását, ha jelentős változások történnek.
