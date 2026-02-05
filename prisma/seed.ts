@@ -75,6 +75,50 @@ async function main() {
     })
     console.log(`👤 Student létrehozva: ${studentUser.email}`)
 
+    // 4. MAJORS (SZAKOK) - ahol magyar/angol van, ott 2 rekord
+    console.log('\n🎓 Major (szak) adatok betöltése...')
+
+    const majors = [
+        // Műszaki képzések
+        { name: 'gépészmérnöki BSc', languages: ['magyar', 'angol'] },
+        { name: 'gépészmérnöki MSc', languages: ['magyar'] },
+        { name: 'villamosmérnöki', languages: ['magyar'] },
+        { name: 'járműmérnöki', languages: ['magyar', 'angol'] },
+        { name: 'mérnökinformatikus', languages: ['magyar', 'angol'] },
+        { name: 'üzemmérnök-inf. Bprof', languages: ['magyar'] },
+        { name: 'logisztikai mérnöki', languages: ['magyar'] },
+
+        // Gazdasági képzések
+        { name: 'gazdálkodási és menedzsment', languages: ['magyar', 'angol'] },
+        { name: 'pénzügy és számvitel', languages: ['magyar'] },
+        { name: 'nemzetközi gazdálkodás', languages: ['magyar'] },
+        { name: 'turizmus-vendéglátás', languages: ['magyar'] },
+        { name: 'kereskedelem és marketing', languages: ['magyar'] },
+
+        // Agrár képzések
+        { name: 'gazdasági és vidékfejlesztési agrármérnöki', languages: ['magyar'] },
+        { name: 'kertészmérnöki', languages: ['magyar'] },
+        { name: 'mezőgazdasági mérnöki', languages: ['magyar'] },
+    ]
+
+    let majorCreatedCount = 0
+    for (const major of majors) {
+        for (const language of major.languages) {
+            const existing = await prisma.major.findFirst({
+                where: { name: major.name, language: language },
+            })
+
+            if (!existing) {
+                await prisma.major.create({
+                    data: { name: major.name, language: language },
+                })
+                majorCreatedCount++
+                console.log(`   ✅ ${major.name} (${language})`)
+            }
+        }
+    }
+    console.log(`🎓 Szakok létrehozva: ${majorCreatedCount} db`)
+
     console.log(`\n🔐 Belépési jelszó mindenkihez: ${DEFAULT_PASSWORD}`)
     console.log('✅ Seed befejezve.')
 }
