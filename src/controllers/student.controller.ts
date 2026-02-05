@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { studentService } from "../services/student.service";
+import { userService } from "../services/user.service";
+import { notificationService } from "../services/notification.service";
+import { Role } from "@prisma/client";
 import { logAction } from "../utils/logger.util";
 import { mapStudent } from "../utils/mapper.util";
 import { getPaginationParams } from "../utils/pagination.util";
@@ -178,6 +181,19 @@ export const transitionToUniversity = async (req: Request, res: Response, next: 
             message: "Sikeresen átváltottál egyetemi profilra!",
             data: mapStudent(updated)
         });
+
+        // Értesítés a rendszergazdáknak
+        const admins = (await userService.getAllByRole(Role.SYSTEM_ADMIN)) as any[];
+        const studentName = (updated as any).fullName || "Hallgató";
+
+        for (const admin of admins) {
+            await notificationService.create({
+                userId: admin.id,
+                title: "Egyetemi profil váltás",
+                message: `${studentName} átváltott középiskolai profilról egyetemire (Neptun: ${req.body.neptunCode}).`,
+                type: "STUDENT_TRANSITION"
+            });
+        }
     } catch (error) {
         next(error);
     }
