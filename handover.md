@@ -320,6 +320,8 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - **Bővített statisztikák**: Teljes körű API statisztikák elérhetőek a `/api/stats` alatt (Jelentkezések, Partnerségek, Pozíciók, Trendek).
 - **Konvenció szerinti félév kezelés**: A duális partnerségeknél a félévek egységes "YYYY/YY/S" formátumban kerülnek rögzítésre.
 - **Rendszergazdai email policy**: A `SYSTEM_ADMIN` felhasználók csak jelszó-visszaállítást és verifikációs emaileket kapnak, más értesítéseknél kimaradnak a levéllistából (adatbiztonsági és kényelmi okokból).
+- **Profil váltás (Középiskola -> Egyetem)**: Dedikált végpont a hallgatók számára az egyetemi adatok (Neptun, Szak) rögzítésére és a státuszváltásra (Rendszergazdai értesítéssel).
+- **Adminisztrátori kontroll**: A rendszergazdák automatikus értesítést kapnak minden cégadat-módosításról, aktiválásról vagy deaktiválásról.
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)

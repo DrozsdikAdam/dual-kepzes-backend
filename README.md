@@ -137,12 +137,11 @@ A listázó végpontok egységes válaszstruktúrát és lekérdezési paraméte
 
 | Szerepkör | Leírás | Főbb jogosultságok |
 |:----------|:-------|:-------------------|
-| `STUDENT` | Hallgató | Saját profil, jelentkezések, partnerségek megtekintése |
-| `MENTOR` | Céges munkavállaló/Mentor | Cég pozíciói, jelentkezések megtekintése, mentor funkciók |
-| `COMPANY_ADMIN` | Cégadmin | Teljes cégkezelés, jelentkezések értékelése, pozíciók és munkavállalók kezelése |
-| `UNIVERSITY_USER` | Egyetemi kapcsolattartó | Partnerségek jóváhagyása, hallgatók felügyelete |
-| `SYSTEM_ADMIN` | Rendszergazda | Teljes rendszer adminisztráció, minden entitás kezelése |
-| | | **Email policy**: Csak biztonsági emaileket (PW reset, Verification) kap. |
+| `STUDENT` | Hallgató | Saját profil, jelentkezések, partnerségek megtekintése, **egyetemi profilra váltás**. |
+| `MENTOR` | Céges munkavállaló/Mentor | Cég pozíciói, jelentkezések megtekintése, mentor funkciók. |
+| `COMPANY_ADMIN` | Cégadmin | Teljes cégkezelés, jelentkezések értékelése, pozíciók és munkavállalók kezelése. |
+| `UNIVERSITY_USER` | Egyetemi kapcsolattartó | Partnerségek jóváhagyása, hallgatók felügyelete. |
+| `SYSTEM_ADMIN` | Rendszergazda | Teljes rendszer adminisztráció, minden entitás kezelése. (Email policy: Csak biztonsági emaileket kap). |
 
 ## 🗄️ Adatbázis Séma Áttekintés
 
@@ -703,6 +702,7 @@ curl http://localhost:3000/api/students/me \
 | `GET` | `/` | Összes hallgató listázása. |
 | `GET` | `/me` | Saját hallgatói profil lekérése. |
 | `PATCH` | `/me` | Saját profil frissítése. |
+| `PATCH` | `/me/university-transition` | Átváltás középiskolai profilról egyetemire (Neptun kód, Szak). |
 | `DELETE` | `/me` | Saját profil törlése. |
 | `GET` | `/:id` | Hallgató lekérése ID alapján. |
 | `PATCH` | `/:id` | Hallgató módosítása (Admin). |
