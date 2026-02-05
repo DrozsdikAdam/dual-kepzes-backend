@@ -1,6 +1,6 @@
 # 🎓 Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-04  
+> **Utolsó frissítés**: 2026-02-05  
 > **Projekt státusz**: Production-ready
 
 ---
@@ -317,6 +317,8 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - **Szak (Major) kezelés** - CRUD műveletek `/api/majors` végponton:
   - Szakok listázása, létrehozása, frissítése, törlése
   - StudentProfile kapcsolat: `majorId`, `firstChoiceId`, `secondChoiceId` → Major táblára hivatkozik
+- **Bővített statisztikák**: Teljes körű API statisztikák elérhetőek a `/api/stats` alatt (Jelentkezések, Partnerségek, Pozíciók, Trendek).
+- **Konvenció szerinti félév kezelés**: A duális partnerségeknél a félévek egységes "YYYY/YY/S" formátumban kerülnek rögzítésre.
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)

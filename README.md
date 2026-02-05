@@ -138,7 +138,7 @@ A listázó végpontok egységes válaszstruktúrát és lekérdezési paraméte
 | Szerepkör | Leírás | Főbb jogosultságok |
 |:----------|:-------|:-------------------|
 | `STUDENT` | Hallgató | Saját profil, jelentkezések, partnerségek megtekintése |
-| `COMPANY_EMPLOYEE` | Céges munkavállaló | Cég pozíciói, jelentkezések megtekintése, mentor funkciók |
+| `MENTOR` | Céges munkavállaló/Mentor | Cég pozíciói, jelentkezések megtekintése, mentor funkciók |
 | `COMPANY_ADMIN` | Cégadmin | Teljes cégkezelés, jelentkezések értékelése, pozíciók és munkavállalók kezelése |
 | `UNIVERSITY_USER` | Egyetemi kapcsolattartó | Partnerségek jóváhagyása, hallgatók felügyelete |
 | `SYSTEM_ADMIN` | Rendszergazda | Teljes rendszer adminisztráció, minden entitás kezelése |
@@ -173,10 +173,11 @@ erDiagram
         string studyMode
         boolean hasLanguageCert
         boolean isInHighSchool
-        string firstChoice
-        string secondChoice
+        string firstChoiceId FK
+        string secondChoiceId FK
         string language
         string languageLevel
+        boolean isAvailableForWork
     }
     Company {
         string id PK
@@ -290,8 +291,8 @@ erDiagram
     StudentProfile ||--o{ Application : "submits"
     StudentProfile ||--o{ DualPartnership : "participates"
     StudentProfile }o--o| Major : "current major"
-    StudentProfile }o--o| Major : "first choice"
-    StudentProfile }o--o| Major : "second choice"
+    StudentProfile }o--o| Major : "first choice major"
+    StudentProfile }o--o| Major : "second choice major"
     
     CompanyEmployee ||--o{ DualPartnership : "mentors"
     
