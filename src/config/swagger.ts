@@ -185,6 +185,7 @@ const options: swaggerJsdoc.Options = {
                               fullName: { type: 'string' },
                               phoneNumber: { type: 'string' },
                               neptunCode: { type: 'string' },
+                              majorId: { type: 'string', format: 'uuid' },
                               mothersName: { type: 'string' },
                               highSchool: { type: 'string' },
                               graduationYear: { type: 'number' },

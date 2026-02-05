@@ -32,6 +32,7 @@ export const studentSchema = baseUserSchema.extend({
     }).optional(),
     highSchool: z.string().trim().min(1),
     neptunCode: z.string().trim().length(6, { message: "A neptun kód pontosan 6 karakter hosszú." }).optional(),
+    majorId: z.string().uuid("Érvénytelen szak azonosító").optional(),
     studyMode: z.enum(["NAPPALI", "LEVELEZŐ"]),
     graduationYear: z.number().min(2000, { message: "Érvénytelen érettségi év" }).max(new Date().getFullYear() + 1, { message: "Érvénytelen érettségi év" }),
 
