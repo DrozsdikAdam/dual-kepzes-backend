@@ -3,6 +3,7 @@ import { NotFoundError, ForbiddenError } from '../errors/AppError';
 import { PartnershipStatus, ApplicationStatus } from '@prisma/client';
 import { getCompanyIdForUser } from '../utils/company.util';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
+import { validatePartnershipTransition } from '../utils/status-transition.util';
 
 export class PartnershipService {
      async getById(partnershipId: string, userId: string) {
@@ -107,6 +108,9 @@ export class PartnershipService {
                throw new NotFoundError('Partneri kapcsolat');
           }
 
+          // 🛡️ Never Trust The Client: Státusz átmenet validálása
+          validatePartnershipTransition(partnership.status, PartnershipStatus.TERMINATED);
+
           return await prisma.dualPartnership.update({
                where: { id: partnershipId },
                data: { status: PartnershipStatus.TERMINATED },
@@ -132,6 +136,9 @@ export class PartnershipService {
           if (!partnership) {
                throw new NotFoundError('Partneri kapcsolat');
           }
+
+          // 🛡️ Never Trust The Client: Státusz átmenet validálása
+          validatePartnershipTransition(partnership.status, PartnershipStatus.PENDING_UNIVERSITY);
 
           // Verify partnership belongs to company
           const validApplication = await prisma.application.findFirst({
@@ -160,7 +167,17 @@ export class PartnershipService {
      }
 
      async assignUniversityUser(id: string, uniEmployeeId: string, userId: string) {
-          // Basic assignment logic - could be expanded with more permission checks
+          const partnership = await prisma.dualPartnership.findUnique({
+               where: { id }
+          });
+
+          if (!partnership) {
+               throw new NotFoundError('Partneri kapcsolat');
+          }
+
+          // 🛡️ Never Trust The Client: Státusz átmenet validálása
+          validatePartnershipTransition(partnership.status, PartnershipStatus.ACTIVE);
+
           return await prisma.dualPartnership.update({
                where: { id },
                data: {
