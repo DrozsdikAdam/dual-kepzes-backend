@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { AppError } from "../errors/AppError";
+import { AppError, ForbiddenError, UnauthorizedError } from "../errors/AppError";
 import { ZodError } from "zod";
 import { ErrorCodes } from "../constants";
+import { logAccessDenied } from "../utils/security-logger.util";
 
 export const errorHandler = (
     err: any,
@@ -48,6 +49,11 @@ export const errorHandler = (
 
     // Handle known application errors
     if (err instanceof AppError) {
+        // Biztonsági logolás 401/403 hibáknál
+        if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
+            logAccessDenied(req, err.message, err.statusCode as 401 | 403).catch(() => { });
+        }
+
         return res.status(err.statusCode).json({
             success: false,
             message: err.message, // Top-level message for UI compatibility

@@ -23,6 +23,7 @@ import {
     isStudent,
     isUniversityStaff
 } from "../middlewares/auth.middleware";
+import { requirePartnershipOwnership } from "../middlewares/ownership.middleware";
 
 const router = Router();
 
@@ -147,6 +148,7 @@ router.get("/:id",
 router.patch(
     "/:id",
     authenticateToken,
+    requirePartnershipOwnership,
     validate(DualPartnershipUpdateSchema),
     updatePartnership
 );
@@ -244,6 +246,7 @@ router.patch(
 router.patch(
     "/:id/terminate",
     authenticateToken,
+    requirePartnershipOwnership,
     terminatePartnership
 );
 
@@ -267,6 +270,7 @@ router.patch(
  */
 router.delete("/:id",
     authenticateToken,
+    requirePartnershipOwnership,
     deletePartnership
 );
 

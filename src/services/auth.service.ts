@@ -1,7 +1,7 @@
 import prisma from '../config/prisma';
 import { hashPassword, comparePassword, generateToken, generateResetToken, hashToken } from '../utils/auth.util';
 import { RegisterInput, LoginInput } from '../schemas/auth.schema';
-import { BadRequestError, UnauthorizedError } from '../errors/AppError';
+import { BadRequestError, UnauthorizedError, ForbiddenError } from '../errors/AppError';
 import { Role } from '@prisma/client';
 import { generateVerificationEmail, generatePasswordResetEmail } from '../utils/email.util';
 import { addEmailToQueue } from './email.queue';
@@ -15,6 +15,11 @@ export class AuthService {
 
           if (existingUser) {
                throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
+          }
+
+          // SYSTEM_ADMIN role nem engedélyezett nyilvános regisztrációnál
+          if (data.role === Role.SYSTEM_ADMIN) {
+               throw new ForbiddenError('A SYSTEM_ADMIN szerepkör csak adminisztrátor által hozható létre.');
           }
 
           const hashedPassword = await hashPassword(data.password);
@@ -74,7 +79,6 @@ export class AuthService {
                          });
                          break;
                     case Role.UNIVERSITY_USER:
-                    case Role.SYSTEM_ADMIN:
                          // No extra data needed for now
                          break;
                     default:

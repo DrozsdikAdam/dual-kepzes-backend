@@ -1,9 +1,7 @@
 node_modules
 # Keep environment variables out of version control
 .env
-
+/planFiles
 /scripts
 /src/generated/prisma
 .vscode
-CHECKLIST.md
-dualis_partneri_kapcsolat_terv.md

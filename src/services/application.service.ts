@@ -4,6 +4,7 @@ import { ApplicationStatus, PartnershipStatus } from '@prisma/client';
 import { getCompanyIdForUser } from '../utils/company.util';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 import { getCurrentSemester } from '../utils/semester.util';
+import { validateApplicationTransition } from '../utils/status-transition.util';
 
 export class ApplicationService {
      async apply(studentId: string, positionId: string) {
@@ -66,6 +67,9 @@ export class ApplicationService {
                throw new NotFoundError('Jelentkezés');
           }
 
+          // Státusz átmenet validálása
+          validateApplicationTransition(application.status, ApplicationStatus.RETRACTED);
+
           return await prisma.application.update({
                where: { id: applicationId },
                data: { status: ApplicationStatus.RETRACTED },
@@ -113,6 +117,9 @@ export class ApplicationService {
           if (!application) {
                throw new NotFoundError('Jelentkezés');
           }
+
+          // Státusz átmenet validálása
+          validateApplicationTransition(application.status, status);
 
           return await prisma.$transaction(async (tx) => {
                const updatedApp = await tx.application.update({

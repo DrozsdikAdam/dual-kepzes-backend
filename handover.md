@@ -1,11 +1,11 @@
-# 🎓 Duális Képzés Backend - Átadási Dokumentáció
+# Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-05 (Cég és Admin együttes létrehozása implementálva)  
+> **Utolsó frissítés**: 2026-02-09 (Biztonsági fejlesztések és tisztítás)  
 > **Projekt státusz**: Production-ready
 
 ---
 
-## 📋 1. Projekt Áttekintés
+## 1. Projekt Áttekintés
 
 ### Cél
 A Duális Képzés rendszer backend szolgáltatása. Az alkalmazás célja a hallgatók, cégek, egyetemi szereplők és a duális képzés adminisztrációjának támogatása egy robusztus, biztonságos és skálázható REST API-n keresztül.
@@ -28,7 +28,7 @@ A Duális Képzés rendszer backend szolgáltatása. Az alkalmazás célja a hal
 
 ---
 
-## 🔐 2. Környezeti Változók
+## 2. Környezeti Változók
 
 A `.env` fájl szükséges változói:
 
@@ -46,7 +46,7 @@ DATABASE_URL="postgresql://user:password@host:5432/database?schema=public"
 DIRECT_URL="postgresql://user:password@host:5432/database?schema=public"
 ```
 
-> ⚠️ **Fontos**: A Prisma a `DIRECT_URL` változót használja a schema.prisma-ban!
+> **Fontos**: A Prisma a `DIRECT_URL` változót használja a schema.prisma-ban!
 
 ### Biztonság
 ```env
@@ -85,16 +85,16 @@ REDIS_PASSWORD="optional_password"
 REDIS_USERNAME="optional_username"
 ```
 
-> 💡 **Megjegyzés**: Ha nincs Redis konfigurálva, az email küldés szinkron módon vagy mock-olva működik.
+> **Megjegyzés**: Ha nincs Redis konfigurálva, az email küldés szinkron módon vagy mock-olva működik.
 
 ---
 
-## 🗄️ 3. Adatbázis
+## 3. Adatbázis
 
 ### Adatbázis Elérhetőség
 Az adatbázis kapcsolati stringet a `DIRECT_URL` környezeti változóban kell megadni.
 
-> 💡 **Fejlesztéshez**: Használj lokális PostgreSQL-t vagy Docker konténert.
+> **Fejlesztéshez**: Használj lokális PostgreSQL-t vagy Docker konténert.
 
 ### Fontos Parancsok
 
@@ -113,7 +113,7 @@ npm run prisma:format
 ```
 
 ### Adatbázis Séma Fájl
-📍 `prisma/schema.prisma`
+`prisma/schema.prisma`
 
 ### Fő Entitások
 - **User** - Felhasználói fiókok (minden szerepkörhöz)
@@ -138,14 +138,14 @@ npm run prisma:format
 
 ---
 
-## 📡 4. Deployment
+## 4. Deployment
 
 ### Fejlesztési Környezet (Railway - Jelenleg)
 A fejlesztés során Railway platformot használunk tesztelésre:
 - **API Base URL**: `https://dual-kepzes-backend-production-7c45.up.railway.app`
 - **Swagger UI**: `https://dual-kepzes-backend-production-7c45.up.railway.app/api-docs`
 
-> ⚠️ **Megjegyzés**: Ez csak fejlesztési/teszt környezet! Az éles rendszer más platformon lesz hostolva.
+> **Megjegyzés**: Ez csak fejlesztési/teszt környezet! Az éles rendszer más platformon lesz hostolva.
 
 ### Railway CLI Parancsok (Fejlesztéshez)
 ```bash
@@ -201,7 +201,7 @@ REDIS_URL=<Redis connection string>
 
 ---
 
-## 🔧 5. Fejlesztői Környezet
+## 5. Fejlesztői Környezet
 
 ### Előfeltételek
 - **Node.js**: v18.x vagy újabb
@@ -243,7 +243,7 @@ npm run dev
 
 ---
 
-## 📁 6. Projekt Struktúra
+## 6. Projekt Struktúra
 
 ```
 dual-kepzes-backend/
@@ -279,7 +279,7 @@ dual-kepzes-backend/
 
 ---
 
-## 🔑 7. Alapértelmezett Felhasználók (Seed)
+## 7. Alapértelmezett Felhasználók (Seed)
 
 A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létre:
 
@@ -289,11 +289,11 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 | `uni@university.com` | UNIVERSITY_USER | `TesztJelszo123!` |
 | `diak@student.com` | STUDENT | `TesztJelszo123!` |
 
-> ⚠️ **FIGYELEM**: Production környezetben ezeket a jelszavakat AZONNAL változtasd meg!
+> **FIGYELEM**: Production környezetben ezeket a jelszavakat AZONNAL változtasd meg!
 
 ---
 
-## 📊 8. Aktuális Fejlesztési Állapot
+## 8. Aktuális Fejlesztési Állapot
 
 ### ✅ Befejezett Funkciók
 - Értesítési rendszer (NotificationController)
@@ -322,7 +322,13 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - **Rendszergazdai email policy**: A `SYSTEM_ADMIN` felhasználók csak jelszó-visszaállítást és verifikációs emaileket kapnak, más értesítéseknél kimaradnak a levéllistából (adatbiztonsági és kényelmi okokból).
 - **Profil váltás (Középiskola -> Egyetem)**: Dedikált végpont a hallgatók számára az egyetemi adatok (Neptun, Szak) rögzítésére és a státuszváltásra (Rendszergazdai értesítéssel).
 - **Adminisztrátori kontroll**: A rendszergazdák automatikus értesítést kapnak minden cégadat-módosításról, aktiválásról vagy deaktiválásról.
-- **Kombinált cég és admin létrehozás**: Új végpont (`/api/companies/with-admin`) a cég és a hozzá tartozó adminisztrátor egy tranzakcióban történő rögzítésére (Rendszergazdai értesítéssel).
+- **Biztonsági Erősítések**:
+  - **Ownership Middleware**: Szigorú adathozzáférés-ellenőrzés minden módosító és törlő végponton.
+  - **Idempotency Kulcsok**: Dupla submit védelem a kritikus POST műveleteknél.
+  - **Magic Bytes Validáció**: Fájltípus ellenőrzés a tartalom alapján (PDF, Word).
+  - **Audit és Biztonsági Naplózás**: 401/403 hibák és gyanús események automatikus rögzítése.
+  - **Státusz Átmenet Validálás**: Csak az üzletileg érvényes állapotváltások engedélyezettek.
+  - **Role Korlátozás**: System Admin szerepkör nem hozható létre publikus regisztrációval.
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
@@ -334,11 +340,11 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - Integrációs tesztek
 - Riportok exportálása (CSV/PDF)
 
-> 📍 Részletes lista: `CHECKLIST.md`
+> Részletes lista: `CHECKLIST.md`
 
 ---
 
-## 📚 9. Dokumentáció Hivatkozások
+## 9. Dokumentáció Hivatkozások
 
 | Dokumentum | Leírás |
 |:-----------|:-------|
@@ -350,7 +356,7 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 
 ---
 
-## 🆘 10. Támogatás és Kapcsolat
+## 10. Támogatás és Kapcsolat
 
 ### Repository
 - **GitHub**: `https://github.com/DrozsdikAdam/dual-kepzes-backend`
@@ -363,4 +369,4 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 
 ---
 
-> 📝 **Megjegyzés**: Ez a dokumentáció a projekt 2026-02-05-i állapotát tükrözi. Kérd az aktualizálását, ha jelentős változások történnek.
+> **Megjegyzés**: Ez a dokumentáció a projekt 2026-02-09-i állapotát tükrözi. Kérd az aktualizálását, ha jelentős változások történnek.
