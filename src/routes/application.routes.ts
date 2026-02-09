@@ -15,6 +15,7 @@ import { authenticateToken, isCompanyEmployee, isStudent, isSystemAdmin } from "
 import { validate } from "../middlewares/validate.middleware";
 import { CreateApplicationSchema, EvaluateApplicationSchema, UpdateApplicationSchema } from "../schemas/application.schema";
 import { uploadConfig } from "../config/upload.config";
+import { requireIdempotency } from "../middlewares/idempotency.middleware";
 
 const router = Router();
 
@@ -47,7 +48,7 @@ router.use(authenticateToken)
  *       201:
  *         description: Application submitted successfully
  */
-router.post("/", validate(CreateApplicationSchema), applyToPosition)
+router.post("/", requireIdempotency(), validate(CreateApplicationSchema), applyToPosition)
 
 /**
  * @swagger
@@ -94,6 +95,7 @@ router.post("/", validate(CreateApplicationSchema), applyToPosition)
  */
 router.post(
      "/submit-with-files",
+     requireIdempotency(),
      uploadConfig.fields([
           { name: "cv", maxCount: 1 },
           { name: "motivationLetter", maxCount: 1 }

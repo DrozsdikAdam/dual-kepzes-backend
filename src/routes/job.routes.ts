@@ -17,6 +17,7 @@ import {
 } from "../schemas/job.schema";
 import { authenticateToken } from "../middlewares/auth.middleware";
 import { requirePositionOwnership } from "../middlewares/ownership.middleware";
+import { requireIdempotency } from "../middlewares/idempotency.middleware";
 
 const router = Router();
 
@@ -132,6 +133,7 @@ router.get("/positions/company/:companyId",
 router.post(
     "/positions",
     authenticateToken,
+    requireIdempotency(),
     validate(PositionCreateSchema),
     createPosition
 );
