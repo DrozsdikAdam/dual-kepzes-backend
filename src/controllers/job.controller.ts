@@ -3,7 +3,7 @@ import { jobService } from "../services/job.service";
 import { PositionInput, TagInput } from "../schemas/job.schema";
 import { logAction } from "../utils/logger.util";
 import { mapPosition } from "../utils/mapper.util";
-import { getCompanyIdForUser } from "../utils/company.util";
+import { getCompanyIdForUser, checkPositionOwnership } from "../utils/company.util";
 import { getPaginationParams } from "../utils/pagination.util";
 import { ForbiddenError } from "../errors/AppError";
 
@@ -133,13 +133,27 @@ export const createPosition = async (
     next: NextFunction
 ) => {
     try {
-        const newPosition = await jobService.create(req.body);
+        // 🛡️ Never Trust The Client: companyId a tokenből, nem a body-ból
+        const { userId } = req.user!;
+        const companyId = await getCompanyIdForUser(userId);
+
+        if (!companyId) {
+            throw new ForbiddenError("Nem tartozol egyetlen céghez sem. Csak céghez tartozó felhasználók hozhatnak létre pozíciókat.");
+        }
+
+        // Body-ból érkező companyId figyelmen kívül hagyása
+        const { companyId: _ignoredCompanyId, ...positionData } = req.body;
+
+        const newPosition = await jobService.create({
+            ...positionData,
+            companyId // Szerver-oldali érték
+        });
 
         await logAction(req, {
             action: "CREATE_POSITION",
             entity: "Position",
             entityId: newPosition.id,
-            details: { createdById: req.user?.userId, title: newPosition.title, companyId: req.body.companyId }
+            details: { createdById: userId, title: newPosition.title, companyId }
         });
 
         res.status(201).json({
@@ -155,18 +169,29 @@ export const createPosition = async (
 export const updatePosition = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
-        const updated = await jobService.update(id, req.body);
+        const { userId } = req.user!;
+
+        // 🛡️ Never Trust The Client: Ownership ellenőrzés
+        const isOwner = await checkPositionOwnership(userId, id);
+        if (!isOwner) {
+            throw new ForbiddenError("Nincs jogosultságod módosítani ezt a pozíciót.");
+        }
+
+        // Body-ból érkező companyId figyelmen kívül hagyása
+        const { companyId: _ignoredCompanyId, ...positionData } = req.body;
+
+        const updated = await jobService.update(id, positionData);
 
         await logAction(req, {
             action: "UPDATE_POSITION",
             entity: "Position",
             entityId: id,
-            details: { updatedById: req.user?.userId, title: updated.title, changedFields: Object.keys(req.body) }
+            details: { updatedById: userId, title: updated.title, changedFields: Object.keys(positionData) }
         });
 
         res.json({
             success: true,
-            message: "Pozíció adatai sikeresen frissítve",
+            message: "Pozíció adatai sikeresen fríssítve",
             data: mapPosition(updated)
         });
     } catch (error) {
@@ -177,13 +202,21 @@ export const updatePosition = async (req: Request, res: Response, next: NextFunc
 export const deletePosition = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
+        const { userId } = req.user!;
+
+        // 🛡️ Never Trust The Client: Ownership ellenőrzés
+        const isOwner = await checkPositionOwnership(userId, id);
+        if (!isOwner) {
+            throw new ForbiddenError("Nincs jogosultságod törölni ezt a pozíciót.");
+        }
+
         await jobService.delete(id);
 
         await logAction(req, {
             action: "DELETE_POSITION",
             entity: "Position",
             entityId: id,
-            details: { deletedById: req.user?.userId }
+            details: { deletedById: userId }
         });
 
         res.json({ success: true, message: "Pozíció sikeresen törölve." });
@@ -195,13 +228,21 @@ export const deletePosition = async (req: Request, res: Response, next: NextFunc
 export const deactivatePosition = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
+        const { userId } = req.user!;
+
+        // 🛡️ Never Trust The Client: Ownership ellenőrzés
+        const isOwner = await checkPositionOwnership(userId, id);
+        if (!isOwner) {
+            throw new ForbiddenError("Nincs jogosultságod deaktiválni ezt a pozíciót.");
+        }
+
         const updated = await jobService.setStatus(id, false);
 
         await logAction(req, {
             action: "DEACTIVATE_POSITION",
             entity: "Position",
             entityId: id,
-            details: { deactivatedBy: req.user?.userId }
+            details: { deactivatedBy: userId }
         });
 
         res.json({
@@ -217,13 +258,21 @@ export const deactivatePosition = async (req: Request, res: Response, next: Next
 export const reactivatePosition = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
+        const { userId } = req.user!;
+
+        // 🛡️ Never Trust The Client: Ownership ellenőrzés
+        const isOwner = await checkPositionOwnership(userId, id);
+        if (!isOwner) {
+            throw new ForbiddenError("Nincs jogosultságod reaktiválni ezt a pozíciót.");
+        }
+
         const updated = await jobService.setStatus(id, true);
 
         await logAction(req, {
             action: "REACTIVATE_POSITION",
             entity: "Position",
             entityId: id,
-            details: { reactivatedBy: req.user?.userId }
+            details: { reactivatedBy: userId }
         });
 
         res.json({
