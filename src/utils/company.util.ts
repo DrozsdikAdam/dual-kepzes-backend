@@ -17,3 +17,28 @@ export const getCompanyIdForUser = async (userId: string): Promise<string | null
 
      return null;
 };
+
+/**
+ * 🛡️ Never Trust The Client: Ellenőrzi, hogy a pozíció a felhasználó cégéhez tartozik-e
+ * @param userId A bejelentkezett felhasználó ID-ja
+ * @param positionId Az ellenőrizendő pozíció ID-ja
+ * @returns {Promise<boolean>} true, ha a pozíció a felhasználó cégéhez tartozik
+ */
+export const checkPositionOwnership = async (userId: string, positionId: string): Promise<boolean> => {
+     const companyId = await getCompanyIdForUser(userId);
+
+     if (!companyId) {
+          return false;
+     }
+
+     const position = await prisma.position.findFirst({
+          where: {
+               id: positionId,
+               companyId,
+               deletedAt: null
+          },
+          select: { id: true }
+     });
+
+     return !!position;
+};
