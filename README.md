@@ -798,6 +798,7 @@ A partnerség automatikusan létrejön `PENDING_MENTOR` státusszal, amikor a c�
 | `GET` | `/:id` | Partnerkapcsolat részletei. |
 | `PATCH` | `/:id` | Partnerkapcsolat adatainak frissítése. |
 | `PATCH` | `/:id/assign-mentor` | Mentor hozzárendelése (Cégadmin). |
+| `PATCH` | `/:id/complete` | Partnerkapcsolat befejezetté tétele (FINISHED). |
 | `PATCH` | `/:id/assign-university-user` | Egyetemi felelős hozzárendelése (Admin). |
 | `PATCH` | `/:id/terminate` | Partnerkapcsolat megszakítása (Terminated státusz). |
 | `DELETE` | `/:id` | Partnerkapcsolat törlése (Soft delete). |

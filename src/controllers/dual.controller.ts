@@ -135,6 +135,37 @@ export const terminatePartnership = async (req: Request, res: Response, next: Ne
     }
 };
 
+export const completePartnership = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const { userId } = req.user!;
+
+        const updated = await partnershipService.complete(id, userId);
+
+        await logAction(req, {
+            action: "COMPLETE_DUAL_PARTNERSHIP",
+            entity: "DualPartnership",
+            entityId: id,
+            details: { completedBy: userId }
+        });
+
+        await notificationService.create({
+            userId: updated.student.userId,
+            title: "Partnerség befejezve",
+            message: `A(z) ${updated.position?.company.name || "érintett"} céggel kötött partnerséged sikeresen befejeződött.`,
+            type: "PARTNERSHIP_COMPLETED"
+        });
+
+        res.json({
+            success: true,
+            message: "Partneri kapcsolat befejezve.",
+            data: mapDualPartnership(updated)
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const assignMentor = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;

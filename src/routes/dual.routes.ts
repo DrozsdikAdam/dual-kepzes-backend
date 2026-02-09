@@ -5,6 +5,7 @@ import {
     getPartnershipById,
     updatePartnership,
     terminatePartnership,
+    completePartnership,
     assignMentor,
     assignUniversityUser,
     getStudentPartnerships,
@@ -248,6 +249,31 @@ router.patch(
     authenticateToken,
     requirePartnershipOwnership,
     terminatePartnership
+);
+
+/**
+ * @swagger
+ * /api/partnerships/{id}/complete:
+ *   patch:
+ *     summary: Complete a partnership
+ *     tags: [Partnerships]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Partnership completed successfully
+ */
+router.patch(
+    "/:id/complete",
+    authenticateToken,
+    requirePartnershipOwnership,
+    completePartnership
 );
 
 /**

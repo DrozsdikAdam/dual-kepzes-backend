@@ -118,6 +118,28 @@ export class PartnershipService {
           });
      }
 
+     async complete(partnershipId: string, userId: string) {
+          const partnership = await prisma.dualPartnership.findUnique({
+               where: { id: partnershipId }
+          });
+
+          if (!partnership) {
+               throw new NotFoundError('Partneri kapcsolat');
+          }
+
+          // Státusz átmenet validálása (ACTIVE -> FINISHED)
+          validatePartnershipTransition(partnership.status, PartnershipStatus.FINISHED);
+
+          return await prisma.dualPartnership.update({
+               where: { id: partnershipId },
+               data: {
+                    status: PartnershipStatus.FINISHED,
+                    endDate: new Date()
+               },
+               select: this.getPartnershipSelect()
+          });
+     }
+
      async assignMentor(
           partnershipId: string,
           mentorId: string,
