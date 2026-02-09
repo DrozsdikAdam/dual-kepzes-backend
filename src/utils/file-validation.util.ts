@@ -1,9 +1,6 @@
 /**
- * 🛡️ Never Trust The Client - File Validation Utility
- * 
- * Magic bytes (file signature) alapú fájltípus ellenőrzés.
- * A kliens által küldött MIME type könnyen hamisítható, 
- * ezért a fájl tényleges tartalmát is ellenőrizzük.
+ * File Validation Utility
+ * Magic bytes alapú fájltípus ellenőrzés.
  */
 
 import { fromBuffer } from 'file-type';

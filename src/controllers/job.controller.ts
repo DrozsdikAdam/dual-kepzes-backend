@@ -133,7 +133,7 @@ export const createPosition = async (
     next: NextFunction
 ) => {
     try {
-        // 🛡️ Never Trust The Client: companyId a tokenből, nem a body-ból
+        // companyId a tokenből, nem a body-ból
         const { userId } = req.user!;
         const companyId = await getCompanyIdForUser(userId);
 
@@ -171,7 +171,7 @@ export const updatePosition = async (req: Request, res: Response, next: NextFunc
         const { id } = req.params;
         const { userId } = req.user!;
 
-        // 🛡️ Never Trust The Client: Ownership ellenőrzés
+        // Ownership ellenőrzés
         const isOwner = await checkPositionOwnership(userId, id);
         if (!isOwner) {
             throw new ForbiddenError("Nincs jogosultságod módosítani ezt a pozíciót.");
@@ -204,7 +204,7 @@ export const deletePosition = async (req: Request, res: Response, next: NextFunc
         const { id } = req.params;
         const { userId } = req.user!;
 
-        // 🛡️ Never Trust The Client: Ownership ellenőrzés
+        // Ownership ellenőrzés
         const isOwner = await checkPositionOwnership(userId, id);
         if (!isOwner) {
             throw new ForbiddenError("Nincs jogosultságod törölni ezt a pozíciót.");
@@ -230,7 +230,7 @@ export const deactivatePosition = async (req: Request, res: Response, next: Next
         const { id } = req.params;
         const { userId } = req.user!;
 
-        // 🛡️ Never Trust The Client: Ownership ellenőrzés
+        // Ownership ellenőrzés
         const isOwner = await checkPositionOwnership(userId, id);
         if (!isOwner) {
             throw new ForbiddenError("Nincs jogosultságod deaktiválni ezt a pozíciót.");
@@ -260,7 +260,7 @@ export const reactivatePosition = async (req: Request, res: Response, next: Next
         const { id } = req.params;
         const { userId } = req.user!;
 
-        // 🛡️ Never Trust The Client: Ownership ellenőrzés
+        // Ownership ellenőrzés
         const isOwner = await checkPositionOwnership(userId, id);
         if (!isOwner) {
             throw new ForbiddenError("Nincs jogosultságod reaktiválni ezt a pozíciót.");

@@ -253,7 +253,7 @@ export const submitApplicationFiles = async (req: Request, res: Response, next: 
             });
         }
 
-        // 🛡️ Never Trust The Client: Magic bytes validálás
+        // Magic bytes validálás
         // A kliens által küldt MIME type hamisítható, ezért a fájl tényleges tartalmát ellenőrizzük
         await validateUploadedFiles(files);
 

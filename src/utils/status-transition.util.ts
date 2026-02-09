@@ -1,8 +1,6 @@
 /**
- * 🛡️ Never Trust The Client - Státusz Átmenetek Validálása
- * 
- * Ez a utility biztosítja, hogy az ApplicationStatus és PartnershipStatus
- * változtatások csak az érvényes átmeneteket engedélyezzék.
+ * Status Transition Utility
+ * ApplicationStatus és PartnershipStatus átmenetek validálása.
  */
 
 import { ApplicationStatus, PartnershipStatus } from '@prisma/client';

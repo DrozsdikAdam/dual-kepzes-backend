@@ -1,8 +1,6 @@
 /**
- * 🛡️ Never Trust The Client - Ownership Middleware
- * 
- * Általános middleware a tulajdonjog ellenőrzésére.
- * Biztosítja, hogy a felhasználó csak a saját erőforrásait tudja módosítani.
+ * Ownership Middleware
+ * Ellenőrzi, hogy a felhasználó tulajdonosa-e az erőforrásnak.
  */
 
 import { Request, Response, NextFunction } from 'express';
@@ -76,7 +74,7 @@ export function requireOwnership(config: OwnershipConfig) {
                const hasOwnership = await checkOwnership(resourceType, resourceId, userId);
 
                if (!hasOwnership) {
-                    // 🛡️ Biztonsági logolás
+                    // Biztonsági logolás
                     await logOwnershipViolation(req, resourceType, resourceId);
 
                     throw new ForbiddenError('Nincs jogosultságod ehhez az erőforráshoz.');

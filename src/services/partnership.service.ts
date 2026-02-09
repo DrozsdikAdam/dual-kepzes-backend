@@ -108,7 +108,7 @@ export class PartnershipService {
                throw new NotFoundError('Partneri kapcsolat');
           }
 
-          // 🛡️ Never Trust The Client: Státusz átmenet validálása
+          // Státusz átmenet validálása
           validatePartnershipTransition(partnership.status, PartnershipStatus.TERMINATED);
 
           return await prisma.dualPartnership.update({
@@ -137,7 +137,7 @@ export class PartnershipService {
                throw new NotFoundError('Partneri kapcsolat');
           }
 
-          // 🛡️ Never Trust The Client: Státusz átmenet validálása
+          // Státusz átmenet validálása
           validatePartnershipTransition(partnership.status, PartnershipStatus.PENDING_UNIVERSITY);
 
           // Verify partnership belongs to company
@@ -175,7 +175,7 @@ export class PartnershipService {
                throw new NotFoundError('Partneri kapcsolat');
           }
 
-          // 🛡️ Never Trust The Client: Státusz átmenet validálása
+          // Státusz átmenet validálása
           validatePartnershipTransition(partnership.status, PartnershipStatus.ACTIVE);
 
           return await prisma.dualPartnership.update({

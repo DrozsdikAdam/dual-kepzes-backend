@@ -49,7 +49,7 @@ export const errorHandler = (
 
     // Handle known application errors
     if (err instanceof AppError) {
-        // 🛡️ Never Trust The Client: Biztonsági logolás 401/403 hibáknál
+        // Biztonsági logolás 401/403 hibáknál
         if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
             logAccessDenied(req, err.message, err.statusCode as 401 | 403).catch(() => { });
         }

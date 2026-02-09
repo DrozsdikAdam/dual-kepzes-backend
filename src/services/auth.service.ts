@@ -17,7 +17,7 @@ export class AuthService {
                throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
           }
 
-          // 🛡️ Never Trust The Client: SYSTEM_ADMIN role nem engedélyezett nyilvános regisztrációnál
+          // SYSTEM_ADMIN role nem engedélyezett nyilvános regisztrációnál
           if (data.role === Role.SYSTEM_ADMIN) {
                throw new ForbiddenError('A SYSTEM_ADMIN szerepkör csak adminisztrátor által hozható létre.');
           }

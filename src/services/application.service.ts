@@ -67,7 +67,7 @@ export class ApplicationService {
                throw new NotFoundError('Jelentkezés');
           }
 
-          // 🛡️ Never Trust The Client: Státusz átmenet validálása
+          // Státusz átmenet validálása
           validateApplicationTransition(application.status, ApplicationStatus.RETRACTED);
 
           return await prisma.application.update({
@@ -118,7 +118,7 @@ export class ApplicationService {
                throw new NotFoundError('Jelentkezés');
           }
 
-          // 🛡️ Never Trust The Client: Státusz átmenet validálása
+          // Státusz átmenet validálása
           validateApplicationTransition(application.status, status);
 
           return await prisma.$transaction(async (tx) => {

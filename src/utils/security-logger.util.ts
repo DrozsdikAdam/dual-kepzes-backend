@@ -1,10 +1,6 @@
 /**
- * 🛡️ Never Trust The Client - Security Logger Utility
- * 
- * Biztonsági események logolása:
- * - Sikertelen hozzáférési kísérletek (401, 403)
- * - Gyanús aktivitás detektálása (rate limit, brute force)
- * - Érvénytelen input kísérletek
+ * Security Logger Utility
+ * Biztonsági események logolása.
  */
 
 import { Request } from 'express';

@@ -19,7 +19,7 @@ export const getCompanyIdForUser = async (userId: string): Promise<string | null
 };
 
 /**
- * 🛡️ Never Trust The Client: Ellenőrzi, hogy a pozíció a felhasználó cégéhez tartozik-e
+ * Ellenőrzi, hogy a pozíció a felhasználó cégéhez tartozik-e
  * @param userId A bejelentkezett felhasználó ID-ja
  * @param positionId Az ellenőrizendő pozíció ID-ja
  * @returns {Promise<boolean>} true, ha a pozíció a felhasználó cégéhez tartozik

@@ -1,10 +1,6 @@
 /**
- * 🛡️ Never Trust The Client - Idempotency Middleware
- * 
+ * Idempotency Middleware
  * Dupla submit védelem kritikus végpontokon.
- * A kliens egy egyedi Idempotency-Key header-t küld,
- * és a szerver gyorsítótárazza az eredményt, hogy azonos kulcs esetén
- * ne hajtsa végre újra a műveletet.
  */
 
 import { Request, Response, NextFunction } from 'express';
