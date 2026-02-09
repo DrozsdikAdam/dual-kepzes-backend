@@ -4,6 +4,7 @@ import { notificationService } from "../services/notification.service";
 import { logAction } from "../utils/logger.util";
 import { mapApplication } from "../utils/mapper.util";
 import { getPaginationParams } from "../utils/pagination.util";
+import { validateUploadedFiles } from "../utils/file-validation.util";
 import prisma from "../config/prisma";
 import { ApplicationStatus, Role } from "@prisma/client";
 import { mailer } from "../config/mailer";
@@ -251,6 +252,10 @@ export const submitApplicationFiles = async (req: Request, res: Response, next: 
                 message: "Önéletrajz (CV) csatolása kötelező."
             });
         }
+
+        // 🛡️ Never Trust The Client: Magic bytes validálás
+        // A kliens által küldt MIME type hamisítható, ezért a fájl tényleges tartalmát ellenőrizzük
+        await validateUploadedFiles(files);
 
         // Diák adatainak lekérése
         const studentProfile = await prisma.studentProfile.findUnique({
