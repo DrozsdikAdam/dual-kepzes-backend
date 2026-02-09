@@ -16,6 +16,7 @@ import {
     PositionUpdateSchema,
 } from "../schemas/job.schema";
 import { authenticateToken } from "../middlewares/auth.middleware";
+import { requirePositionOwnership } from "../middlewares/ownership.middleware";
 
 const router = Router();
 
@@ -162,6 +163,7 @@ router.post(
 router.patch(
     "/positions/:id",
     authenticateToken,
+    requirePositionOwnership,
     validate(PositionUpdateSchema),
     updatePosition
 );
@@ -186,6 +188,7 @@ router.patch(
  */
 router.delete("/positions/:id",
     authenticateToken,
+    requirePositionOwnership,
     deletePosition
 );
 
@@ -209,6 +212,7 @@ router.delete("/positions/:id",
  */
 router.patch("/positions/:id/deactivate",
     authenticateToken,
+    requirePositionOwnership,
     deactivatePosition
 );
 
