@@ -2,7 +2,7 @@
 
 Ez a repository a Duális Képzés rendszer backend szolgáltatását tartalmazza. Az alkalmazás célja a hallgatók, cégek, egyetemi szereplők és a duális képzés adminisztrációjának támogatása egy robusztus, biztonságos és skálázható REST API-n keresztül.
 
-## 🛠 Technológia Stack
+## Technológia Stack
 
 A projekt modern, iparági sztenderd technológiákra épül:
 
@@ -18,7 +18,7 @@ A projekt modern, iparági sztenderd technológiákra épül:
 -   **Tesztelés**: [Jest](https://jestjs.io/) & [Supertest](https://github.com/ladjs/supertest) - Unit és integrációs tesztek a megbízhatóság érdekében.
 -   **Dokumentáció**: [Swagger/OpenAPI](https://swagger.io/) - Interaktív API dokumentáció és végpont tesztelési felület.
 
-## 🚀 Előfeltételek
+## Előfeltételek
 
 A fejlesztői környezet futtatásához szükséges szoftverek:
 
@@ -27,7 +27,7 @@ A fejlesztői környezet futtatásához szükséges szoftverek:
 *   **PostgreSQL**: Helyi adatbázis szerver vagy Docker konténer.
 *   **Redis**: Opcionális, de ajánlott a háttérfolyamatokhoz (BullMQ).
 
-## 📥 Telepítés és Indítás
+## Telepítés és Indítás
 
 1.  **Repository klónozása**
     ```bash
@@ -81,7 +81,7 @@ A fejlesztői környezet futtatásához szükséges szoftverek:
     ```
     A szerver elindul a `http://localhost:3000` címen.
 
-## 📜 Elérhető Szkriptek
+## Elérhető Szkriptek
 
 A `package.json`-ben definiált főbb parancsok:
 
@@ -98,7 +98,7 @@ A `package.json`-ben definiált főbb parancsok:
 | `npm run format` | Kód automatikus formázása (Prettier). |
 | `npx prisma db seed` | Adatbázis feltöltése tesztadatokkal (`prisma/seed.ts`). |
 
-## 🏗 Projekt Struktúra
+## Projekt Struktúra
 
 ```
 src/
@@ -117,23 +117,23 @@ prisma/
 
 Minden végpont a `/api` prefix alatt érhető el. A legtöbb végponthoz érvényes `Authorization: Bearer <token>` fejléc szükséges.
 
-## 📚 API Dokumentáció
+## API Dokumentáció
 
 Az összes API végpont **teljes dokumentációja interaktív Swagger felületen** keresztül érhető el:
 
-👉 **Helyi fejlesztés**: `http://localhost:3000/api-docs`  
-👉 **Production**: `https://dual-kepzes-backend-production-7c45.up.railway.app/api-docs`
+**Helyi fejlesztés**: `http://localhost:3000/api-docs`  
+**Production**: `https://dual-kepzes-backend-production-7c45.up.railway.app/api-docs`
 
 A Swagger UI lehetőséget ad:
-- ✅ Végpontok részletes leírásának megtekintésére
-- ✅ Sémák és válaszok vizuális megjelenítésére  
-- ✅ Interaktív tesztelésre (Try it out!)
-- ✅ Autentikációs token használatára
+- Végpontok részletes leírásának megtekintésére
+- Sémák és válaszok vizuális megjelenítésére  
+- Interaktív tesztelésre (Try it out!)
+- Autentikációs token használatára
 
-### 📄 Lapozás (Pagination)
+### Lapozás (Pagination)
 A listázó végpontok egységes válaszstruktúrát és lekérdezési paramétereket használnak. Részleteket az [API_PAGINATION.md](API_PAGINATION.md) fájlban találsz.
 
-## 🔐 Szerepkörök és Jogosultságok
+## Szerepkörök és Jogosultságok
 
 | Szerepkör | Leírás | Főbb jogosultságok |
 |:----------|:-------|:-------------------|
@@ -143,7 +143,7 @@ A listázó végpontok egységes válaszstruktúrát és lekérdezési paraméte
 | `UNIVERSITY_USER` | Egyetemi kapcsolattartó | Partnerségek jóváhagyása, hallgatók felügyelete. |
 | `SYSTEM_ADMIN` | Rendszergazda | Teljes rendszer adminisztráció, minden entitás kezelése. (Email policy: Csak biztonsági emaileket kap). |
 
-## 🗄️ Adatbázis Séma Áttekintés
+## Adatbázis Séma Áttekintés
 
 A rendszer fő entitásai és kapcsolataik:
 
@@ -306,7 +306,7 @@ erDiagram
 
 **Részletes sémát** lásd: `prisma/schema.prisma` vagy Prisma Studio (`npm run prisma:studio`)
 
-## 🏛️ Rendszer Architektúra
+## Rendszer Architektúra
 
 A backend alkalmazás rétegelt architektúrát követ:
 
@@ -352,7 +352,7 @@ graph TB
     Services -.->|Notifications| SMTP
 ```
 
-## 🔄 Request Processing Flow
+## Request Processing Flow
 
 Egy tipikus API kérés feldolgozásának menete:
 
@@ -391,7 +391,7 @@ sequenceDiagram
     end
 ```
 
-## 🔐 Autentikációs Flow
+## Autentikációs Flow
 
 JWT token alapú autentikáció működése:
 
@@ -442,50 +442,42 @@ sequenceDiagram
     API-->>User: 200 OK + User Profile
 ```
 
-## 🎯 Partnership Status Flow
+## Partnership Status Flow
 
 A duális partnerség életciklusa (státusz átmenetek):
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDING_MENTOR: Application ACCEPTED
-
-    PENDING_MENTOR --> PENDING_UNIVERSITY: Mentor Assigned
-    
-    PENDING_UNIVERSITY --> ACTIVE: University User Assigned
-    
-    ACTIVE --> TERMINATED: Partnership Terminated
-    ACTIVE --> COMPLETED: Natural Completion
-    
-    PENDING_MENTOR --> TERMINATED: Early Termination
-    PENDING_UNIVERSITY --> TERMINATED: Early Termination
-    
+    [*] --> PENDING_MENTOR
+    PENDING_MENTOR --> PENDING_UNIVERSITY
+    PENDING_MENTOR --> TERMINATED
+    PENDING_UNIVERSITY --> ACTIVE
+    PENDING_UNIVERSITY --> TERMINATED
+    ACTIVE --> FINISHED
+    ACTIVE --> TERMINATED
+    FINISHED --> [*]
     TERMINATED --> [*]
-    COMPLETED --> [*]
-    
-    note right of PENDING_MENTOR
-        Company has accepted
-        the student's application
-    end note
-    
-    note right of PENDING_UNIVERSITY
-        Mentor assigned,
-        awaiting university approval
-    end note
-    
-    note right of ACTIVE
-        Fully operational
-        dual education partnership
-    end note
-    
-    style PENDING_MENTOR fill:#ff9800,stroke:#e65100,stroke-width:3px,color:#000
-    style PENDING_UNIVERSITY fill:#2196f3,stroke:#0d47a1,stroke-width:3px,color:#fff
-    style ACTIVE fill:#4caf50,stroke:#1b5e20,stroke-width:3px,color:#fff
-    style TERMINATED fill:#f44336,stroke:#b71c1c,stroke-width:3px,color:#fff
-    style COMPLETED fill:#00897b,stroke:#004d40,stroke-width:3px,color:#fff
 ```
 
-## 📊 Application to Partnership Process
+## Application Status Flow
+
+A jelentkezés folyamata és lehetséges állapotai:
+
+```mermaid
+stateDiagram-v2
+    [*] --> SUBMITTED
+    SUBMITTED --> ACCEPTED
+    SUBMITTED --> REJECTED
+    SUBMITTED --> NO_RESPONSE
+    SUBMITTED --> RETRACTED
+    NO_RESPONSE --> ACCEPTED
+    NO_RESPONSE --> REJECTED
+    ACCEPTED --> [*]
+    REJECTED --> [*]
+    RETRACTED --> [*]
+```
+
+## Application to Partnership Process
 
 A jelentkezéstől a partnerségig vezető üzleti folyamat:
 
@@ -521,20 +513,12 @@ flowchart TD
     style Status fill:#ffc107,stroke:#f57f17,stroke-width:2px,color:#000
     style Wait fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#000
     style End1 fill:#f44336,stroke:#b71c1c,stroke-width:3px,color:#fff
-    style CreatePartnership fill:#8bc34a,stroke:#33691e,stroke-width:2px,color:#000
-    style P1 fill:#ff9800,stroke:#e65100,stroke-width:3px,color:#000
-    style AssignMentor fill:#ffc107,stroke:#f57f17,stroke-width:2px,color:#000
-    style P2 fill:#2196f3,stroke:#0d47a1,stroke-width:3px,color:#fff
-    style Notify1 fill:#00bcd4,stroke:#006064,stroke-width:2px,color:#fff
-    style AssignUni fill:#2196f3,stroke:#0d47a1,stroke-width:2px,color:#fff
-    style P3 fill:#4caf50,stroke:#1b5e20,stroke-width:3px,color:#fff
-    style Monitor fill:#8bc34a,stroke:#33691e,stroke-width:2px,color:#000
-    style Complete fill:#cddc39,stroke:#827717,stroke-width:2px,color:#000
     style End2 fill:#f44336,stroke:#b71c1c,stroke-width:3px,color:#fff
     style End3 fill:#00897b,stroke:#004d40,stroke-width:3px,color:#fff
+
 ```
 
-## 📎 GDPR-Kompatibilis Fájlfeltöltési Folyamat
+## GDPR-Kompatibilis Fájlfeltöltési Folyamat
 
 A CV és motivációs levél feltöltése pass-through módon működik - a fájlok nem kerülnek tárolásra a szerveren:
 
@@ -553,16 +537,15 @@ sequenceDiagram
     M->>E: Buffer-ből email attachment
     E->>HR: Email küldés csatolmányokkal
     Note over E,HR: Minden céges admin<br/>megkapja az emailt
-    E-->>S: Email elküldve ✓
+    E-->>S: Email elküldve
     S->>S: Jelentkezés mentése (fájlok nélkül)
     S->>M: Garbage Collection törli a buffert
     S-->>D: 201 Created - Sikeres jelentkezés
 ```
 
-> [!IMPORTANT]
 > **GDPR megfelelőség**: A fájlok csak a memóriában (RAM) tárolódnak a feldolgozás idejére. Az email küldés után a JavaScript garbage collection automatikusan törli a buffer-eket. Semmilyen fájl nem kerül lemezre vagy adatbázisba.
 
-## 🚀 Deployment Architecture
+## Deployment Architecture
 
 Éles környezet (Railway) architektúrája:
 
@@ -603,7 +586,7 @@ graph LR
     style Redis fill:#dc382d,color:#fff
 ```
 
-## ⚠️ Hibakezelés
+## Hibakezelés
 
 ### Hibakódok
 
@@ -630,17 +613,26 @@ graph LR
 }
 ```
 
-## 🔒 Biztonsági Intézkedések (Szerviz szint)
+## Biztonsági Funkciók
 
-A rendszer integritásának védelme érdekében a szolgáltatási rétegben (Services) szigorú mezővédelem került bevezetésre. Ez megakadályozza, hogy az `update` műveletek során véletlenül vagy rosszindulatúan módosítsanak olyan érzékeny mezőket, mint:
+A rendszer robusztus, több rétegű biztonsági architektúrát alkalmaz:
 
-- **Felhasználók esetén**: `id`, `role`, `email`.
-- **Cégek esetén**: `id`, `taxId`.
-- **Partnerkapcsolatok esetén**: `id`, `studentId`, `positionId`.
+### 1. Szerveroldali Validáció (Zod)
+Minden bejövő kérés szigorú séma-alapú validáción esik át. A kliens által küldött felesleges vagy tiltott mezők automatikusan eltávolításra kerülnek.
 
-Ezeket a mezőket a rendszer automatikusan eltávolítja a bejövő kérésekből a mentés előtt.
+### 2. Magic Bytes Fájlvalidáció
+A fájlfeltöltéseknél nem bízunk a kliens által küldött MIME típusban. A rendszer elemezni tudja a fájlok tényleges tartalmát (magic bytes), megelőzve ezzel a rosszindulatú fájlok feltöltését.
 
-## 🚀 Quick Start - API Használat
+### 3. Ownership Middleware
+Általános jogosultságkezelő réteg, amely biztosítja, hogy a felhasználók csak a saját erőforrásaikat (jelentkezések, profilok, értesítések stb.) módosíthassák vagy törölhessék.
+
+### 4. Idempotency Kulcsok
+A kritikus műveletek (pl. jelentkezés leadása, pozíció létrehozása) védve vannak a véletlen dupla beküldés ellen. A kliens egy egyedi kulcsot küldhet, amellyel a szerver azonosítani tudja az ismételt kéréseket.
+
+### 5. Audit és Biztonsági Naplózás
+Minden kritikus esemény és jogosultsági hiba (401, 403) automatikusan naplózásra kerül az adatbázisba, lehetővé téve a biztonsági auditokat és a rendellenes viselkedés észlelését.
+
+## Quick Start - API Használat
 
 ### 1. Regisztráció és bejelentkezés
 ```bash
@@ -677,13 +669,13 @@ curl http://localhost:3000/api/students/me \
   -H "Authorization: Bearer <your_token_here>"
 ```
 
-> **💡 Tipp**: A teljes API végpontokat és sémákat a [Swagger UI](#-api-dokumentáció)-n keresztül is kipróbálhatod!
+> **Tipp**: A teljes API végpontokat és sémákat a [Swagger UI](#-api-dokumentáció)-n keresztül is kipróbálhatod!
 
 ---
 
-## 📋 API Végpontok Referencia
+## API Végpontok Referencia
 
-### 🔐 Autentikáció (`/api/auth`)
+### Autentikáció (`/api/auth`)
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
@@ -695,7 +687,7 @@ curl http://localhost:3000/api/students/me \
 | `POST` | `/reset-password` | Új jelszó beállítása tokennel. |
 
 
-### 👤 Hallgatók (`/api/students`)
+### Hallgatók (`/api/students`)
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
@@ -708,7 +700,7 @@ curl http://localhost:3000/api/students/me \
 | `PATCH` | `/:id` | Hallgató módosítása (Admin). |
 | `DELETE` | `/:id` | Hallgató törlése (Soft delete). |
 
-### 🏢 Cégek (`/api/companies`)
+### Cégek (`/api/companies`)
 
 A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 
@@ -725,7 +717,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `PATCH` | `/:id/reactivate` | Cég újraaktiválása. |
 | `PATCH` | `/:id/deactivate` | Cég inaktiválása. |
 
-### 💼 Állások / Pozíciók (`/api/jobs/positions`)
+### Állások / Pozíciók (`/api/jobs/positions`)
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
@@ -739,7 +731,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `PATCH` | `/:id/deactivate`| Pozíció inaktiválása. |
 | `GET` | `/company/:companyId` | Egy adott cég pozíciói. |
 
-### 📝 Jelentkezések (`/api/applications`)
+### Jelentkezések (`/api/applications`)
 
 | Metódus | Végpont | Leírás | Jogosultság |
 | :--- | :--- | :--- | :--- |
@@ -754,7 +746,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `PATCH` | `/admin/:id` | Jelentkezés módosítása. | Admin |
 | `POST` | `/submit-with-files` | **[ÚJ]** Jelentkezés CV és motivációs levél fájlok feltöltésével. GDPR-kompatibilis: a fájlok nem kerülnek tárolásra, csak emailben továbbítódnak a céges adminoknak. | Student |
 
-### 📰 Hírek (`/api/news`)
+### Hírek (`/api/news`)
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
@@ -768,7 +760,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `PATCH` | `/admin/:id/unarchive` | Hír visszaállítása. |
 | `DELETE` | `/admin/:id` | Hír végleges törlése vagy soft delete. |
 
-### 🔔 Értesítések (`/api/notifications`)
+### Értesítések (`/api/notifications`)
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
@@ -783,7 +775,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `PUT` | `/:id/unarchive` | Értesítés visszaállítása. |
 | `DELETE` | `/:id` | Értesítés törlése. |
 
-### 📊 Statisztika (`/api/stats`)
+### Statisztika (`/api/stats`)
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
@@ -793,7 +785,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `GET` | `/positions` | Pozíció statisztikák (7 napon belül lejáró, jelentkezés nélküli pozíciók). |
 | `GET` | `/trends` | Időbeli trendek (regisztrációk, jelentkezések, partnerségek az elmúlt 6 hónapban). |
 
-### 🤝 Duális Partnerkapcsolatok (`/api/partnerships`)
+### Duális Partnerkapcsolatok (`/api/partnerships`)
 
 A hallgatók és cégek közötti duális képzési szerződések kezelése.
 A partnerség automatikusan létrejön `PENDING_MENTOR` státusszal, amikor a cég elfogad egy jelentkezést (`ACCEPTED`).
@@ -810,7 +802,7 @@ A partnerség automatikusan létrejön `PENDING_MENTOR` státusszal, amikor a c�
 | `PATCH` | `/:id/terminate` | Partnerkapcsolat megszakítása (Terminated státusz). |
 | `DELETE` | `/:id` | Partnerkapcsolat törlése (Soft delete). |
 
-### 📚 Szakok (`/api/majors`)
+### Szakok (`/api/majors`)
 
 A képzési szakok (Major) kezelése. A hallgatói profil szakválasztáshoz kapcsolódik.
 
@@ -822,7 +814,7 @@ A képzési szakok (Major) kezelése. A hallgatói profil szakválasztáshoz kap
 | `PATCH` | `/:id` | Szak frissítése. | Auth |
 | `DELETE` | `/:id` | Szak törlése. | Auth |
 
-### 🏢 Cég Adminisztrátorok (`/api/company-admins`)
+### Cég Adminisztrátorok (`/api/company-admins`)
 
 A cégek adminisztrátorainak kezelése.
 
@@ -837,7 +829,7 @@ A cégek adminisztrátorainak kezelése.
 | `DELETE` | `/:id` | Cégadmin törlése (Admin). |
 | `PATCH` | `/restore/:id` | Törölt cégadmin visszaállítása. |
 
-### 👨‍💼 Munkavállalók (`/api/employees`)
+### Munkavállalók (`/api/employees`)
 
 Céges munkavállalók (pl. mentorok) kezelése.
 
@@ -852,7 +844,7 @@ Céges munkavállalók (pl. mentorok) kezelése.
 | `PATCH` | `/:id` | Munkavállaló frissítése (Admin/CompanyAdmin). |
 | `DELETE` | `/:id` | Munkavállaló törlése (Admin/CompanyAdmin). |
 
-### 🎓 Egyetemi Felhasználók (`/api/university-users`)
+### Egyetemi Felhasználók (`/api/university-users`)
 
 Egyetemi kapcsolattartók és adminisztrátorok.
 
@@ -866,7 +858,7 @@ Egyetemi kapcsolattartók és adminisztrátorok.
 | `PATCH` | `/:id` | Adatok frissítése (Admin). |
 | `DELETE` | `/:id` | Törlés (Admin). |
 
-### 🛠 Rendszer Adminisztrátorok (`/api/system-admins`)
+### Rendszer Adminisztrátorok (`/api/system-admins`)
 
 A platform üzemeltetői.
 
@@ -881,7 +873,7 @@ A platform üzemeltetői.
 | `PATCH` | `/:id` | Adatok frissítése (Superadmin). |
 | `DELETE` | `/:id` | Admin törlése (Superadmin). |
 
-### 👥 Felhasználók (`/api/users`)
+### Felhasználók (`/api/users`)
 
 Általános felhasználókezelés (pl. inaktív fiókok).
 
@@ -892,4 +884,4 @@ A platform üzemeltetői.
 | `PATCH` | `/:id/deactivate` | Felhasználó felfüggesztése. |
 
 ---
-**Megjegyzés**: Ez a dokumentáció a projekt jelenlegi állapotát tükrözi. API változtatások esetén kérjük a dokumentáció frissítését.
+**Megjegyzés**: Ez a dokumentáció a projekt 2026-02-09-i állapotát tükrözi. API változtatások esetén kérjük a dokumentáció frissítését.
