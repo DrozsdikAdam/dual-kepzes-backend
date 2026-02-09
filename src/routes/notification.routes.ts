@@ -12,6 +12,7 @@ import {
      createNotification,
      getUnreadNotificationsCount
 } from "../controllers/notification.controller";
+import { requireNotificationOwnership } from "../middlewares/ownership.middleware";
 
 const router = Router();
 
@@ -122,7 +123,7 @@ router.put("/read-all", markAllAsRead); // Összes olvasottnak jelölése
  *       200:
  *         description: Notification marked as read
  */
-router.put("/:id/read", markAsRead); // Egy olvasottnak jelölése
+router.put("/:id/read", requireNotificationOwnership, markAsRead); // Egy olvasottnak jelölése
 
 /**
  * @swagger
@@ -142,7 +143,7 @@ router.put("/:id/read", markAsRead); // Egy olvasottnak jelölése
  *       200:
  *         description: Notification archived successfully
  */
-router.put("/:id/archive", archiveNotification); // Archiválás
+router.put("/:id/archive", requireNotificationOwnership, archiveNotification); // Archiválás
 
 /**
  * @swagger
@@ -162,7 +163,7 @@ router.put("/:id/archive", archiveNotification); // Archiválás
  *       200:
  *         description: Notification unarchived successfully
  */
-router.put("/:id/unarchive", unarchiveNotification); // Visszaállítás az archívumból
+router.put("/:id/unarchive", requireNotificationOwnership, unarchiveNotification); // Visszaállítás az archívumból
 
 /**
  * @swagger
@@ -182,7 +183,7 @@ router.put("/:id/unarchive", unarchiveNotification); // Visszaállítás az arch
  *       200:
  *         description: Notification deleted successfully
  */
-router.delete("/:id", deleteNotification); // Törlés (Soft delete + Archive)
+router.delete("/:id", requireNotificationOwnership, deleteNotification); // Törlés (Soft delete + Archive)
 
 // Teszteléshez vagy saját magunknak küldéshez
 
