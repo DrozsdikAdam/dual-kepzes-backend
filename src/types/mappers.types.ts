@@ -62,6 +62,29 @@ export interface MappedStudentProfile {
      language?: string | null;
      languageLevel?: string | null;
      location?: MappedLocation | null;
+     isAvailableForWork: boolean;
+}
+
+export interface PublicStudentProfile {
+     id: string;
+     highSchool: string;
+     graduationYear: number;
+     major?: MappedMajor | null;
+     studyMode: string;
+     hasLanguageCert: boolean;
+     isInHighSchool: boolean;
+     language?: string | null;
+     languageLevel?: string | null;
+     location?: MappedLocation | null;
+     isAvailableForWork: boolean;
+}
+
+export interface PublicStudent {
+     id: string;
+     fullName: string;
+     role: Role;
+     isActive: boolean;
+     studentProfile?: PublicStudentProfile | null;
 }
 
 export interface MappedStudent {
