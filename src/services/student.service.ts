@@ -55,7 +55,8 @@ export class StudentService {
                          }
                     },
                     language: true,
-                    languageLevel: true
+                    languageLevel: true,
+                    isAvailableForWork: true
                }
           }
      };
@@ -76,6 +77,29 @@ export class StudentService {
      async getAll(params: Required<PaginationParams>) {
           const { skip, take } = getPrismaSkipTake(params);
           const where = { role: Role.STUDENT };
+
+          return await paginate(
+               params,
+               prisma.user.findMany({
+                    where,
+                    select: this.studentSelect,
+                    orderBy: { createdAt: 'desc' as const },
+                    skip,
+                    take
+               }),
+               prisma.user.count({ where })
+          );
+     }
+
+     async getAvailableForWork(params: Required<PaginationParams>) {
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = {
+               role: Role.STUDENT,
+               isActive: true,
+               studentProfile: {
+                    isAvailableForWork: true
+               }
+          };
 
           return await paginate(
                params,
