@@ -705,6 +705,7 @@ curl http://localhost:3000/api/students/me \
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
 | `GET` | `/` | Összes hallgató listázása. |
+| `GET` | `/available` | Munkakeresésre jelentkezett hallgatók listázása (Publikus adatokkal). |
 | `GET` | `/me` | Saját hallgatói profil lekérése. |
 | `PATCH` | `/me` | Saját profil frissítése. |
 | `PATCH` | `/me/university-transition` | Átváltás középiskolai profilról egyetemire (Neptun kód, Szak). |

@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-10 (Külön regisztrációs végpontok)  
+> **Utolsó frissítés**: 2026-02-10 (Munkakeresésre jelentkezett hallgatók végpont)  
 > **Projekt státusz**: Production-ready
 
 ---
@@ -333,6 +333,7 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
   - **Audit és Biztonsági Naplózás**: 401/403 hibák és gyanús események automatikus rögzítése.
   - **Státusz Átmenet Validálás**: Csak az üzletileg érvényes állapotváltások engedélyezettek.
   - **Role Korlátozás**: System Admin és Company Admin szerepkörök csak dedikált végpontokon keresztül regisztrálhatnak.
+- **Munkakeresésre jelentkezett hallgatók**: Dedikált végpont (`GET /api/students/available`) a munkát kereső hallgatók listázására, publikus (nem érzékeny) adatokkal.
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
