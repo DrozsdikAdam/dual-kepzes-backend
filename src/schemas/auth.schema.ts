@@ -138,13 +138,21 @@ export const RegisterSchema = z.object({
     body: z.discriminatedUnion("role", [
         studentSchema,
         mentorSchema,
-        universityUserSchema,
-        companyAdminSchema,
-        systemAdminSchema
+        universityUserSchema
     ])
 });
 
+export const CompanyAdminRegisterSchema = z.object({
+    body: companyAdminSchema
+});
+
+export const SystemAdminRegisterSchema = z.object({
+    body: systemAdminSchema
+});
+
 export type RegisterInput = z.infer<typeof RegisterSchema>["body"];
+export type CompanyAdminRegisterInput = z.infer<typeof CompanyAdminRegisterSchema>["body"];
+export type SystemAdminRegisterInput = z.infer<typeof SystemAdminRegisterSchema>["body"];
 export type LoginInput = z.infer<typeof LoginSchema>["body"];
 export type RequestPasswordResetInput = z.infer<typeof RequestPasswordResetSchema>["body"];
 export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>["body"];

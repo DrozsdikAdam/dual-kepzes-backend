@@ -636,7 +636,7 @@ Minden kritikus esemény és jogosultsági hiba (401, 403) automatikusan naplóz
 
 ### 1. Regisztráció és bejelentkezés
 ```bash
-# Regisztráció
+# Regisztráció (Hallgató, Mentor, Egyetemi felhasználó)
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
@@ -644,6 +644,17 @@ curl -X POST http://localhost:3000/api/auth/register \
     "password": "Jelszo123!",
     "fullName": "Teszt Hallgató",
     "role": "STUDENT"
+  }'
+
+# Regisztráció (Cégadmin)
+curl -X POST http://localhost:3000/api/auth/register/company-admin \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@ceg.hu",
+    "password": "Jelszo123!",
+    "fullName": "Cégvezető Elek",
+    "companyId": "uuid-a-ceghez",
+    "jobTitle": "Ügyvezető"
   }'
 
 # Email megerősítés (A kapott tokennel)
@@ -679,8 +690,10 @@ curl http://localhost:3000/api/students/me \
 
 | Metódus | Végpont | Leírás |
 | :--- | :--- | :--- |
-| `POST` | `/register` | Új felhasználó regisztrációja. (Email megerősítést igényel) |
-| `POST` | `/login` | Bejelentkezés és JWT token igénylése. (Csak megerősített dev-et enged) |
+| `POST` | `/register` | Új felhasználó regisztrációja (`STUDENT`, `MENTOR`, `UNIVERSITY_USER`). |
+| `POST` | `/register/company-admin` | Dedikált regisztráció cégadminisztrátoroknak. |
+| `POST` | `/register/system-admin` | Dedikált regisztráció rendszeradminisztrátoroknak. |
+| `POST` | `/login` | Bejelentkezés és JWT token igénylése. |
 | `POST` | `/verify-email` | Email cím megerősítése tokennel. |
 | `POST` | `/resend-verification` | Megerősítő email újraküldése. |
 | `POST` | `/request-password-reset` | Jelszó visszaállítás kérése email címmel. |

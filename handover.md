@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-09 (Biztonsági fejlesztések és tisztítás)  
+> **Utolsó frissítés**: 2026-02-10 (Külön regisztrációs végpontok)  
 > **Projekt státusz**: Production-ready
 
 ---
@@ -322,13 +322,17 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - **Rendszergazdai email policy**: A `SYSTEM_ADMIN` felhasználók csak jelszó-visszaállítást és verifikációs emaileket kapnak, más értesítéseknél kimaradnak a levéllistából (adatbiztonsági és kényelmi okokból).
 - **Profil váltás (Középiskola -> Egyetem)**: Dedikált végpont a hallgatók számára az egyetemi adatok (Neptun, Szak) rögzítésére és a státuszváltásra (Rendszergazdai értesítéssel).
 - **Adminisztrátori kontroll**: A rendszergazdák automatikus értesítést kapnak minden cégadat-módosításról, aktiválásról vagy deaktiválásról.
+- **Külön regisztrációs végpontok**:
+  - `POST /api/auth/register/company-admin`: Dedikált végpont cégadminoknak.
+  - `POST /api/auth/register/system-admin`: Dedikált végpont rendszeradminoknak.
+  - A generikus `/api/auth/register` végponton a `COMPANY_ADMIN` és `SYSTEM_ADMIN` szerepkörök tiltva vannak.
 - **Biztonsági Erősítések**:
   - **Ownership Middleware**: Szigorú adathozzáférés-ellenőrzés minden módosító és törlő végponton.
   - **Idempotency Kulcsok**: Dupla submit védelem a kritikus POST műveleteknél.
   - **Magic Bytes Validáció**: Fájltípus ellenőrzés a tartalom alapján (PDF, Word).
   - **Audit és Biztonsági Naplózás**: 401/403 hibák és gyanús események automatikus rögzítése.
   - **Státusz Átmenet Validálás**: Csak az üzletileg érvényes állapotváltások engedélyezettek.
-  - **Role Korlátozás**: System Admin szerepkör nem hozható létre publikus regisztrációval.
+  - **Role Korlátozás**: System Admin és Company Admin szerepkörök csak dedikált végpontokon keresztül regisztrálhatnak.
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)

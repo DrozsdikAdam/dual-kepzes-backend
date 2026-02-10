@@ -1,7 +1,7 @@
 import { Router } from "express"
-import { register, login, requestPasswordReset, resetPassword, verifyEmail, resendVerification } from "../controllers/auth.controller"
+import { register, login, requestPasswordReset, resetPassword, verifyEmail, resendVerification, registerCompanyAdmin, registerSystemAdmin } from "../controllers/auth.controller"
 import { validate } from "../middlewares/validate.middleware"
-import { RegisterSchema, LoginSchema, RequestPasswordResetSchema, ResetPasswordSchema, VerifyEmailSchema, ResendVerificationSchema } from "../schemas/auth.schema"
+import { RegisterSchema, LoginSchema, RequestPasswordResetSchema, ResetPasswordSchema, VerifyEmailSchema, ResendVerificationSchema, CompanyAdminRegisterSchema, SystemAdminRegisterSchema } from "../schemas/auth.schema"
 
 const router = Router();
 
@@ -41,7 +41,7 @@ const router = Router();
  *                 type: string
  *               role:
  *                 type: string
- *                 enum: [STUDENT, COMPANY_ADMIN, MENTOR, UNIVERSITY_USER, SYSTEM_ADMIN]
+ *                 enum: [STUDENT, MENTOR, UNIVERSITY_USER]
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -49,6 +49,97 @@ const router = Router();
  *         description: Bad request
  */
 router.post("/register", validate(RegisterSchema), register);
+
+/**
+ * @swagger
+ * /api/auth/register/company-admin:
+ *   post:
+ *     summary: Register a new company administrator
+ *     description: Creates a new user with COMPANY_ADMIN role and links them to an existing company.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - fullName
+ *               - phoneNumber
+ *               - companyId
+ *               - jobTitle
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: admin@company.com
+ *               password:
+ *                 type: string
+ *                 minLength: 12
+ *                 example: SecurePassword123!
+ *               fullName:
+ *                 type: string
+ *                 example: Kiss János
+ *               phoneNumber:
+ *                 type: string
+ *                 example: "+36301234567"
+ *               companyId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: The ID of the company the admin will manage
+ *               jobTitle:
+ *                 type: string
+ *                 example: HR Manager
+ *     responses:
+ *       201:
+ *         description: Company admin registered successfully
+ *       400:
+ *         description: Bad request (email already exists, invalid data)
+ */
+router.post("/register/company-admin", validate(CompanyAdminRegisterSchema), registerCompanyAdmin);
+
+/**
+ * @swagger
+ * /api/auth/register/system-admin:
+ *   post:
+ *     summary: Register a new system administrator
+ *     description: Creates a new user with SYSTEM_ADMIN role.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - fullName
+ *               - phoneNumber
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: admin@university.hu
+ *               password:
+ *                 type: string
+ *                 minLength: 12
+ *                 example: SecurePassword123!
+ *               fullName:
+ *                 type: string
+ *                 example: Nagy Péter
+ *               phoneNumber:
+ *                 type: string
+ *                 example: "+36209876543"
+ *     responses:
+ *       201:
+ *         description: System admin registered successfully
+ *       400:
+ *         description: Bad request (email already exists, invalid data)
+ */
+router.post("/register/system-admin", validate(SystemAdminRegisterSchema), registerSystemAdmin);
 
 /**
  * @swagger
