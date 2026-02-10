@@ -75,12 +75,12 @@ export interface PublicStudentProfile {
      isInHighSchool: boolean;
      language?: string | null;
      languageLevel?: string | null;
-     location?: MappedLocation | null;
      isAvailableForWork: boolean;
 }
 
 export interface PublicStudent {
      id: string;
+     email: string;
      fullName: string;
      role: Role;
      isActive: boolean;

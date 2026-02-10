@@ -144,13 +144,6 @@ export const mapPublicStudentProfile = (profile: (Partial<StudentProfile> & {
           isInHighSchool: rest.isInHighSchool ?? false,
           language: rest.language,
           languageLevel: rest.languageLevel,
-          location: mainLocation ? {
-               id: mainLocation.id,
-               country: mainLocation.country!,
-               zipCode: mainLocation.zipCode!,
-               city: mainLocation.city!,
-               address: mainLocation.address!
-          } : null,
           isAvailableForWork: rest.isAvailableForWork ?? false
      };
 };
@@ -160,6 +153,7 @@ export const mapPublicStudent = (user: (Partial<User> & { studentProfile?: (Part
 
      return {
           id: user.id!,
+          email: user.email!,
           fullName: user.fullName!,
           role: user.role!,
           isActive: user.isActive ?? true,
