@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { authService } from "../services/auth.service";
-import { RegisterInput, LoginInput, RequestPasswordResetInput, ResetPasswordInput, VerifyEmailInput, ResendVerificationInput } from "../schemas/auth.schema";
+import { RegisterInput, LoginInput, RequestPasswordResetInput, ResetPasswordInput, VerifyEmailInput, ResendVerificationInput, CompanyAdminRegisterInput, SystemAdminRegisterInput } from "../schemas/auth.schema";
 import { logAction } from "../utils/logger.util";
 
 export const register = async (req: Request<{}, {}, RegisterInput>, res: Response, next: NextFunction) => {
@@ -21,6 +21,58 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
         res.status(201).json({
             success: true,
             message: "Sikeres regisztráció",
+            userId: newUser.id,
+            role: newUser.role
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const registerCompanyAdmin = async (req: Request<{}, {}, CompanyAdminRegisterInput>, res: Response, next: NextFunction) => {
+    try {
+        const newUser = await authService.registerCompanyAdmin(req.body);
+
+        await logAction(req, {
+            action: "COMPANY_ADMIN_REGISTERED",
+            entity: "User",
+            entityId: newUser.id,
+            details: {
+                email: newUser.email,
+                role: newUser.role,
+                fullName: newUser.fullName
+            }
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Sikeres cégadmin regisztráció",
+            userId: newUser.id,
+            role: newUser.role
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const registerSystemAdmin = async (req: Request<{}, {}, SystemAdminRegisterInput>, res: Response, next: NextFunction) => {
+    try {
+        const newUser = await authService.registerSystemAdmin(req.body);
+
+        await logAction(req, {
+            action: "SYSTEM_ADMIN_REGISTERED",
+            entity: "User",
+            entityId: newUser.id,
+            details: {
+                email: newUser.email,
+                role: newUser.role,
+                fullName: newUser.fullName
+            }
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Sikeres rendszeradmin regisztráció",
             userId: newUser.id,
             role: newUser.role
         });
