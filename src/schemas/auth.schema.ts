@@ -138,9 +138,7 @@ export const RegisterSchema = z.object({
     body: z.discriminatedUnion("role", [
         studentSchema,
         mentorSchema,
-        universityUserSchema,
-        companyAdminSchema,
-        systemAdminSchema
+        universityUserSchema
     ])
 });
 
