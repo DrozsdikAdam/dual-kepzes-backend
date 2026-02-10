@@ -9,7 +9,8 @@ import {
     getStudentById,
     deleteMyProfile,
     deleteStudentById,
-    transitionToUniversity
+    transitionToUniversity,
+    getAvailableStudents
 } from "../controllers/student.controller";
 import { MyProfileUpdateSchema, StudentUpdateSchema, UniversityTransitionSchema } from "../schemas/student.schema";
 
@@ -35,6 +36,31 @@ const router = Router();
  *         description: List of all students
  */
 router.get("/", authenticateToken, getAllStudents);
+
+/**
+ * @swagger
+ * /api/students/available:
+ *   get:
+ *     summary: List all students available for work (Public information only)
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of available students with non-sensitive data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/PublicStudent'
+ */
+router.get("/available", authenticateToken, getAvailableStudents);
 
 /**
  * @swagger

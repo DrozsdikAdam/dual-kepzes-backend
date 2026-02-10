@@ -15,7 +15,9 @@ import {
      MappedStudentProfile,
      MappedStudent,
      MappedApplication,
-     MappedDualPartnership
+     MappedDualPartnership,
+     PublicStudent,
+     PublicStudentProfile
 } from '../types/mappers.types';
 
 type PartialLocation = Partial<Location>;
@@ -119,7 +121,49 @@ export const mapStudentProfile = (profile: (Partial<StudentProfile> & {
                zipCode: mainLocation.zipCode!,
                city: mainLocation.city!,
                address: mainLocation.address!
-          } : null
+          } : null,
+          isAvailableForWork: rest.isAvailableForWork ?? false
+     };
+};
+
+export const mapPublicStudentProfile = (profile: (Partial<StudentProfile> & {
+     locations?: PartialLocation[];
+     major?: PartialMajor;
+}) | null): PublicStudentProfile | null => {
+     if (!profile) return null;
+     const mainLocation = profile.locations && profile.locations.length > 0 ? profile.locations[0] : null;
+     const { locations, major, ...rest } = profile;
+
+     return {
+          id: rest.id!,
+          highSchool: rest.highSchool!,
+          graduationYear: rest.graduationYear!,
+          major: mapMajor(major || null),
+          studyMode: rest.studyMode!,
+          hasLanguageCert: rest.hasLanguageCert ?? false,
+          isInHighSchool: rest.isInHighSchool ?? false,
+          language: rest.language,
+          languageLevel: rest.languageLevel,
+          location: mainLocation ? {
+               id: mainLocation.id,
+               country: mainLocation.country!,
+               zipCode: mainLocation.zipCode!,
+               city: mainLocation.city!,
+               address: mainLocation.address!
+          } : null,
+          isAvailableForWork: rest.isAvailableForWork ?? false
+     };
+};
+
+export const mapPublicStudent = (user: (Partial<User> & { studentProfile?: (Partial<StudentProfile> & { locations?: PartialLocation[] }) | null }) | null): PublicStudent | null => {
+     if (!user) return null;
+
+     return {
+          id: user.id!,
+          fullName: user.fullName!,
+          role: user.role!,
+          isActive: user.isActive ?? true,
+          studentProfile: user.studentProfile ? mapPublicStudentProfile(user.studentProfile) : null
      };
 };
 
