@@ -1,6 +1,6 @@
 import prisma from '../config/prisma';
 import { hashPassword, comparePassword, generateToken, generateResetToken, hashToken } from '../utils/auth.util';
-import { RegisterInput, LoginInput } from '../schemas/auth.schema';
+import { RegisterInput, LoginInput, CompanyAdminRegisterInput, SystemAdminRegisterInput } from '../schemas/auth.schema';
 import { BadRequestError, UnauthorizedError, ForbiddenError } from '../errors/AppError';
 import { Role } from '@prisma/client';
 import { generateVerificationEmail, generatePasswordResetEmail } from '../utils/email.util';
@@ -15,11 +15,6 @@ export class AuthService {
 
           if (existingUser) {
                throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
-          }
-
-          // SYSTEM_ADMIN role nem engedélyezett nyilvános regisztrációnál
-          if (data.role === Role.SYSTEM_ADMIN) {
-               throw new ForbiddenError('A SYSTEM_ADMIN szerepkör csak adminisztrátor által hozható létre.');
           }
 
           const hashedPassword = await hashPassword(data.password);
@@ -66,7 +61,6 @@ export class AuthService {
                          });
                          break;
                     case Role.MENTOR:
-                    case Role.COMPANY_ADMIN:
                          if (!data.companyId) {
                               throw new BadRequestError(`Cég azonosító kötelező a ${data.role} regisztrációhoz.`);
                          }
@@ -97,6 +91,68 @@ export class AuthService {
           */
 
           return result;
+     }
+
+     async registerCompanyAdmin(data: CompanyAdminRegisterInput) {
+          const existingUser = await prisma.user.findUnique({
+               where: { email: data.email }
+          });
+
+          if (existingUser) {
+               throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
+          }
+
+          const hashedPassword = await hashPassword(data.password);
+
+          const result = await prisma.$transaction(async (tx) => {
+               const user = await tx.user.create({
+                    data: {
+                         email: data.email,
+                         password: hashedPassword,
+                         fullName: data.fullName,
+                         phoneNumber: data.phoneNumber,
+                         role: Role.COMPANY_ADMIN,
+                         isEmailVerified: true
+                    }
+               });
+
+               await tx.companyEmployee.create({
+                    data: {
+                         userId: user.id,
+                         companyId: data.companyId,
+                         jobTitle: data.jobTitle
+                    }
+               });
+
+               return user;
+          });
+
+          return result;
+     }
+
+     async registerSystemAdmin(data: SystemAdminRegisterInput) {
+          const existingUser = await prisma.user.findUnique({
+               where: { email: data.email }
+          });
+
+          if (existingUser) {
+               throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
+          }
+
+          const hashedPassword = await hashPassword(data.password);
+
+          const user = await prisma.user.create({
+               data: {
+                    email: data.email,
+                    password: hashedPassword,
+                    fullName: data.fullName,
+                    phoneNumber: data.phoneNumber,
+                    role: Role.SYSTEM_ADMIN,
+                    isEmailVerified: true
+               }
+          });
+
+          return user;
      }
 
      async login(data: LoginInput) {
@@ -320,4 +376,3 @@ export class AuthService {
 }
 
 export const authService = new AuthService();
-
