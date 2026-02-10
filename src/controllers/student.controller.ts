@@ -4,7 +4,7 @@ import { userService } from "../services/user.service";
 import { notificationService } from "../services/notification.service";
 import { Role } from "@prisma/client";
 import { logAction } from "../utils/logger.util";
-import { mapStudent } from "../utils/mapper.util";
+import { mapStudent, mapPublicStudent } from "../utils/mapper.util";
 import { getPaginationParams } from "../utils/pagination.util";
 import { UnauthorizedError, BadRequestError } from "../errors/AppError";
 
@@ -60,6 +60,27 @@ export const getAllStudents = async (req: Request, res: Response, next: NextFunc
         res.status(200).json({
             success: true,
             data: result.data.map(mapStudent),
+            pagination: result.pagination
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get available students (public)
+ * @route GET /api/students/available
+ * @group Students - Student operations
+ * @returns {object} 200 - Paginated list of available students
+ * @security bearerAuth
+ */
+export const getAvailableStudents = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const params = getPaginationParams(req.query);
+        const result = await studentService.getAvailableForWork(params);
+        res.status(200).json({
+            success: true,
+            data: result.data.map(mapPublicStudent),
             pagination: result.pagination
         });
     } catch (error) {
