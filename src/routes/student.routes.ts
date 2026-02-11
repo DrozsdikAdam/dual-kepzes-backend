@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken, isStudent, isStaff, isUniversityStaff, isSystemAdmin } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import {
     getAllStudents,
@@ -35,7 +35,7 @@ const router = Router();
  *       200:
  *         description: List of all students
  */
-router.get("/", authenticateToken, getAllStudents);
+router.get("/", authenticateToken, isUniversityStaff, getAllStudents);
 
 /**
  * @swagger
@@ -60,7 +60,7 @@ router.get("/", authenticateToken, getAllStudents);
  *                   items:
  *                     $ref: '#/components/schemas/PublicStudent'
  */
-router.get("/available", authenticateToken, getAvailableStudents);
+router.get("/available", authenticateToken, isStaff, getAvailableStudents);
 
 /**
  * @swagger
@@ -74,7 +74,7 @@ router.get("/available", authenticateToken, getAvailableStudents);
  *       200:
  *         description: My profile details
  */
-router.get("/me", authenticateToken, getMyProfile);
+router.get("/me", authenticateToken, isStudent, getMyProfile);
 
 /**
  * @swagger
@@ -94,7 +94,7 @@ router.get("/me", authenticateToken, getMyProfile);
  *       200:
  *         description: Profile updated successfully
  */
-router.patch("/me", authenticateToken, validate(MyProfileUpdateSchema), updateMyProfile);
+router.patch("/me", authenticateToken, isStudent, validate(MyProfileUpdateSchema), updateMyProfile);
 
 /**
  * @swagger
@@ -108,7 +108,7 @@ router.patch("/me", authenticateToken, validate(MyProfileUpdateSchema), updateMy
  *       200:
  *         description: Profile deleted successfully
  */
-router.delete("/me", authenticateToken, deleteMyProfile)
+router.delete("/me", authenticateToken, isStudent, deleteMyProfile)
 
 /**
  * @swagger
@@ -139,7 +139,7 @@ router.delete("/me", authenticateToken, deleteMyProfile)
  *       200:
  *         description: Transitioned to university profile successfully
  */
-router.patch("/me/university-transition", authenticateToken, validate(UniversityTransitionSchema), transitionToUniversity);
+router.patch("/me/university-transition", authenticateToken, isStudent, validate(UniversityTransitionSchema), transitionToUniversity);
 
 /**
  * @swagger
@@ -159,7 +159,7 @@ router.patch("/me/university-transition", authenticateToken, validate(University
  *       200:
  *         description: Student profile details
  */
-router.get("/:id", authenticateToken, getStudentById)
+router.get("/:id", authenticateToken, isStaff, getStudentById)
 
 /**
  * @swagger
@@ -179,7 +179,7 @@ router.get("/:id", authenticateToken, getStudentById)
  *       200:
  *         description: Student profile deleted successfully
  */
-router.delete("/:id", authenticateToken, deleteStudentById)
+router.delete("/:id", authenticateToken, isSystemAdmin, deleteStudentById)
 
 /**
  * @swagger
@@ -205,6 +205,6 @@ router.delete("/:id", authenticateToken, deleteStudentById)
  *       200:
  *         description: Student profile updated successfully
  */
-router.patch("/:id", authenticateToken, validate(StudentUpdateSchema), updateStudentById);
+router.patch("/:id", authenticateToken, isSystemAdmin, validate(StudentUpdateSchema), updateStudentById);
 
 export default router;
