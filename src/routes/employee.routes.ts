@@ -2,7 +2,7 @@ import { Router } from "express";
 import { deleteEmployeeById, getCompanyEmployees, getEmployeeById, updateEmployeeById, getMeEmployee, updateMeEmployee, deleteMeEmployee, getMyStudents, getMyPartnershipById, getCompanyMentors } from "../controllers/employee.controller";
 import { UpdateEmployeeSchema } from "../schemas/employee.schema";
 import { validate } from "../middlewares/validate.middleware";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken, isCompanyEmployee, isMentor, isCompanyAdmin } from "../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -25,7 +25,7 @@ const router = Router();
  *       200:
  *         description: My employee profile details
  */
-router.get("/me", authenticateToken, getMeEmployee);
+router.get("/me", authenticateToken, isCompanyEmployee, getMeEmployee);
 
 /**
  * @swagger
@@ -45,7 +45,7 @@ router.get("/me", authenticateToken, getMeEmployee);
  *       200:
  *         description: Profile updated successfully
  */
-router.patch("/me", authenticateToken, validate(UpdateEmployeeSchema), updateMeEmployee);
+router.patch("/me", authenticateToken, isCompanyEmployee, validate(UpdateEmployeeSchema), updateMeEmployee);
 
 /**
  * @swagger
@@ -59,7 +59,7 @@ router.patch("/me", authenticateToken, validate(UpdateEmployeeSchema), updateMeE
  *       200:
  *         description: Account deleted successfully
  */
-router.delete("/me", authenticateToken, deleteMeEmployee);
+router.delete("/me", authenticateToken, isCompanyEmployee, deleteMeEmployee);
 
 /**
  * @swagger
@@ -73,7 +73,7 @@ router.delete("/me", authenticateToken, deleteMeEmployee);
  *       200:
  *         description: List of assigned students
  */
-router.get("/me/students", authenticateToken, getMyStudents);
+router.get("/me/students", authenticateToken, isMentor, getMyStudents);
 
 /**
  * @swagger
@@ -93,7 +93,7 @@ router.get("/me/students", authenticateToken, getMyStudents);
  *       200:
  *         description: Assigned student/partnership details
  */
-router.get("/me/students/:id", authenticateToken, getMyPartnershipById);
+router.get("/me/students/:id", authenticateToken, isMentor, getMyPartnershipById);
 
 /**
  * @swagger
@@ -107,7 +107,7 @@ router.get("/me/students/:id", authenticateToken, getMyPartnershipById);
  *       200:
  *         description: List of company mentors
  */
-router.get("/mentors", authenticateToken, getCompanyMentors);
+router.get("/mentors", authenticateToken, isCompanyEmployee, getCompanyMentors);
 
 /**
  * @swagger
@@ -121,7 +121,7 @@ router.get("/mentors", authenticateToken, getCompanyMentors);
  *       200:
  *         description: List of company employees
  */
-router.get("/", authenticateToken, getCompanyEmployees)
+router.get("/", authenticateToken, isCompanyEmployee, getCompanyEmployees)
 
 /**
  * @swagger
@@ -141,7 +141,7 @@ router.get("/", authenticateToken, getCompanyEmployees)
  *       200:
  *         description: Employee details
  */
-router.get("/:id", authenticateToken, getEmployeeById)
+router.get("/:id", authenticateToken, isCompanyEmployee, getEmployeeById)
 
 /**
  * @swagger
@@ -167,7 +167,7 @@ router.get("/:id", authenticateToken, getEmployeeById)
  *       200:
  *         description: Profile updated successfully
  */
-router.patch("/:id", authenticateToken, validate(UpdateEmployeeSchema), updateEmployeeById);
+router.patch("/:id", authenticateToken, isCompanyAdmin, validate(UpdateEmployeeSchema), updateEmployeeById);
 
 /**
  * @swagger
@@ -187,6 +187,6 @@ router.patch("/:id", authenticateToken, validate(UpdateEmployeeSchema), updateEm
  *       200:
  *         description: Account deleted successfully
  */
-router.delete("/:id", authenticateToken, deleteEmployeeById)
+router.delete("/:id", authenticateToken, isCompanyAdmin, deleteEmployeeById)
 
 export default router;
