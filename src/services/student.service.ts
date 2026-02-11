@@ -178,6 +178,29 @@ export class StudentService {
           });
      }
 
+     async toggleAvailableForWork(userId: string) {
+          const user = await prisma.user.findUnique({
+               where: { id: userId, role: Role.STUDENT },
+               select: { studentProfile: { select: { isAvailableForWork: true } } }
+          });
+
+          if (!user?.studentProfile) {
+               throw new NotFoundError('Hallgatói profil');
+          }
+
+          return await prisma.user.update({
+               where: { id: userId },
+               data: {
+                    studentProfile: {
+                         update: {
+                              isAvailableForWork: !user.studentProfile.isAvailableForWork
+                         }
+                    }
+               },
+               select: this.studentSelect
+          });
+     }
+
      private prepareLocationUpdate(existingLocation: any, newLocation: any) {
           if (!newLocation) return undefined;
 
