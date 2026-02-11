@@ -51,16 +51,19 @@ export const mapCompany = (company: (Partial<Company> & { location?: PartialLoca
 export const mapPosition = (position: (Partial<Position> & {
      location?: PartialLocation | null,
      company?: (Partial<Company> & { location?: PartialLocation[] }) | null,
-     tags?: Array<{ name: string; category: string }>
+     tags?: Array<{ name: string; category: string }>,
+     major?: PartialMajor
 }) | null): MappedPosition | null => {
      if (!position) return null;
-     const { location: loc, company, tags, ...rest } = position;
+     const { location: loc, company, tags, major, ...rest } = position;
 
      return {
           id: rest.id!,
           companyId: rest.companyId!,
           title: rest.title!,
           description: rest.description,
+          majorId: rest.majorId,
+          major: mapMajor(major || null),
           isDual: rest.isDual ?? true,
           deadline: rest.deadline,
           isActive: rest.isActive ?? true,

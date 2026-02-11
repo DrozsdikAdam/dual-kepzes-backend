@@ -47,6 +47,7 @@ export const PositionCreateSchema = z.object({
         companyId: z.string().uuid(),
         title: z.string().min(3),
         description: z.string().optional(),
+        majorId: z.string().uuid("Érvénytelen szak azonosító").optional(),
         locationId: z.string().uuid("Érvénytelen helyszín azonosító"),
         isDual: z.boolean().default(false),
         deadline: z.coerce.date().optional().nullable(),

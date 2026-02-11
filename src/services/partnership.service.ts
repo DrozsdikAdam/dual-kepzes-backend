@@ -200,14 +200,28 @@ export class PartnershipService {
           // Státusz átmenet validálása
           validatePartnershipTransition(partnership.status, PartnershipStatus.ACTIVE);
 
-          return await prisma.dualPartnership.update({
-               where: { id },
-               data: {
-                    uniEmployeeId: uniEmployeeId,
-                    status: PartnershipStatus.ACTIVE
-               },
-               select: this.getPartnershipSelect()
-          });
+          // Ellenőrizzük, hogy van-e mentor hozzárendelve
+          if (!partnership.mentorId) {
+               throw new ForbiddenError('A partnerség nem aktiválható mentor nélkül. Előbb rendelj hozzá egy mentort.');
+          }
+
+          // Tranzakcióban frissítjük a partnerséget és a diák elérhetőségét
+          const [updatedPartnership] = await prisma.$transaction([
+               prisma.dualPartnership.update({
+                    where: { id },
+                    data: {
+                         uniEmployeeId: uniEmployeeId,
+                         status: PartnershipStatus.ACTIVE
+                    },
+                    select: this.getPartnershipSelect()
+               }),
+               prisma.studentProfile.update({
+                    where: { id: partnership.studentId },
+                    data: { isAvailableForWork: false }
+               })
+          ]);
+
+          return updatedPartnership;
      }
 
      async getStudentPartnerships(userId: string, params: Required<PaginationParams>) {

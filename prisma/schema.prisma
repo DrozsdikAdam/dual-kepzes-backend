@@ -163,6 +163,9 @@ model Major {
   studentsWithMajor        StudentProfile[] @relation("CurrentMajor")
   studentsWithFirstChoice  StudentProfile[] @relation("FirstChoice")
   studentsWithSecondChoice StudentProfile[] @relation("SecondChoice")
+
+  // Kapcsolatok - pozíciók amelyek ehhez a szakhoz tartoznak
+  positions Position[]
 }
 
 // ---------------------------------------------------------
@@ -202,6 +205,9 @@ model Position {
 
   title       String
   description String?
+
+  majorId String?
+  major   Major?  @relation(fields: [majorId], references: [id])
 
   isDual Boolean @default(true)
 
