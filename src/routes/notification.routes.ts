@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken, isSystemAdmin } from "../middlewares/auth.middleware";
 import {
      getNotifications,
      getNotificationById,
@@ -205,6 +205,6 @@ router.delete("/:id", requireNotificationOwnership, deleteNotification); // Tör
  *       201:
  *         description: Notification created successfully
  */
-router.post("/", createNotification);
+router.post("/", isSystemAdmin, createNotification);
 
 export default router;
