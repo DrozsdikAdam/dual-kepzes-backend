@@ -15,7 +15,7 @@ import {
     PositionCreateSchema,
     PositionUpdateSchema,
 } from "../schemas/job.schema";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken, isCompanyAdmin, isCompanyEmployee } from "../middlewares/auth.middleware";
 import { requirePositionOwnership } from "../middlewares/ownership.middleware";
 import { requireIdempotency } from "../middlewares/idempotency.middleware";
 
@@ -133,6 +133,7 @@ router.get("/positions/company/:companyId",
 router.post(
     "/positions",
     authenticateToken,
+    isCompanyAdmin,
     requireIdempotency(),
     validate(PositionCreateSchema),
     createPosition
@@ -165,6 +166,7 @@ router.post(
 router.patch(
     "/positions/:id",
     authenticateToken,
+    isCompanyEmployee,
     requirePositionOwnership,
     validate(PositionUpdateSchema),
     updatePosition
@@ -190,6 +192,7 @@ router.patch(
  */
 router.delete("/positions/:id",
     authenticateToken,
+    isCompanyEmployee,
     requirePositionOwnership,
     deletePosition
 );
@@ -214,6 +217,7 @@ router.delete("/positions/:id",
  */
 router.patch("/positions/:id/deactivate",
     authenticateToken,
+    isCompanyEmployee,
     requirePositionOwnership,
     deactivatePosition
 );
