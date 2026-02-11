@@ -322,6 +322,7 @@ graph TB
     subgraph "API Layer"
         Router[Express Router]
         Auth[Auth Middleware]
+        RoleCheck[Role Middleware]
         Validation[Validation Middleware]
         RateLimit[Rate Limiting]
     end
@@ -344,7 +345,8 @@ graph TB
     FE -->|HTTP/REST| Router
     Swagger -->|HTTP/REST| Router
     Router --> Auth
-    Auth --> Validation
+    Auth --> RoleCheck
+    RoleCheck --> Validation
     Validation --> RateLimit
     RateLimit --> Controllers
     Controllers --> Services
@@ -619,19 +621,22 @@ graph LR
 
 A rendszer robusztus, több rétegű biztonsági architektúrát alkalmaz:
 
-### 1. Szerveroldali Validáció (Zod)
+### 1. Role-Based Access Control (RBAC)
+Minden API végpont szerepkör-alapú hozzáférés-vezérléssel van ellátva. A `requireRole` middleware és az előre definiált helper-ek (`isStudent`, `isCompanyAdmin`, `isCompanyEmployee`, `isMentor`, `isUniversityUser`, `isUniversityStaff`, `isSystemAdmin`, `isStaff`) biztosítják, hogy csak a megfelelő jogosultsággal rendelkező felhasználók férhessenek hozzá az adott végpontokhoz.
+
+### 2. Szerveroldali Validáció (Zod)
 Minden bejövő kérés szigorú séma-alapú validáción esik át. A kliens által küldött felesleges vagy tiltott mezők automatikusan eltávolításra kerülnek.
 
-### 2. Magic Bytes Fájlvalidáció
+### 3. Magic Bytes Fájlvalidáció
 A fájlfeltöltéseknél nem bízunk a kliens által küldött MIME típusban. A rendszer elemezni tudja a fájlok tényleges tartalmát (magic bytes), megelőzve ezzel a rosszindulatú fájlok feltöltését.
 
-### 3. Ownership Middleware
+### 4. Ownership Middleware
 Általános jogosultságkezelő réteg, amely biztosítja, hogy a felhasználók csak a saját erőforrásaikat (jelentkezések, profilok, értesítések stb.) módosíthassák vagy törölhessék.
 
-### 4. Idempotency Kulcsok
+### 5. Idempotency Kulcsok
 A kritikus műveletek (pl. jelentkezés leadása, pozíció létrehozása) védve vannak a véletlen dupla beküldés ellen. A kliens egy egyedi kulcsot küldhet, amellyel a szerver azonosítani tudja az ismételt kéréseket.
 
-### 5. Audit és Biztonsági Naplózás
+### 6. Audit és Biztonsági Naplózás
 Minden kritikus esemény és jogosultsági hiba (401, 403) automatikusan naplózásra kerül az adatbázisba, lehetővé téve a biztonsági auditokat és a rendellenes viselkedés észlelését.
 
 ## Quick Start - API Használat
@@ -704,48 +709,48 @@ curl http://localhost:3000/api/students/me \
 
 ### Hallgatók (`/api/students`)
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/` | Összes hallgató listázása. |
-| `GET` | `/available` | Munkakeresésre jelentkezett hallgatók listázása (Publikus adatokkal). |
-| `GET` | `/me` | Saját hallgatói profil lekérése. |
-| `PATCH` | `/me` | Saját profil frissítése. |
-| `PATCH` | `/me/university-transition` | Átváltás középiskolai profilról egyetemire (Neptun kód, Szak). |
-| `DELETE` | `/me` | Saját profil törlése. |
-| `GET` | `/:id` | Hallgató lekérése ID alapján. |
-| `PATCH` | `/:id` | Hallgató módosítása (Admin). |
-| `DELETE` | `/:id` | Hallgató törlése (Soft delete). |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Összes hallgató listázása. | UniversityStaff |
+| `GET` | `/available` | Munkakeresésre jelentkezett hallgatók listázása (Publikus adatokkal). | Staff |
+| `GET` | `/me` | Saját hallgatói profil lekérése. | Student |
+| `PATCH` | `/me` | Saját profil frissítése. | Student |
+| `PATCH` | `/me/university-transition` | Átváltás középiskolai profilról egyetemire (Neptun kód, Szak). | Student |
+| `DELETE` | `/me` | Saját profil törlése. | Student |
+| `GET` | `/:id` | Hallgató lekérése ID alapján. | Staff |
+| `PATCH` | `/:id` | Hallgató módosítása (Admin). | SystemAdmin |
+| `DELETE` | `/:id` | Hallgató törlése (Soft delete). | SystemAdmin |
 
 ### Cégek (`/api/companies`)
 
 A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/` | Aktív cégek listázása. |
-| `POST` | `/` | Új cég létrehozása. |
-| `POST` | `/with-admin` | Új cég és hozzá tartozó cégadmin létrehozása egy lépésben (Admin). |
-| `GET` | `/inactive` | Inaktív cégek listázása. |
-| `GET` | `/own-application` | Saját jelentkezési felülettel rendelkező cégek listázása. |
-| `GET` | `/:id` | Cég részletei. |
-| `PATCH` | `/:id` | Cég adatainak frissítése. |
-| `DELETE` | `/:id` | Cég törlése (Soft delete). |
-| `PATCH` | `/:id/reactivate` | Cég újraaktiválása. |
-| `PATCH` | `/:id/deactivate` | Cég inaktiválása. |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Aktív cégek listázása. | Auth |
+| `POST` | `/` | Új cég létrehozása. | SystemAdmin |
+| `POST` | `/with-admin` | Új cég és hozzá tartozó cégadmin létrehozása egy lépésben. | Publikus |
+| `GET` | `/inactive` | Inaktív cégek listázása. | SystemAdmin |
+| `GET` | `/own-application` | Saját jelentkezési felülettel rendelkező cégek listázása. | Auth |
+| `GET` | `/:id` | Cég részletei. | Auth |
+| `PATCH` | `/:id` | Cég adatainak frissítése. | CompanyAdmin / SystemAdmin |
+| `DELETE` | `/:id` | Cég törlése (Soft delete). | SystemAdmin |
+| `PATCH` | `/:id/reactivate` | Cég újraaktiválása. | SystemAdmin |
+| `PATCH` | `/:id/deactivate` | Cég inaktiválása. | SystemAdmin |
 
 ### Állások / Pozíciók (`/api/jobs/positions`)
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/` | Aktív pozíciók listázása. (Opcionális: `?isDual=true` vagy `false`) |
-| `GET` | `/dual` | Kizárólag duális pozíciók listázása. |
-| `GET` | `/non-dual` | Kizárólag nem duális pozíciók listázása. |
-| `POST` | `/` | Új pozíció létrehozása. |
-| `GET` | `/:id` | Pozíció részletei. |
-| `PATCH` | `/:id` | Pozíció frissítése. |
-| `DELETE` | `/:id` | Pozíció törlése. |
-| `PATCH` | `/:id/deactivate`| Pozíció inaktiválása. |
-| `GET` | `/company/:companyId` | Egy adott cég pozíciói. |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Aktív pozíciók listázása. (Opcionális: `?isDual=true` vagy `false`) | Publikus |
+| `GET` | `/dual` | Kizárólag duális pozíciók listázása. | Publikus |
+| `GET` | `/non-dual` | Kizárólag nem duális pozíciók listázása. | Publikus |
+| `POST` | `/` | Új pozíció létrehozása. | CompanyAdmin |
+| `GET` | `/:id` | Pozíció részletei. | Publikus |
+| `PATCH` | `/:id` | Pozíció frissítése. | CompanyEmployee + Owner |
+| `DELETE` | `/:id` | Pozíció törlése. | CompanyEmployee + Owner |
+| `PATCH` | `/:id/deactivate`| Pozíció inaktiválása. | CompanyEmployee + Owner |
+| `GET` | `/company/:companyId` | Egy adott cég pozíciói. | Publikus |
 
 ### Jelentkezések (`/api/applications`)
 
@@ -764,60 +769,60 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 
 ### Hírek (`/api/news`)
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/` | Hírek listázása (hallgatóknak/felhasználóknak). Szerepkör alapú szűréssel. |
-| `GET` | `/:id` | Hír részletei. |
-| `POST` | `/admin` | Hír létrehozása (Admin). Megcélozható vele mindenki (`ALL`) vagy konkrét szerepkörök (`STUDENT`, `MENTOR`, stb.). |
-| `GET` | `/admin` | Hírek kezelése (Admin lista). |
-| `GET` | `/admin/archived` | Archivált hírek. |
-| `PATCH` | `/admin/:id` | Hír szerkesztése. |
-| `PATCH` | `/admin/:id/archive` | Hír archiválása. |
-| `PATCH` | `/admin/:id/unarchive` | Hír visszaállítása. |
-| `DELETE` | `/admin/:id` | Hír végleges törlése vagy soft delete. |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Hírek listázása (hallgatóknak/felhasználóknak). Szerepkör alapú szűréssel. | Auth |
+| `GET` | `/:id` | Hír részletei. | Auth |
+| `POST` | `/admin` | Hír létrehozása. Megcélozható vele mindenki (`ALL`) vagy konkrét szerepkörök. | SystemAdmin |
+| `GET` | `/admin` | Hírek kezelése (Admin lista). | SystemAdmin |
+| `GET` | `/admin/archived` | Archivált hírek. | SystemAdmin |
+| `PATCH` | `/admin/:id` | Hír szerkesztése. | SystemAdmin |
+| `PATCH` | `/admin/:id/archive` | Hír archiválása. | SystemAdmin |
+| `PATCH` | `/admin/:id/unarchive` | Hír visszaállítása. | SystemAdmin |
+| `DELETE` | `/admin/:id` | Hír végleges törlése vagy soft delete. | SystemAdmin |
 
 ### Értesítések (`/api/notifications`)
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/` | Olvasatlan/Aktív értesítések. |
-| `GET` | `/archived` | Archivált értesítések. |
-| `GET` | `/:id` | Értesítés részletei. |
-| `GET` | `/unread-count` | Olvasatlan értesítések száma. |
-| `POST` | `/` | Új értesítés létrehozása. |
-| `PUT` | `/read-all` | Minden megjelölése olvasottként. |
-| `PUT` | `/:id/read` | Egy elem olvasottnak jelölése. |
-| `PUT` | `/:id/archive` | Értesítés archiválása. |
-| `PUT` | `/:id/unarchive` | Értesítés visszaállítása. |
-| `DELETE` | `/:id` | Értesítés törlése. |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Olvasatlan/Aktív értesítések. | Auth |
+| `GET` | `/archived` | Archivált értesítések. | Auth |
+| `GET` | `/:id` | Értesítés részletei. | Auth |
+| `GET` | `/unread-count` | Olvasatlan értesítések száma. | Auth |
+| `POST` | `/` | Új értesítés létrehozása. | SystemAdmin |
+| `PUT` | `/read-all` | Minden megjelölése olvasottként. | Auth |
+| `PUT` | `/:id/read` | Egy elem olvasottnak jelölése. | Auth |
+| `PUT` | `/:id/archive` | Értesítés archiválása. | Auth |
+| `PUT` | `/:id/unarchive` | Értesítés visszaállítása. | Auth |
+| `DELETE` | `/:id` | Értesítés törlése. | Auth |
 
 ### Statisztika (`/api/stats`)
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/` | Rendszerszintű statisztikák (felhasználók, cégek, pozíciók, partnerségek). |
-| `GET` | `/applications` | Jelentkezési statisztikák (státusz szerinti bontás, konverziós arány, átlag/pozíció, elmúlt 30 nap). |
-| `GET` | `/partnerships` | Partnerségi statisztikák (státusz és félév szerinti bontás, átlagos időtartam). |
-| `GET` | `/positions` | Pozíció statisztikák (7 napon belül lejáró, jelentkezés nélküli pozíciók). |
-| `GET` | `/trends` | Időbeli trendek (regisztrációk, jelentkezések, partnerségek az elmúlt 6 hónapban). |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Rendszerszintű statisztikák (felhasználók, cégek, pozíciók, partnerségek). | SystemAdmin |
+| `GET` | `/applications` | Jelentkezési statisztikák (státusz szerinti bontás, konverziós arány, átlag/pozíció, elmúlt 30 nap). | SystemAdmin |
+| `GET` | `/partnerships` | Partnerségi statisztikák (státusz és félév szerinti bontás, átlagos időtartam). | SystemAdmin |
+| `GET` | `/positions` | Pozíció statisztikák (7 napon belül lejáró, jelentkezés nélküli pozíciók). | SystemAdmin |
+| `GET` | `/trends` | Időbeli trendek (regisztrációk, jelentkezések, partnerségek az elmúlt 6 hónapban). | SystemAdmin |
 
 ### Duális Partnerkapcsolatok (`/api/partnerships`)
 
 A hallgatók és cégek közötti duális képzési szerződések kezelése.
 A partnerség automatikusan létrejön `PENDING_MENTOR` státusszal, amikor a cég elfogad egy jelentkezést (`ACCEPTED`).
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/student` | Hallgató saját partnerségeinek listázása. |
-| `GET` | `/company` | Céghez tartozó partnerségek listázása. |
-| `GET` | `/university` | Összes partnerség listázása (Egyetem). |
-| `GET` | `/:id` | Partnerkapcsolat részletei. |
-| `PATCH` | `/:id` | Partnerkapcsolat adatainak frissítése. |
-| `PATCH` | `/:id/assign-mentor` | Mentor hozzárendelése (Cégadmin). |
-| `PATCH` | `/:id/complete` | Partnerkapcsolat befejezetté tétele (FINISHED). |
-| `PATCH` | `/:id/assign-university-user` | Egyetemi felelős hozzárendelése (Admin). |
-| `PATCH` | `/:id/terminate` | Partnerkapcsolat megszakítása (Terminated státusz). |
-| `DELETE` | `/:id` | Partnerkapcsolat törlése (Soft delete). |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/student` | Hallgató saját partnerségeinek listázása. | Student |
+| `GET` | `/company` | Céghez tartozó partnerségek listázása. | CompanyEmployee |
+| `GET` | `/university` | Összes partnerség listázása (Egyetem). | UniversityStaff |
+| `GET` | `/:id` | Partnerkapcsolat részletei. | Auth |
+| `PATCH` | `/:id` | Partnerkapcsolat adatainak frissítése. | UniversityStaff + Owner |
+| `PATCH` | `/:id/assign-mentor` | Mentor hozzárendelése. | CompanyAdmin |
+| `PATCH` | `/:id/complete` | Partnerkapcsolat befejezetté tétele (FINISHED). | UniversityStaff + Owner |
+| `PATCH` | `/:id/assign-university-user` | Egyetemi felelős hozzárendelése. | UniversityStaff |
+| `PATCH` | `/:id/terminate` | Partnerkapcsolat megszakítása (Terminated státusz). | UniversityStaff + Owner |
+| `DELETE` | `/:id` | Partnerkapcsolat törlése (Soft delete). | SystemAdmin + Owner |
 
 ### Szakok (`/api/majors`)
 
@@ -827,78 +832,80 @@ A képzési szakok (Major) kezelése. A hallgatói profil szakválasztáshoz kap
 | :--- | :--- | :--- | :--- |
 | `GET` | `/` | Összes szak listázása. | Publikus |
 | `GET` | `/:id` | Szak részletei ID alapján. | Publikus |
-| `POST` | `/` | Új szak létrehozása. | Auth |
-| `PATCH` | `/:id` | Szak frissítése. | Auth |
-| `DELETE` | `/:id` | Szak törlése. | Auth |
+| `POST` | `/` | Új szak létrehozása. | SystemAdmin |
+| `PATCH` | `/:id` | Szak frissítése. | SystemAdmin |
+| `DELETE` | `/:id` | Szak törlése. | SystemAdmin |
 
 ### Cég Adminisztrátorok (`/api/company-admins`)
 
 A cégek adminisztrátorainak kezelése.
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/` | Összes cégadmin listázása. |
-| `GET` | `/me` | Saját profil lekérése. |
-| `PATCH` | `/me` | Saját profil frissítése. |
-| `DELETE` | `/me` | Saját profil törlése. |
-| `GET` | `/:id` | Cégadmin lekérése ID alapján. |
-| `PATCH` | `/:id` | Adatok frissítése (Admin). |
-| `DELETE` | `/:id` | Cégadmin törlése (Admin). |
-| `PATCH` | `/restore/:id` | Törölt cégadmin visszaállítása. |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Összes cégadmin listázása. | SystemAdmin |
+| `GET` | `/me` | Saját profil lekérése. | CompanyAdmin |
+| `PATCH` | `/me` | Saját profil frissítése. | CompanyAdmin |
+| `DELETE` | `/me` | Saját profil törlése. | CompanyAdmin |
+| `GET` | `/:id` | Cégadmin lekérése ID alapján. | SystemAdmin |
+| `PATCH` | `/:id` | Adatok frissítése. | SystemAdmin |
+| `DELETE` | `/:id` | Cégadmin törlése. | SystemAdmin |
+| `PATCH` | `/restore/:id` | Törölt cégadmin visszaállítása. | SystemAdmin |
 
 ### Munkavállalók (`/api/employees`)
 
 Céges munkavállalók (pl. mentorok) kezelése.
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/` | Céghez tartozó munkavállalók listázása. |
-| `GET` | `/mentors` | Csak a mentorok listázása (Cégadminnak). |
-| `GET` | `/me` | Saját profil lekérése. |
-| `PATCH` | `/me` | Saját profil frissítése. |
-| `DELETE` | `/me` | Saját profil törlése. |
-| `GET` | `/:id` | Munkavállaló lekérése ID alapján. |
-| `PATCH` | `/:id` | Munkavállaló frissítése (Admin/CompanyAdmin). |
-| `DELETE` | `/:id` | Munkavállaló törlése (Admin/CompanyAdmin). |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Céghez tartozó munkavállalók listázása. | CompanyEmployee |
+| `GET` | `/mentors` | Csak a mentorok listázása. | CompanyEmployee |
+| `GET` | `/me` | Saját profil lekérése. | CompanyEmployee |
+| `PATCH` | `/me` | Saját profil frissítése. | CompanyEmployee |
+| `DELETE` | `/me` | Saját profil törlése. | CompanyEmployee |
+| `GET` | `/me/students` | Mentorált hallgatók listázása. | Mentor |
+| `GET` | `/me/students/:id` | Mentorált hallgató/partnerség részletei. | Mentor |
+| `GET` | `/:id` | Munkavállaló lekérése ID alapján. | CompanyEmployee |
+| `PATCH` | `/:id` | Munkavállaló frissítése. | CompanyAdmin |
+| `DELETE` | `/:id` | Munkavállaló törlése. | CompanyAdmin |
 
 ### Egyetemi Felhasználók (`/api/university-users`)
 
 Egyetemi kapcsolattartók és adminisztrátorok.
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/` | Összes egyetemi felhasználó listázása. |
-| `GET` | `/me` | Saját profil lekérése. |
-| `PATCH` | `/me` | Saját profil frissítése. |
-| `DELETE` | `/me` | Saját profil törlése. |
-| `GET` | `/:id` | Egyetemi felhasználó lekérése ID alapján. |
-| `PATCH` | `/:id` | Adatok frissítése (Admin). |
-| `DELETE` | `/:id` | Törlés (Admin). |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Összes egyetemi felhasználó listázása. | UniversityStaff |
+| `GET` | `/me` | Saját profil lekérése. | UniversityUser |
+| `PATCH` | `/me` | Saját profil frissítése. | UniversityUser |
+| `DELETE` | `/me` | Saját profil törlése. | UniversityUser |
+| `GET` | `/:id` | Egyetemi felhasználó lekérése ID alapján. | UniversityStaff |
+| `PATCH` | `/:id` | Adatok frissítése. | SystemAdmin |
+| `DELETE` | `/:id` | Törlés. | SystemAdmin |
 
 ### Rendszer Adminisztrátorok (`/api/system-admins`)
 
-A platform üzemeltetői.
+A platform üzemeltetői. Minden végpont `SYSTEM_ADMIN` jogosultságot igényel.
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/` | Összes rendszeradmin listázása. |
-| `GET` | `/admin-users` | Minden admin (Rendszer, Cég, Egyetem) listázása. |
-| `GET` | `/me` | Saját admin profil lekérése. |
-| `PATCH` | `/me` | Saját admin profil frissítése. |
-| `DELETE` | `/me` | Saját admin profil törlése. |
-| `GET` | `/:id` | Rendszeradmin lekérése ID alapján. |
-| `PATCH` | `/:id` | Adatok frissítése (Superadmin). |
-| `DELETE` | `/:id` | Admin törlése (Superadmin). |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Összes rendszeradmin listázása. | SystemAdmin |
+| `GET` | `/admin-users` | Minden admin (Rendszer, Cég, Egyetem) listázása. | SystemAdmin |
+| `GET` | `/me` | Saját admin profil lekérése. | SystemAdmin |
+| `PATCH` | `/me` | Saját admin profil frissítése. | SystemAdmin |
+| `DELETE` | `/me` | Saját admin profil törlése. | SystemAdmin |
+| `GET` | `/:id` | Rendszeradmin lekérése ID alapján. | SystemAdmin |
+| `PATCH` | `/:id` | Adatok frissítése. | SystemAdmin |
+| `DELETE` | `/:id` | Admin törlése. | SystemAdmin |
 
 ### Felhasználók (`/api/users`)
 
-Általános felhasználókezelés (pl. inaktív fiókok).
+Általános felhasználókezelés (pl. inaktív fiókok). Minden végpont `SYSTEM_ADMIN` jogosultságot igényel.
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `GET` | `/inactive` | Inaktív felhasználók listázása. |
-| `PATCH` | `/:id/reactivate` | Felhasználó visszaállítása. |
-| `PATCH` | `/:id/deactivate` | Felhasználó felfüggesztése. |
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/inactive` | Inaktív felhasználók listázása. | SystemAdmin |
+| `PATCH` | `/:id/reactivate` | Felhasználó visszaállítása. | SystemAdmin |
+| `PATCH` | `/:id/deactivate` | Felhasználó felfüggesztése. | SystemAdmin |
 
 ---
-**Megjegyzés**: Ez a dokumentáció a projekt 2026-02-09-i állapotát tükrözi. API változtatások esetén kérjük a dokumentáció frissítését.
+**Megjegyzés**: Ez a dokumentáció a projekt 2026-02-11-i állapotát tükrözi. API változtatások esetén kérjük a dokumentáció frissítését.

@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-11 (Pozíció-Szak kapcsolat, Partnership aktiválás logika)  
+> **Utolsó frissítés**: 2026-02-11 (Role-Based Endpoint Security, Partnership aktiválás logika)  
 > **Projekt státusz**: Production-ready
 
 ---
@@ -336,6 +336,7 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - **Munkakeresésre jelentkezett hallgatók**: Dedikált végpont (`GET /api/students/available`) a munkát kereső hallgatók listázására, publikus (nem érzékeny) adatokkal.
 - **Pozíció-Szak kapcsolat**: A `Position` modellhez opcionális `majorId` FK hozzáadva a `Major` táblára. A pozíciók válaszában megjelenik a kapcsolt szak (`major`) objektum.
 - **Partnership aktiválás logika**: A partnerség csak akkor válhat `ACTIVE`-vá, ha van hozzárendelt mentor és egyetemi felügyelő. Aktiváláskor a hallgató `isAvailableForWork` állapota automatikusan `false`-ra áll (tranzakcióban).
+- **Role-Based Endpoint Security (RBAC)**: Minden API végpont szerepkör-alapú hozzáférés-vezérléssel van ellátva a `requireRole` middleware segítségével. A role helper-ek (`isStudent`, `isCompanyAdmin`, `isCompanyEmployee`, `isMentor`, `isUniversityUser`, `isUniversityStaff`, `isSystemAdmin`, `isStaff`) biztosítják, hogy csak a megfelelő jogosultsággal rendelkező felhasználók férhessenek hozzá az adott végpontokhoz. Mind a 14 route fájl frissítve.
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
