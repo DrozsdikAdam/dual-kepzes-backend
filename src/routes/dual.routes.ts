@@ -20,9 +20,11 @@ import {
 } from "../schemas/dual.schema";
 import {
     authenticateToken,
-    isCompanyEmployee,
     isStudent,
-    isUniversityStaff
+    isCompanyEmployee,
+    isCompanyAdmin,
+    isUniversityStaff,
+    isSystemAdmin
 } from "../middlewares/auth.middleware";
 import { requirePartnershipOwnership } from "../middlewares/ownership.middleware";
 
@@ -51,6 +53,7 @@ const router = Router();
  */
 router.get("/student",
     authenticateToken,
+    isStudent,
     getStudentPartnerships
 );
 
@@ -70,6 +73,7 @@ router.get("/student",
  */
 router.get("/company",
     authenticateToken,
+    isCompanyEmployee,
     getCompanyPartnerships
 );
 
@@ -89,6 +93,7 @@ router.get("/company",
  */
 router.get("/university",
     authenticateToken,
+    isUniversityStaff,
     getUniversityPartnerships
 );
 
@@ -149,6 +154,7 @@ router.get("/:id",
 router.patch(
     "/:id",
     authenticateToken,
+    isUniversityStaff,
     requirePartnershipOwnership,
     validate(DualPartnershipUpdateSchema),
     updatePartnership
@@ -186,6 +192,7 @@ router.patch(
 router.patch(
     "/:id/assign-mentor",
     authenticateToken,
+    isCompanyAdmin,
     validate(AssignMentorSchema),
     assignMentor
 );
@@ -222,6 +229,7 @@ router.patch(
 router.patch(
     "/:id/assign-university-user",
     authenticateToken,
+    isUniversityStaff,
     validate(AssignUniversityUserSchema),
     assignUniversityUser
 );
@@ -247,6 +255,7 @@ router.patch(
 router.patch(
     "/:id/terminate",
     authenticateToken,
+    isUniversityStaff,
     requirePartnershipOwnership,
     terminatePartnership
 );
@@ -272,6 +281,7 @@ router.patch(
 router.patch(
     "/:id/complete",
     authenticateToken,
+    isUniversityStaff,
     requirePartnershipOwnership,
     completePartnership
 );
@@ -296,6 +306,7 @@ router.patch(
  */
 router.delete("/:id",
     authenticateToken,
+    isSystemAdmin,
     requirePartnershipOwnership,
     deletePartnership
 );
