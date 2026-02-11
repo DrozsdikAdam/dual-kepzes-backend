@@ -35,6 +35,8 @@ export interface MappedPosition {
      companyId: string;
      title: string;
      description?: string | null;
+     majorId?: string | null;
+     major?: MappedMajor | null;
      isDual: boolean;
      deadline?: Date | null;
      isActive: boolean;
