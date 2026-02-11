@@ -6,7 +6,7 @@ import {
      updateMajor,
      deleteMajor
 } from "../controllers/major.controller";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken, isSystemAdmin } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { CreateMajorSchema, UpdateMajorSchema, MajorIdParamSchema } from "../schemas/major.schema";
 
@@ -121,7 +121,7 @@ router.use(authenticateToken);
  *       401:
  *         description: Unauthorized
  */
-router.post("/", validate(CreateMajorSchema), createMajor);
+router.post("/", isSystemAdmin, validate(CreateMajorSchema), createMajor);
 
 /**
  * @swagger
@@ -150,7 +150,7 @@ router.post("/", validate(CreateMajorSchema), createMajor);
  *       404:
  *         description: Major not found
  */
-router.patch("/:id", validate(UpdateMajorSchema), updateMajor);
+router.patch("/:id", isSystemAdmin, validate(UpdateMajorSchema), updateMajor);
 
 /**
  * @swagger
@@ -173,6 +173,6 @@ router.patch("/:id", validate(UpdateMajorSchema), updateMajor);
  *       404:
  *         description: Major not found
  */
-router.delete("/:id", validate(MajorIdParamSchema), deleteMajor);
+router.delete("/:id", isSystemAdmin, validate(MajorIdParamSchema), deleteMajor);
 
 export default router;

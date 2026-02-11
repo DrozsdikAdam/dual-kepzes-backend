@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken, isSystemAdmin } from "../middlewares/auth.middleware";
 import {
      getSystemStats,
      getApplicationStats,
@@ -29,7 +29,7 @@ const router = Router();
  *       200:
  *         description: Object containing system stats
  */
-router.get("/", authenticateToken, getSystemStats);
+router.get("/", authenticateToken, isSystemAdmin, getSystemStats);
 
 /**
  * @swagger
@@ -71,7 +71,7 @@ router.get("/", authenticateToken, getSystemStats);
  *                       type: integer
  *                       description: Applications in the last 30 days
  */
-router.get("/applications", authenticateToken, getApplicationStats);
+router.get("/applications", authenticateToken, isSystemAdmin, getApplicationStats);
 
 /**
  * @swagger
@@ -116,7 +116,7 @@ router.get("/applications", authenticateToken, getApplicationStats);
  *                       type: integer
  *                       description: Average partnership duration in days
  */
-router.get("/partnerships", authenticateToken, getPartnershipStats);
+router.get("/partnerships", authenticateToken, isSystemAdmin, getPartnershipStats);
 
 /**
  * @swagger
@@ -146,7 +146,7 @@ router.get("/partnerships", authenticateToken, getPartnershipStats);
  *                       type: integer
  *                       description: Active positions with no applications
  */
-router.get("/positions", authenticateToken, getPositionStats);
+router.get("/positions", authenticateToken, isSystemAdmin, getPositionStats);
 
 /**
  * @swagger
@@ -198,6 +198,6 @@ router.get("/positions", authenticateToken, getPositionStats);
  *                           count:
  *                             type: integer
  */
-router.get("/trends", authenticateToken, getTrendStats);
+router.get("/trends", authenticateToken, isSystemAdmin, getTrendStats);
 
 export default router;

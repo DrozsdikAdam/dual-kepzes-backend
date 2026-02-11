@@ -11,7 +11,7 @@ import {
      getAllAdminUsers
 } from "../controllers/systemAdmin.controller"
 import { SystemAdminUpdateSchema } from "../schemas/systemAdmin.schema"
-import { authenticateToken } from "../middlewares/auth.middleware"
+import { authenticateToken, isSystemAdmin } from "../middlewares/auth.middleware"
 
 const router = Router()
 
@@ -23,6 +23,7 @@ const router = Router()
  */
 
 router.use(authenticateToken)
+router.use(isSystemAdmin)
 
 /**
  * @swagger

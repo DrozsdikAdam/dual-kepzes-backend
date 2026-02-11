@@ -1,5 +1,7 @@
 import { Router } from "express";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken, isSystemAdmin, isCompanyAdmin } from "../middlewares/auth.middleware";
+import { requireRole } from "../middlewares/auth.middleware";
+import { Role } from "@prisma/client";
 import {
      getInactiveCompanies,
      reactivateCompany,
@@ -83,7 +85,7 @@ router.use(authenticateToken);
  *       200:
  *         description: List of inactive companies
  */
-router.get("/inactive", getInactiveCompanies);
+router.get("/inactive", isSystemAdmin, getInactiveCompanies);
 
 /**
  * @swagger
@@ -133,6 +135,7 @@ router.get("/", getAllCompanies);
  */
 router.post(
      "/",
+     isSystemAdmin,
      validate(CompanyCreateSchema),
      createCompany
 );
@@ -187,6 +190,7 @@ router.get("/:id", getCompanyById);
  */
 router.patch(
      "/:id",
+     requireRole([Role.COMPANY_ADMIN, Role.SYSTEM_ADMIN]),
      validate(CompanyUpdateSchema),
      updateCompany
 );
@@ -209,7 +213,7 @@ router.patch(
  *       200:
  *         description: Company deleted successfully
  */
-router.delete("/:id", deleteCompany);
+router.delete("/:id", isSystemAdmin, deleteCompany);
 
 // Egyéb műveletek id alapján
 
@@ -231,7 +235,7 @@ router.delete("/:id", deleteCompany);
  *       200:
  *         description: Company reactivated successfully
  */
-router.patch("/:id/reactivate", reactivateCompany);
+router.patch("/:id/reactivate", isSystemAdmin, reactivateCompany);
 
 /**
  * @swagger
@@ -251,6 +255,6 @@ router.patch("/:id/reactivate", reactivateCompany);
  *       200:
  *         description: Company deactivated successfully
  */
-router.patch("/:id/deactivate", deactivateCompany);
+router.patch("/:id/deactivate", isSystemAdmin, deactivateCompany);
 
 export default router;

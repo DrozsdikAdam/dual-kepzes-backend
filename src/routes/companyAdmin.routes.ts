@@ -11,7 +11,7 @@ import {
      restoreCompanyAdmin
 } from "../controllers/companyAdmin.controller"
 import { CompanyAdminUpdateSchema } from "../schemas/companyAdmin.schema"
-import { authenticateToken } from "../middlewares/auth.middleware"
+import { authenticateToken, isCompanyAdmin, isSystemAdmin } from "../middlewares/auth.middleware"
 
 const router = Router()
 
@@ -36,7 +36,7 @@ router.use(authenticateToken)
  *       200:
  *         description: My company admin profile details
  */
-router.get("/me", getMeCompanyAdmin)
+router.get("/me", isCompanyAdmin, getMeCompanyAdmin)
 
 /**
  * @swagger
@@ -56,7 +56,7 @@ router.get("/me", getMeCompanyAdmin)
  *       200:
  *         description: Profile updated successfully
  */
-router.patch("/me", validate(CompanyAdminUpdateSchema), updateMeCompanyAdmin)
+router.patch("/me", isCompanyAdmin, validate(CompanyAdminUpdateSchema), updateMeCompanyAdmin)
 
 /**
  * @swagger
@@ -70,7 +70,7 @@ router.patch("/me", validate(CompanyAdminUpdateSchema), updateMeCompanyAdmin)
  *       200:
  *         description: Account deleted successfully
  */
-router.delete("/me", deleteMeCompanyAdmin)
+router.delete("/me", isCompanyAdmin, deleteMeCompanyAdmin)
 
 /**
  * @swagger
@@ -84,7 +84,7 @@ router.delete("/me", deleteMeCompanyAdmin)
  *       200:
  *         description: List of all company admins
  */
-router.get("/", getCompanyAdmins)
+router.get("/", isSystemAdmin, getCompanyAdmins)
 
 /**
  * @swagger
@@ -104,7 +104,7 @@ router.get("/", getCompanyAdmins)
  *       200:
  *         description: Account restored successfully
  */
-router.patch("/restore/:id", restoreCompanyAdmin)
+router.patch("/restore/:id", isSystemAdmin, restoreCompanyAdmin)
 
 /**
  * @swagger
@@ -124,7 +124,7 @@ router.patch("/restore/:id", restoreCompanyAdmin)
  *       200:
  *         description: Company admin details
  */
-router.get("/:id", getCompanyAdminById)
+router.get("/:id", isSystemAdmin, getCompanyAdminById)
 
 /**
  * @swagger
@@ -150,7 +150,7 @@ router.get("/:id", getCompanyAdminById)
  *       200:
  *         description: Profile updated successfully
  */
-router.patch("/:id", validate(CompanyAdminUpdateSchema), updateCompanyAdminById)
+router.patch("/:id", isSystemAdmin, validate(CompanyAdminUpdateSchema), updateCompanyAdminById)
 
 /**
  * @swagger
@@ -170,6 +170,6 @@ router.patch("/:id", validate(CompanyAdminUpdateSchema), updateCompanyAdminById)
  *       200:
  *         description: Account deleted successfully
  */
-router.delete("/:id", deleteCompanyAdmin)
+router.delete("/:id", isSystemAdmin, deleteCompanyAdmin)
 
 export default router
