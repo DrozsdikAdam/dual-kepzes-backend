@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken, isSystemAdmin } from "../middlewares/auth.middleware";
 import { getInactiveUsers, reactivateUser, deactivateUser } from "../controllers/user.controller";
 
 const router = Router();
@@ -14,6 +14,7 @@ const router = Router();
 
 // Minden routehoz szükséges a bejelentkezés, de SystemAdmin jog nem (egyelőre)
 router.use(authenticateToken);
+router.use(isSystemAdmin);
 
 /**
  * @swagger
