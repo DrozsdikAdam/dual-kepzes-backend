@@ -48,7 +48,7 @@ router.use(authenticateToken)
  *       201:
  *         description: Application submitted successfully
  */
-router.post("/", requireIdempotency(), validate(CreateApplicationSchema), applyToPosition)
+router.post("/", isStudent, requireIdempotency(), validate(CreateApplicationSchema), applyToPosition)
 
 /**
  * @swagger
@@ -95,6 +95,7 @@ router.post("/", requireIdempotency(), validate(CreateApplicationSchema), applyT
  */
 router.post(
      "/submit-with-files",
+     isStudent,
      requireIdempotency(),
      uploadConfig.fields([
           { name: "cv", maxCount: 1 },
@@ -115,7 +116,7 @@ router.post(
  *       200:
  *         description: List of own applications
  */
-router.get("/", getMyApplications)
+router.get("/", isStudent, getMyApplications)
 
 /**
  * @swagger
@@ -135,7 +136,7 @@ router.get("/", getMyApplications)
  *       200:
  *         description: Application retracted successfully
  */
-router.patch("/:id/retract", retractApplication)
+router.patch("/:id/retract", isStudent, retractApplication)
 
 // Company routes
 
@@ -151,7 +152,7 @@ router.patch("/:id/retract", retractApplication)
  *       200:
  *         description: List of applications for the company
  */
-router.get("/company", getMyCompanyApplications)
+router.get("/company", isCompanyEmployee, getMyCompanyApplications)
 
 /**
  * @swagger
@@ -177,7 +178,7 @@ router.get("/company", getMyCompanyApplications)
  *       200:
  *         description: Application evaluated successfully
  */
-router.patch("/company/:id/evaluate", validate(EvaluateApplicationSchema), evaluateApplication)
+router.patch("/company/:id/evaluate", isCompanyEmployee, validate(EvaluateApplicationSchema), evaluateApplication)
 
 /**
  * @swagger
@@ -203,7 +204,7 @@ router.patch("/company/:id/evaluate", validate(EvaluateApplicationSchema), evalu
  *       200:
  *         description: Evaluation updated successfully
  */
-router.patch("/company/:id", validate(UpdateApplicationSchema), updateEvaluation)
+router.patch("/company/:id", isCompanyEmployee, validate(UpdateApplicationSchema), updateEvaluation)
 
 // System Admin routes
 
@@ -219,7 +220,7 @@ router.patch("/company/:id", validate(UpdateApplicationSchema), updateEvaluation
  *       200:
  *         description: List of all applications
  */
-router.get("/admin", getApplications)
+router.get("/admin", isSystemAdmin, getApplications)
 
 /**
  * @swagger
@@ -239,7 +240,7 @@ router.get("/admin", getApplications)
  *       200:
  *         description: Application details
  */
-router.get("/admin/:id", getApplication)
+router.get("/admin/:id", isSystemAdmin, getApplication)
 
 /**
  * @swagger
@@ -265,6 +266,6 @@ router.get("/admin/:id", getApplication)
  *       200:
  *         description: Application updated successfully
  */
-router.patch("/admin/:id", validate(UpdateApplicationSchema), updateApplication)
+router.patch("/admin/:id", isSystemAdmin, validate(UpdateApplicationSchema), updateApplication)
 
 export default router;
