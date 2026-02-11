@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken, isUniversityUser, isUniversityStaff, isSystemAdmin } from "../middlewares/auth.middleware";
 import {
      getUniversityUserById,
      getUniversityUsers,
@@ -35,7 +35,7 @@ router.use(authenticateToken)
  *       200:
  *         description: My university user profile details
  */
-router.get("/me", getMeUniversityUser);
+router.get("/me", isUniversityUser, getMeUniversityUser);
 
 /**
  * @swagger
@@ -55,7 +55,7 @@ router.get("/me", getMeUniversityUser);
  *       200:
  *         description: Profile updated successfully
  */
-router.patch("/me", validate(UniversityUserUpdateSchema), updateMeUniversityUser);
+router.patch("/me", isUniversityUser, validate(UniversityUserUpdateSchema), updateMeUniversityUser);
 
 /**
  * @swagger
@@ -69,7 +69,7 @@ router.patch("/me", validate(UniversityUserUpdateSchema), updateMeUniversityUser
  *       200:
  *         description: Account deleted successfully
  */
-router.delete("/me", deleteMeUniversityUser);
+router.delete("/me", isUniversityUser, deleteMeUniversityUser);
 
 /**
  * @swagger
@@ -83,7 +83,7 @@ router.delete("/me", deleteMeUniversityUser);
  *       200:
  *         description: List of university users
  */
-router.get("/", getUniversityUsers);
+router.get("/", isUniversityStaff, getUniversityUsers);
 
 /**
  * @swagger
@@ -103,7 +103,7 @@ router.get("/", getUniversityUsers);
  *       200:
  *         description: University user details
  */
-router.get("/:id", getUniversityUserById)
+router.get("/:id", isUniversityStaff, getUniversityUserById)
 
 /**
  * @swagger
@@ -129,7 +129,7 @@ router.get("/:id", getUniversityUserById)
  *       200:
  *         description: Profile updated successfully
  */
-router.patch("/:id", validate(UniversityUserUpdateSchema), updateUniversityUserById)
+router.patch("/:id", isSystemAdmin, validate(UniversityUserUpdateSchema), updateUniversityUserById)
 
 /**
  * @swagger
@@ -149,6 +149,6 @@ router.patch("/:id", validate(UniversityUserUpdateSchema), updateUniversityUserB
  *       200:
  *         description: Account deleted successfully
  */
-router.delete("/:id", deleteUniversityUser)
+router.delete("/:id", isSystemAdmin, deleteUniversityUser)
 
 export default router;
