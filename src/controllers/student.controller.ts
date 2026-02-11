@@ -219,3 +219,31 @@ export const transitionToUniversity = async (req: Request, res: Response, next: 
         next(error);
     }
 };
+
+export const toggleAvailableForWork = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) {
+            throw new UnauthorizedError("Nincs azonosítva a felhasználó.");
+        }
+
+        const updated = await studentService.toggleAvailableForWork(userId);
+
+        await logAction(req, {
+            action: "TOGGLE_AVAILABLE_FOR_WORK",
+            entity: "User",
+            entityId: userId,
+            details: {
+                isAvailableForWork: (updated as any).studentProfile?.isAvailableForWork
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Elérhetőség sikeresen módosítva!",
+            data: mapStudent(updated)
+        });
+    } catch (error) {
+        next(error);
+    }
+};
