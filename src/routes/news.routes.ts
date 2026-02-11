@@ -11,7 +11,7 @@ import {
      unarchiveNews,
      updateNews,
 } from "../controllers/news.controller";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken, isSystemAdmin } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { CreateNewsSchema, UpdateNewsSchema } from "../schemas/news.schema";
 
@@ -46,7 +46,7 @@ router.use(authenticateToken);
  *       201:
  *         description: News created successfully
  */
-router.post("/admin", validate(CreateNewsSchema), createNews);
+router.post("/admin", isSystemAdmin, validate(CreateNewsSchema), createNews);
 
 /**
  * @swagger
@@ -60,7 +60,7 @@ router.post("/admin", validate(CreateNewsSchema), createNews);
  *       200:
  *         description: List of all news
  */
-router.get("/admin", getAdminNews);
+router.get("/admin", isSystemAdmin, getAdminNews);
 
 /**
  * @swagger
@@ -74,7 +74,7 @@ router.get("/admin", getAdminNews);
  *       200:
  *         description: List of archived news
  */
-router.get("/admin/archived", getArchivedNews);
+router.get("/admin/archived", isSystemAdmin, getArchivedNews);
 
 /**
  * @swagger
@@ -94,7 +94,7 @@ router.get("/admin/archived", getArchivedNews);
  *       200:
  *         description: News details
  */
-router.get("/admin/:id", getAdminNewsById);
+router.get("/admin/:id", isSystemAdmin, getAdminNewsById);
 
 /**
  * @swagger
@@ -120,7 +120,7 @@ router.get("/admin/:id", getAdminNewsById);
  *       200:
  *         description: News updated successfully
  */
-router.patch("/admin/:id", validate(UpdateNewsSchema), updateNews);
+router.patch("/admin/:id", isSystemAdmin, validate(UpdateNewsSchema), updateNews);
 
 /**
  * @swagger
@@ -140,7 +140,7 @@ router.patch("/admin/:id", validate(UpdateNewsSchema), updateNews);
  *       200:
  *         description: News archived successfully
  */
-router.patch("/admin/:id/archive", archiveNews);
+router.patch("/admin/:id/archive", isSystemAdmin, archiveNews);
 
 /**
  * @swagger
@@ -160,7 +160,7 @@ router.patch("/admin/:id/archive", archiveNews);
  *       200:
  *         description: News unarchived successfully
  */
-router.patch("/admin/:id/unarchive", unarchiveNews);
+router.patch("/admin/:id/unarchive", isSystemAdmin, unarchiveNews);
 
 /**
  * @swagger
@@ -180,7 +180,7 @@ router.patch("/admin/:id/unarchive", unarchiveNews);
  *       200:
  *         description: News deleted successfully
  */
-router.delete("/admin/:id", deleteNews);
+router.delete("/admin/:id", isSystemAdmin, deleteNews);
 
 // User routes
 
