@@ -10,7 +10,8 @@ import {
     deleteMyProfile,
     deleteStudentById,
     transitionToUniversity,
-    getAvailableStudents
+    getAvailableStudents,
+    toggleAvailableForWork
 } from "../controllers/student.controller";
 import { MyProfileUpdateSchema, StudentUpdateSchema, UniversityTransitionSchema } from "../schemas/student.schema";
 
@@ -140,6 +141,20 @@ router.delete("/me", authenticateToken, isStudent, deleteMyProfile)
  *         description: Transitioned to university profile successfully
  */
 router.patch("/me/university-transition", authenticateToken, isStudent, validate(UniversityTransitionSchema), transitionToUniversity);
+
+/**
+ * @swagger
+ * /api/students/me/toggle-availability:
+ *   patch:
+ *     summary: Toggle available for work status
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Availability status toggled successfully
+ */
+router.patch("/me/toggle-availability", authenticateToken, isStudent, toggleAvailableForWork);
 
 /**
  * @swagger
