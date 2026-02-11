@@ -8,6 +8,14 @@ export class JobService {
           id: true,
           title: true,
           description: true,
+          majorId: true,
+          major: {
+               select: {
+                    id: true,
+                    name: true,
+                    language: true
+               }
+          },
           location: {
                select: {
                     zipCode: true,
@@ -127,6 +135,7 @@ export class JobService {
                     isDual: data.isDual,
                     company: { connect: { id: data.companyId } },
                     location: { connect: { id: data.locationId } },
+                    major: data.majorId ? { connect: { id: data.majorId } } : undefined,
                     tags: data.tags && data.tags.length > 0 ? {
                          connectOrCreate: data.tags.map((tag) => ({
                               where: { name: tag.name },
@@ -139,7 +148,7 @@ export class JobService {
      }
 
      async update(id: string, data: any) {
-          const { tagNames, locationId, ...rest } = data;
+          const { tagNames, locationId, majorId, ...rest } = data;
 
           if (locationId) {
                const position = await prisma.position.findUnique({
@@ -168,6 +177,9 @@ export class JobService {
                     location: locationId ? {
                          connect: { id: locationId }
                     } : undefined,
+                    major: majorId !== undefined
+                         ? (majorId ? { connect: { id: majorId } } : { disconnect: true })
+                         : undefined,
                     tags: tagNames ? {
                          set: [],
                          connectOrCreate: tagNames.map((name: string) => ({
