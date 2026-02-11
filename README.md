@@ -211,6 +211,7 @@ erDiagram
         string companyId FK
         string title
         string description
+        string majorId FK
         boolean isDual
         datetime deadline
         boolean isActive
@@ -301,6 +302,7 @@ erDiagram
     Company ||--o{ Location : "has branches"
     StudentProfile ||--o{ Location : "lives at"
     StudentProfile }o--o| Major : "major mapping"
+    Position }o--o| Major : "linked to major"
     Position }o--o{ Tag : "tagged with"
 ```
 
@@ -501,9 +503,9 @@ flowchart TD
     P2 --> Notify1[Notify System Admins]
     Notify1 --> AssignUni{University Assigns Supervisor?}
     AssignUni -->|Yes| P3[Partnership: ACTIVE]
+    P3 --> SetAvail[Student: isAvailableForWork = false]
+    SetAvail --> Monitor[Ongoing Mentorship]
     AssignUni -->|No| P2
-    
-    P3 --> Monitor[Ongoing Mentorship]
     Monitor --> Complete{Completion or Termination?}
     Complete -->|Terminated| End2([Partnership: TERMINATED])
     Complete -->|Completed| End3([Partnership: COMPLETED])

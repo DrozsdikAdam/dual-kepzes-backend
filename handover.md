@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-10 (Munkakeresésre jelentkezett hallgatók végpont)  
+> **Utolsó frissítés**: 2026-02-11 (Pozíció-Szak kapcsolat, Partnership aktiválás logika)  
 > **Projekt státusz**: Production-ready
 
 ---
@@ -334,6 +334,8 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
   - **Státusz Átmenet Validálás**: Csak az üzletileg érvényes állapotváltások engedélyezettek.
   - **Role Korlátozás**: System Admin és Company Admin szerepkörök csak dedikált végpontokon keresztül regisztrálhatnak.
 - **Munkakeresésre jelentkezett hallgatók**: Dedikált végpont (`GET /api/students/available`) a munkát kereső hallgatók listázására, publikus (nem érzékeny) adatokkal.
+- **Pozíció-Szak kapcsolat**: A `Position` modellhez opcionális `majorId` FK hozzáadva a `Major` táblára. A pozíciók válaszában megjelenik a kapcsolt szak (`major`) objektum.
+- **Partnership aktiválás logika**: A partnerség csak akkor válhat `ACTIVE`-vá, ha van hozzárendelt mentor és egyetemi felügyelő. Aktiváláskor a hallgató `isAvailableForWork` állapota automatikusan `false`-ra áll (tranzakcióban).
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
@@ -374,4 +376,4 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 
 ---
 
-> **Megjegyzés**: Ez a dokumentáció a projekt 2026-02-09-i állapotát tükrözi. Kérd az aktualizálását, ha jelentős változások történnek.
+> **Megjegyzés**: Ez a dokumentáció a projekt 2026-02-11-i állapotát tükrözi. Kérd az aktualizálását, ha jelentős változások történnek.
