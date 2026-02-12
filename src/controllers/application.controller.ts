@@ -3,8 +3,9 @@ import { applicationService } from "../services/application.service";
 import { notificationService } from "../services/notification.service";
 import { logAction } from "../utils/logger.util";
 import { mapApplication } from "../utils/mapper.util";
-import { getPaginationParams } from "../utils/pagination.util";
+import { getPaginationParams, paginate } from "../utils/pagination.util";
 import { validateUploadedFiles } from "../utils/file-validation.util";
+import { NOTIFICATION_TYPES } from "../utils/constants";
 import prisma from "../config/prisma";
 import { ApplicationStatus, Role } from "@prisma/client";
 import { mailer } from "../config/mailer";
@@ -61,7 +62,7 @@ async function sendNewApplicationNotifications(application: any) {
             userId: admin.id,
             title: "Új jelentkezés érkezett",
             message: `Új jelentkezés érkezett a(z) ${application.position.title ?? 'pozíció'} pozícióra: ${application.student.user.fullName}`,
-            type: "NEW_APPLICATION"
+            type: NOTIFICATION_TYPES.NEW_APPLICATION
         });
     }
 }
@@ -174,11 +175,11 @@ export const evaluateApplication = async (req: Request, res: Response, next: Nex
 
         // Értesítés küldése a diáknak a státuszváltozásról
         const statusMessages: Record<ApplicationStatus, { title: string; type: string }> = {
-            [ApplicationStatus.ACCEPTED]: { title: "Jelentkezésed elfogadva!", type: "APPLICATION_ACCEPTED" },
-            [ApplicationStatus.REJECTED]: { title: "Jelentkezésed elutasítva", type: "APPLICATION_REJECTED" },
-            [ApplicationStatus.NO_RESPONSE]: { title: "Jelentkezésedre nem érkezett válasz.", type: "APPLICATION_NO_RESPONSE" },
-            [ApplicationStatus.SUBMITTED]: { title: "Jelentkezésed beérkezett", type: "APPLICATION_SUBMITTED" },
-            [ApplicationStatus.RETRACTED]: { title: "Jelentkezésed visszavonva", type: "APPLICATION_RETRACTED" }
+            [ApplicationStatus.ACCEPTED]: { title: "Jelentkezésed elfogadva!", type: NOTIFICATION_TYPES.APPLICATION_ACCEPTED },
+            [ApplicationStatus.REJECTED]: { title: "Jelentkezésed elutasítva", type: NOTIFICATION_TYPES.APPLICATION_REJECTED },
+            [ApplicationStatus.NO_RESPONSE]: { title: "Jelentkezésedre nem érkezett válasz.", type: NOTIFICATION_TYPES.APPLICATION_NO_RESPONSE },
+            [ApplicationStatus.SUBMITTED]: { title: "Jelentkezésed beérkezett", type: NOTIFICATION_TYPES.APPLICATION_SUBMITTED },
+            [ApplicationStatus.RETRACTED]: { title: "Jelentkezésed visszavonva", type: NOTIFICATION_TYPES.APPLICATION_RETRACTED }
         };
 
         const statusInfo = statusMessages[status as ApplicationStatus];

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { companyService } from "../services/company.service";
 import { notifySystemAdmins } from "../utils/notification.util";
+import { NOTIFICATION_TYPES } from "../utils/constants";
 import { NotFoundError } from "../errors/AppError";
 import { logAction } from "../utils/logger.util";
 import { CompanyInput } from "../schemas/job.schema";
@@ -103,7 +104,7 @@ export const createCompanyWithAdmin = async (
           await notifySystemAdmins({
                title: "Új cég regisztráció",
                message: `Új cég került rögzítésre: "${newCompany!.name}" (adószám: ${newCompany!.taxId}).`,
-               type: "COMPANY_CREATE"
+               type: NOTIFICATION_TYPES.COMPANY_CREATE
           });
      } catch (error) {
           next(error);
@@ -132,7 +133,7 @@ export const updateCompany = async (req: Request, res: Response, next: NextFunct
           await notifySystemAdmins({
                title: "Cégadatok változása",
                message: `A(z) "${updated.name}" cég adatai frissültek.`,
-               type: "COMPANY_UPDATE"
+               type: NOTIFICATION_TYPES.COMPANY_UPDATE
           });
      } catch (error) {
           next(error);
@@ -193,7 +194,7 @@ export const reactivateCompany = async (req: Request, res: Response, next: NextF
           await notifySystemAdmins({
                title: "Cég újraaktiválva",
                message: `A(z) "${updatedCompany.name}" cég újraaktiválásra került.`,
-               type: "COMPANY_STATUS"
+               type: NOTIFICATION_TYPES.COMPANY_STATUS
           });
      } catch (error) {
           next(error);
@@ -222,7 +223,7 @@ export const deactivateCompany = async (req: Request, res: Response, next: NextF
           await notifySystemAdmins({
                title: "Cég deaktiválva",
                message: `A(z) "${updatedCompany.name}" cég deaktiválásra került.`,
-               type: "COMPANY_STATUS"
+               type: NOTIFICATION_TYPES.COMPANY_STATUS
           });
      } catch (error) {
           next(error);

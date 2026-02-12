@@ -4,6 +4,7 @@ import { userService } from "../services/user.service";
 import { notificationService } from "../services/notification.service";
 import { Role } from "@prisma/client";
 import { logAction } from "../utils/logger.util";
+import { NOTIFICATION_TYPES } from "../utils/constants";
 import { mapStudent, mapPublicStudent } from "../utils/mapper.util";
 import { getPaginationParams } from "../utils/pagination.util";
 import { UnauthorizedError, BadRequestError } from "../errors/AppError";
@@ -212,7 +213,7 @@ export const transitionToUniversity = async (req: Request, res: Response, next: 
                 userId: admin.id,
                 title: "Egyetemi profil váltás",
                 message: `${studentName} átváltott középiskolai profilról egyetemire (Neptun: ${req.body.neptunCode}).`,
-                type: "STUDENT_TRANSITION"
+                type: NOTIFICATION_TYPES.STUDENT_TRANSITION
             });
         }
     } catch (error) {

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { newsService } from "../services/news.service";
 import { notificationService } from "../services/notification.service";
 import { logAction } from "../utils/logger.util";
+import { NOTIFICATION_TYPES } from "../utils/constants";
 import { getPaginationParams } from "../utils/pagination.util";
 import prisma from "../config/prisma";
 import { Role } from "@prisma/client";
@@ -42,7 +43,7 @@ export const createNews = async (req: Request, res: Response, next: NextFunction
                     userId: user.id,
                     title: news.isImportant ? "🔔 Fontos hír!" : "Új hír érkezett",
                     message: news.title,
-                    type: "NEW_NEWS"
+                    type: NOTIFICATION_TYPES.NEW_NEWS
                });
           }
 

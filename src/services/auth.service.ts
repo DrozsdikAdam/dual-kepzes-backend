@@ -7,6 +7,7 @@ import { generateVerificationEmail, generatePasswordResetEmail } from '../utils/
 import { addEmailToQueue } from './email.queue';
 import { notificationService } from './notification.service';
 import { prepareLocationData } from '../utils/location.util';
+import { NOTIFICATION_TYPES, SECURITY } from '../utils/constants';
 
 export class AuthService {
      async register(data: RegisterInput) {
@@ -281,9 +282,8 @@ export class AuthService {
           const resetToken = generateResetToken();
           const hashedToken = hashToken(resetToken);
 
-          // Token tárolása 2 órás lejárattal (UTC időben)
-          // Használjunk milliszekundumot a pontosság érdekében
-          const tokenExpiry = new Date(Date.now() + 2 * 60 * 60 * 1000); // +2 óra
+          // Token tárolása lejárattal (UTC időben)
+          const tokenExpiry = new Date(Date.now() + SECURITY.PASSWORD_RESET_EXPIRY_MS);
 
           await prisma.user.update({
                where: { id: user.id },
