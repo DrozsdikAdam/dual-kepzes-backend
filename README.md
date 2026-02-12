@@ -158,8 +158,6 @@ erDiagram
         Role role
         boolean isEmailVerified
         boolean isActive
-        datetime createdAt
-        datetime updatedAt
     }
     StudentProfile {
         string id PK
@@ -170,24 +168,21 @@ erDiagram
         int graduationYear
         string neptunCode
         string majorId FK
-        string studyMode
         boolean hasLanguageCert
         boolean isInHighSchool
-        string firstChoiceId FK
-        string secondChoiceId FK
-        string language
-        string languageLevel
         boolean isAvailableForWork
+    }
+    Major {
+        string id PK
+        string name
+        string language
     }
     Company {
         string id PK
         string name
         string taxId UK
-        string description
-        string contactName
         string contactEmail
         string website
-        string logoUrl
         boolean hasOwnApplication
         boolean isActive
     }
@@ -199,8 +194,6 @@ erDiagram
     }
     Location {
         string id PK
-        string country
-        string zipCode
         string city
         string address
         string companyId FK
@@ -210,7 +203,6 @@ erDiagram
         string id PK
         string companyId FK
         string title
-        string description
         string majorId FK
         boolean isDual
         datetime deadline
@@ -227,7 +219,6 @@ erDiagram
         string studentId FK
         string positionId FK
         ApplicationStatus status
-        string companyNote
         datetime submittedAt
     }
     DualPartnership {
@@ -237,7 +228,6 @@ erDiagram
         string uniEmployeeId FK
         string positionId FK
         string semester
-        string contractNumber
         PartnershipStatus status
         datetime startDate
         datetime endDate
@@ -246,12 +236,8 @@ erDiagram
         string id PK
         string userId FK
         string title
-        string message
         string type
         boolean isRead
-        string status
-        datetime sentAt
-        boolean isArchived
     }
     AuditLog {
         string id PK
@@ -259,51 +245,34 @@ erDiagram
         string action
         string entity
         string entityId
-        json details
-        datetime timestamp
     }
     News {
         string id PK
         string title
-        string content
-        boolean isImportant
         string targetGroup
-        string_array tags
+        boolean isImportant
         boolean isArchived
-        datetime createdAt
-    }
-    Major {
-        string id PK
-        string name
-        string language
     }
 
-    %% Mag / Fő folyamat (Center)
-    StudentProfile ||--o{ Application : "submits"
-    Position ||--o{ Application : "receives"
-    Application ||--o| DualPartnership : "promoted to"
-    
-    %% Felhasználói oldal (Left/Top)
     User ||--o| StudentProfile : "has profile"
+    User ||--o| CompanyEmployee : "works as"
     User ||--o{ Notification : "receives"
     User ||--o{ AuditLog : "triggers"
-    
-    %% Céges oldal (Right/Bottom)
-    Company ||--o{ Position : "offers"
-    Company ||--o{ CompanyEmployee : "employs"
-    Location ||--o{ Position : "is at"
-    
-    %% Összekötő és kiegészítő adatok
-    DualPartnership }o--|| StudentProfile : "participates"
-    DualPartnership }o--|| Position : "linked to"
-    DualPartnership }o--|| CompanyEmployee : "mentors"
-    DualPartnership }o--|| User : "uni supervisor"
-    
-    Company ||--o{ Location : "has branches"
+    StudentProfile }o--o| Major : "studies"
     StudentProfile ||--o{ Location : "lives at"
-    StudentProfile }o--o| Major : "major mapping"
-    Position }o--o| Major : "linked to major"
+    StudentProfile ||--o{ Application : "submits"
+    Company ||--o{ CompanyEmployee : "employs"
+    Company ||--o{ Position : "offers"
+    Company ||--o{ Location : "has branches"
+    Position }o--o| Major : "requires"
     Position }o--o{ Tag : "tagged with"
+    Position ||--o{ Application : "receives"
+    Location ||--o{ Position : "hosts"
+    Application ||--o| DualPartnership : "promoted to"
+    DualPartnership }o--|| StudentProfile : "participates"
+    DualPartnership }o--|| CompanyEmployee : "mentored by"
+    DualPartnership }o--|| User : "uni supervisor"
+    DualPartnership }o--|| Position : "linked to"
 ```
 
 **Részletes sémát** lásd: `prisma/schema.prisma` vagy Prisma Studio (`npm run prisma:studio`)
