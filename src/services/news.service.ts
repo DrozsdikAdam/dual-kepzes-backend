@@ -5,6 +5,7 @@ import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/paginati
 import { Role } from '@prisma/client';
 import { notificationService } from './notification.service';
 import { NOTIFICATION_TYPES } from '../utils/constants';
+import { CreateNewsInput, UpdateNewsInput } from '../schemas/news.schema';
 
 export class NewsService {
      private newsSelect = {
@@ -18,13 +19,7 @@ export class NewsService {
           isArchived: true
      };
 
-     async create(data: {
-          title: string;
-          content: string;
-          isImportant?: boolean;
-          targetGroup?: string;
-          tags?: string[];
-     }) {
+     async create(data: CreateNewsInput) {
           const news = await prisma.news.create({
                data,
                select: this.newsSelect
@@ -38,7 +33,7 @@ export class NewsService {
           return news;
      }
 
-     private async notifyTargetUsers(news: any) {
+     private async notifyTargetUsers(news: { title: string; targetGroup: string; isImportant: boolean }) {
           const targetGroup = news.targetGroup?.toUpperCase();
           let targetUsers: { id: string }[] = [];
 
@@ -114,8 +109,8 @@ export class NewsService {
           return news;
      }
 
-     async update(id: string, data: any) {
-          const { id: _, ...updateData } = data;
+     async update(id: string, data: UpdateNewsInput) {
+          const { ...updateData } = data;
           return await prisma.news.update({
                where: { id },
                data: updateData,

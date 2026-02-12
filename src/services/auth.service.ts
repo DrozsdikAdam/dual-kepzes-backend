@@ -2,7 +2,7 @@ import prisma from '../config/prisma';
 import { hashPassword, comparePassword, generateToken, generateResetToken, hashToken } from '../utils/auth.util';
 import { RegisterInput, LoginInput, CompanyAdminRegisterInput, SystemAdminRegisterInput } from '../schemas/auth.schema';
 import { BadRequestError, UnauthorizedError, ForbiddenError } from '../errors/AppError';
-import { Role } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 import { generateVerificationEmail, generatePasswordResetEmail } from '../utils/email.util';
 import { addEmailToQueue } from './email.queue';
 import { notificationService } from './notification.service';
@@ -15,7 +15,7 @@ export class AuthService {
 
           const hashedPassword = await hashPassword(data.password);
 
-          const result: any = await prisma.$transaction(async (tx) => {
+          const result = await prisma.$transaction(async (tx) => {
                const user = await tx.user.create({
                     data: {
                          email: data.email,
