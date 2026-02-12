@@ -10,13 +10,7 @@ import { prepareLocationData } from '../utils/location.util';
 
 export class AuthService {
      async register(data: RegisterInput) {
-          const existingUser = await prisma.user.findUnique({
-               where: { email: data.email }
-          });
-
-          if (existingUser) {
-               throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
-          }
+          await this.ensureEmailNotTaken(data.email);
 
           const hashedPassword = await hashPassword(data.password);
 
@@ -95,13 +89,7 @@ export class AuthService {
      }
 
      async registerCompanyAdmin(data: CompanyAdminRegisterInput) {
-          const existingUser = await prisma.user.findUnique({
-               where: { email: data.email }
-          });
-
-          if (existingUser) {
-               throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
-          }
+          await this.ensureEmailNotTaken(data.email);
 
           const hashedPassword = await hashPassword(data.password);
 
@@ -132,13 +120,7 @@ export class AuthService {
      }
 
      async registerSystemAdmin(data: SystemAdminRegisterInput) {
-          const existingUser = await prisma.user.findUnique({
-               where: { email: data.email }
-          });
-
-          if (existingUser) {
-               throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
-          }
+          await this.ensureEmailNotTaken(data.email);
 
           const hashedPassword = await hashPassword(data.password);
 
@@ -373,6 +355,16 @@ export class AuthService {
           });
 
           return { success: true, message: 'Jelszó sikeresen megváltoztatva.' };
+     }
+
+     private async ensureEmailNotTaken(email: string) {
+          const existingUser = await prisma.user.findUnique({
+               where: { email }
+          });
+
+          if (existingUser) {
+               throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
+          }
      }
 }
 
