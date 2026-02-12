@@ -6,8 +6,13 @@ import { NOTIFICATION_TYPES } from "../utils/constants";
 import { getPaginationParams } from "../utils/pagination.util";
 import prisma from "../config/prisma";
 import { Role } from "@prisma/client";
+import { CreateNewsInput, UpdateNewsInput } from "../schemas/news.schema";
 
-export const createNews = async (req: Request, res: Response, next: NextFunction) => {
+export const createNews = async (
+     req: Request<{}, {}, CreateNewsInput>,
+     res: Response,
+     next: NextFunction
+) => {
      try {
           const news = await newsService.create(req.body);
 
@@ -140,7 +145,11 @@ export const unarchiveNews = async (req: Request, res: Response, next: NextFunct
      }
 };
 
-export const updateNews = async (req: Request, res: Response, next: NextFunction) => {
+export const updateNews = async (
+     req: Request<{ id: string }, {}, UpdateNewsInput>,
+     res: Response,
+     next: NextFunction
+) => {
      try {
           const { id } = req.params;
           const news = await newsService.update(id, req.body);

@@ -222,7 +222,7 @@ export const toggleAvailableForWork = async (req: Request, res: Response, next: 
             entity: "User",
             entityId: userId,
             details: {
-                isAvailableForWork: (updated as any).studentProfile?.isAvailableForWork
+                isAvailableForWork: (updated as typeof updated & { studentProfile?: { isAvailableForWork: boolean } }).studentProfile?.isAvailableForWork
             }
         });
 

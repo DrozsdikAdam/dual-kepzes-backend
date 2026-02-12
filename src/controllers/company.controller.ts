@@ -36,13 +36,13 @@ export const getCompanyById = async (req: Request, res: Response, next: NextFunc
                details: { viewById: req.user?.userId, name: company.name }
           });
 
-          const mappedCompany = mapCompany(company as any);
+          const mappedCompany = mapCompany(company);
           if (!mappedCompany) {
                throw new NotFoundError('Cég');
           }
 
           if (mappedCompany.positions) {
-               mappedCompany.positions = mappedCompany.positions.map(mapPosition).filter((p): p is any => p !== null);
+               mappedCompany.positions = mappedCompany.positions.map(mapPosition).filter((p) => p !== null);
           }
 
           res.json({
