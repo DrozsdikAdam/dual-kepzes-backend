@@ -7,11 +7,11 @@ Ez a repository a Duális Képzés rendszer backend szolgáltatását tartalmazz
 A projekt modern, iparági sztenderd technológiákra épül:
 
 -   **Runtime**: [Node.js](https://nodejs.org/) (v18+) - Skálázható, eseményvezérelt futtatókörnyezet a szerveroldali logika végrehajtásához.
--   **Nyelv**: [TypeScript](https://www.typescriptlang.org/) - A JavaScript típusbiztos felülhalmaza, amely növeli a kód megbízhatóságát és karbantarthatóságát.
+-   **Nyelv**: [TypeScript](https://www.typescriptlang.org/) (v5.0+) - Szigorú típusbiztonság a teljes vertikumban (Service-tők a Controller-ekig), minimalizálva a runtime hibákat.
 -   **Keretrendszer**: [Express](https://expressjs.com/) - Minimalista webes keretrendszer a REST API végpontok és a HTTP kérések hatékony kezelésére.
 -   **Adatbázis**: [PostgreSQL](https://www.postgresql.org/) - Megbízható, nyílt forráskódú relációs adatbázis-kezelő a strukturált adatok tárolására.
--   **ORM**: [Prisma](https://www.prisma.io/) - Modern adatbázis-hozzáférési réteg, amely egyszerűsíti az adatmodellezést és a lekérdezéseket.
--   **Validáció**: [Zod](https://zod.dev/) - TypeScript-first séma deklarációs és validációs könyvtár a bejövő adatok ellenőrzésére.
+-   **ORM**: [Prisma](https://www.prisma.io/) - Modern adatbázis-hozzáférési réteg, amely egyszerűsíti az adatmodellezést és típusbiztos lekérdezéseket biztosít.
+-   **Validáció**: [Zod](https://zod.dev/) - TypeScript-first séma validáció, amely garantálja a bejövő adatok integritását és automatikus típus-inferenciát biztosít a backend rétegek számára.
 -   **Autentikáció**: JSON Web Token (JWT) + Bcrypt - Biztonságos token alapú azonosítás és jelszóhashelés a felhasználói fiókok védelmére.
 -   **Háttérfolyamatok**: [BullMQ](https://docs.bullmq.io/) (Redis alapú queue) - Nagy teljesítményű üzenetsor-kezelő az aszinkron feladatok és háttérműveletek megbízható végrehajtásához.
 -   **Email**: Nodemailer (SMTP) - Moduláris email küldő szolgáltatás a rendszerüzenetek és értesítések kézbesítésére.

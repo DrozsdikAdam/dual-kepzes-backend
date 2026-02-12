@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-11 (Role-Based Endpoint Security, Partnership aktiválás logika)  
+> **Utolsó frissítés**: 2026-02-12 (Típusbiztonsági refaktor, Clean Code fejlesztések, Role-Based Security)  
 > **Projekt státusz**: Production-ready
 
 ---
@@ -338,6 +338,14 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - **Partnership aktiválás logika**: A partnerség csak akkor válhat `ACTIVE`-vá, ha van hozzárendelt mentor és egyetemi felügyelő. Aktiváláskor a hallgató `isAvailableForWork` állapota automatikusan `false`-ra áll (tranzakcióban).
 - **Role-Based Endpoint Security (RBAC)**: Minden API végpont szerepkör-alapú hozzáférés-vezérléssel van ellátva a `requireRole` middleware segítségével. A role helper-ek (`isStudent`, `isCompanyAdmin`, `isCompanyEmployee`, `isMentor`, `isUniversityUser`, `isUniversityStaff`, `isSystemAdmin`, `isStaff`) biztosítják, hogy csak a megfelelő jogosultsággal rendelkező felhasználók férhessenek hozzá az adott végpontokhoz. Mind a 14 route fájl frissítve.
 - **Munkakeresési elérhetőség toggle**: Dedikált végpont (`PATCH /api/students/me/toggle-availability`) a hallgatók számára az `isAvailableForWork` mező ki-/bekapcsolására. A művelet naplózásra kerül az audit logba.
+- **Típusbiztonsági Refaktor**:
+  - Teljes körű TypeScript típusbiztosság a `Service` és `Controller` rétegekben.
+  - `any` típusok kivezetése a kritikus logikákból (`StudentService`, `AuthService`, `JobService`, `NewsService`, `CompanyService`).
+  - Zod sémákból származtatott input típusok használata a kontroller request body-kban.
+- **Clean Code & DRY fejlesztések**:
+  - **Helyszínkezelés**: Központosított `prepareLocationData` helper az összes szolgáltatás számára.
+  - **Értesítések**: Központosított `notifySystemAdmins` segédfüggvény és service-szintű értesítéskezelés (SRP elv követése).
+  - **Email validáció**: `ensureEmailNotTaken` helper az `AuthService`-ben.
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
