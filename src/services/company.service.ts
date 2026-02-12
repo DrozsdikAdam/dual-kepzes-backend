@@ -1,10 +1,10 @@
 import prisma from '../config/prisma';
 import { NotFoundError, BadRequestError } from '../errors/AppError';
-import { CompanyInput } from '../schemas/job.schema';
+import { CompanyInput, CompanyUpdateInput } from '../schemas/job.schema';
 import { CompanyWithAdminInput } from '../schemas/company.schema';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 import { hashPassword } from '../utils/auth.util';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
 import { prepareLocationData } from '../utils/location.util';
 import { notificationService } from './notification.service';
 import { notifySystemAdmins } from '../utils/notification.util';
@@ -208,22 +208,21 @@ export class CompanyService {
           return company;
      }
 
-     async update(id: string, data: any) {
+     async update(id: string, data: CompanyUpdateInput) {
           // Restricted field protection
-          const { id: _, taxId: __, ...updateData } = data;
-          const { locations, ...companyRest } = updateData;
-          const locationOperations: any = {};
+          const { locations, ...companyRest } = data;
+          const locationOperations: Prisma.LocationUpdateManyWithoutCompanyNestedInput = {};
 
           if (locations && locations.length > 0) {
-               const startNew = locations.filter((l: any) => !l.id);
-               const toUpdate = locations.filter((l: any) => l.id);
+               const startNew = locations.filter((l) => !l.id);
+               const toUpdate = locations.filter((l) => l.id);
 
                if (startNew.length > 0) {
-                    locationOperations.create = startNew.map(prepareLocationData);
+                    locationOperations.create = startNew.map((l) => prepareLocationData(l));
                }
 
                if (toUpdate.length > 0) {
-                    locationOperations.update = toUpdate.map((loc: any) => ({
+                    locationOperations.update = toUpdate.map((loc) => ({
                          where: { id: loc.id },
                          data: {
                               country: loc.country,
