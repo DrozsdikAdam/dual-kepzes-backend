@@ -22,3 +22,5 @@ export const UpdateNewsSchema = z.object({
           tags: z.array(z.string()).optional()
      })
 })
+export type CreateNewsInput = z.infer<typeof CreateNewsSchema>["body"];
+export type UpdateNewsInput = z.infer<typeof UpdateNewsSchema>["body"];
