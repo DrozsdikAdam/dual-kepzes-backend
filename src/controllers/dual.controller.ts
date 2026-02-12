@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { partnershipService } from "../services/partnership.service";
 import { notificationService } from "../services/notification.service";
-import { userService } from "../services/user.service";
+import { notifySystemAdmins } from "../utils/notification.util";
 import { Role, PartnershipStatus } from "@prisma/client";
 import { DualPartnershipUpdateRequest } from "../schemas/dual.schema";
 import { logAction } from "../utils/logger.util";
@@ -53,15 +53,11 @@ export const updatePartnership = async (
             });
 
             if (data.status === PartnershipStatus.PENDING_UNIVERSITY) {
-                const systemAdmins = await userService.getAllByRole(Role.SYSTEM_ADMIN) as any[];
-                for (const admin of systemAdmins) {
-                    await notificationService.create({
-                        userId: admin.id,
-                        title: "Új jóváhagyásra váró partnerség",
-                        message: `Egy új duális partnerség mentor kijelölése megtörtént, és egyetemi jóváhagyásra vár: ${updated.student.user.fullName} - ${updated.position?.company.name || "Ismeretlen cég"}`,
-                        type: "PARTNERSHIP_PENDING_UNIVERSITY"
-                    });
-                }
+                await notifySystemAdmins({
+                    title: "Új jóváhagyásra váró partnerség",
+                    message: `Egy új duális partnerség mentor kijelölése megtörtént, és egyetemi jóváhagyásra vár: ${updated.student.user.fullName} - ${updated.position?.company.name || "Ismeretlen cég"}`,
+                    type: "PARTNERSHIP_PENDING_UNIVERSITY"
+                });
             }
         }
 
@@ -189,15 +185,11 @@ export const assignMentor = async (req: Request, res: Response, next: NextFuncti
         });
 
         // Notify system admins as well
-        const systemAdmins = await userService.getAllByRole(Role.SYSTEM_ADMIN) as any[];
-        for (const admin of systemAdmins) {
-            await notificationService.create({
-                userId: admin.id,
-                title: "Új jóváhagyásra váró partnerség",
-                message: `Egy új duális partnerség mentor kijelölése megtörtént, és egyetemi jóváhagyásra vár: ${updated.student.user.fullName} - ${updated.position?.company.name || "Ismeretlen cég"}`,
-                type: "PARTNERSHIP_PENDING_UNIVERSITY"
-            });
-        }
+        await notifySystemAdmins({
+            title: "Új jóváhagyásra váró partnerség",
+            message: `Egy új duális partnerség mentor kijelölése megtörtént, és egyetemi jóváhagyásra vár: ${updated.student.user.fullName} - ${updated.position?.company.name || "Ismeretlen cég"}`,
+            type: "PARTNERSHIP_PENDING_UNIVERSITY"
+        });
 
         // Notify assigned mentor
         if (updated.mentor) {
