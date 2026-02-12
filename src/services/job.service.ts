@@ -1,5 +1,5 @@
 import prisma from '../config/prisma';
-import { NotFoundError } from '../errors/AppError';
+import { NotFoundError, BadRequestError } from '../errors/AppError';
 import { PositionInput } from '../schemas/job.schema';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 
@@ -124,7 +124,7 @@ export class JobService {
           });
 
           if (!location) {
-               throw new Error("A megadott helyszín nem tartozik ehhez a céghez.");
+               throw new BadRequestError("A megadott helyszín nem tartozik ehhez a céghez.");
           }
 
           return await prisma.position.create({
@@ -166,7 +166,7 @@ export class JobService {
                });
 
                if (!location) {
-                    throw new Error("A megadott helyszín nem tartozik ehhez a céghez.");
+                    throw new BadRequestError("A megadott helyszín nem tartozik ehhez a céghez.");
                }
           }
 
