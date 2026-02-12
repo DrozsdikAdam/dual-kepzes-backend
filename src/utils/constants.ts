@@ -1,0 +1,33 @@
+/**
+ * Application-wide constants to avoid magic numbers and strings.
+ */
+
+export const SECURITY = {
+     // Password reset token expiry in milliseconds (1 hour)
+     PASSWORD_RESET_EXPIRY_MS: 3600000,
+     // Default password salt rounds
+     SALT_ROUNDS: 10,
+};
+
+export const NOTIFICATION_TYPES = {
+     // Company related
+     COMPANY_CREATE: "COMPANY_CREATE",
+     COMPANY_UPDATE: "COMPANY_UPDATE",
+     COMPANY_STATUS: "COMPANY_STATUS",
+
+     // Partnership related
+     PARTNERSHIP_STATUS_UPDATE: "PARTNERSHIP_STATUS_UPDATE",
+     PARTNERSHIP_PENDING_UNIVERSITY: "PARTNERSHIP_PENDING_UNIVERSITY",
+     PARTNERSHIP_TERMINATED: "PARTNERSHIP_TERMINATED",
+     PARTNERSHIP_COMPLETED: "PARTNERSHIP_COMPLETED",
+
+     // Assignment related
+     STUDENT_ASSIGNED_TO_MENTOR: "STUDENT_ASSIGNED_TO_MENTOR",
+     MENTOR_ASSIGNED: "MENTOR_ASSIGNED",
+     UNI_USER_ASSIGNED: "UNI_USER_ASSIGNED",
+     PARTNERSHIP_ASSIGNED_TO_UNI_USER: "PARTNERSHIP_ASSIGNED_TO_UNI_USER",
+
+     // System related
+     EMAIL_VERIFICATION: "EMAIL_VERIFICATION",
+     PASSWORD_RESET: "PASSWORD_RESET",
+};
