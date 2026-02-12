@@ -203,19 +203,6 @@ export const transitionToUniversity = async (req: Request, res: Response, next: 
             message: "Sikeresen átváltottál egyetemi profilra!",
             data: mapStudent(updated)
         });
-
-        // Értesítés a rendszergazdáknak
-        const admins = (await userService.getAllByRole(Role.SYSTEM_ADMIN)) as any[];
-        const studentName = (updated as any).fullName || "Hallgató";
-
-        for (const admin of admins) {
-            await notificationService.create({
-                userId: admin.id,
-                title: "Egyetemi profil váltás",
-                message: `${studentName} átváltott középiskolai profilról egyetemire (Neptun: ${req.body.neptunCode}).`,
-                type: NOTIFICATION_TYPES.STUDENT_TRANSITION
-            });
-        }
     } catch (error) {
         next(error);
     }

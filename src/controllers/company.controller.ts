@@ -100,12 +100,6 @@ export const createCompanyWithAdmin = async (
                data: mapCompany(newCompany)
           });
 
-          // Értesítés a rendszergazdáknak
-          await notifySystemAdmins({
-               title: "Új cég regisztráció",
-               message: `Új cég került rögzítésre: "${newCompany!.name}" (adószám: ${newCompany!.taxId}).`,
-               type: NOTIFICATION_TYPES.COMPANY_CREATE
-          });
      } catch (error) {
           next(error);
      }
@@ -129,12 +123,6 @@ export const updateCompany = async (req: Request, res: Response, next: NextFunct
                data: mapCompany(updated)
           });
 
-          // Értesítés a rendszergazdáknak
-          await notifySystemAdmins({
-               title: "Cégadatok változása",
-               message: `A(z) "${updated.name}" cég adatai frissültek.`,
-               type: NOTIFICATION_TYPES.COMPANY_UPDATE
-          });
      } catch (error) {
           next(error);
      }
@@ -190,12 +178,6 @@ export const reactivateCompany = async (req: Request, res: Response, next: NextF
                data: mapCompany(updatedCompany)
           });
 
-          // Értesítés a rendszergazdáknak
-          await notifySystemAdmins({
-               title: "Cég újraaktiválva",
-               message: `A(z) "${updatedCompany.name}" cég újraaktiválásra került.`,
-               type: NOTIFICATION_TYPES.COMPANY_STATUS
-          });
      } catch (error) {
           next(error);
      }
@@ -217,13 +199,6 @@ export const deactivateCompany = async (req: Request, res: Response, next: NextF
                success: true,
                message: "Cég sikeresen deaktiválva.",
                data: mapCompany(updatedCompany)
-          });
-
-          // Értesítés a rendszergazdáknak
-          await notifySystemAdmins({
-               title: "Cég deaktiválva",
-               message: `A(z) "${updatedCompany.name}" cég deaktiválásra került.`,
-               type: NOTIFICATION_TYPES.COMPANY_STATUS
           });
      } catch (error) {
           next(error);

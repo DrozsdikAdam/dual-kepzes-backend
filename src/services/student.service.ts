@@ -3,6 +3,8 @@ import { NotFoundError } from '../errors/AppError';
 import { Role } from '@prisma/client';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 import { prepareLocationData } from '../utils/location.util';
+import { notifySystemAdmins } from '../utils/notification.util';
+import { NOTIFICATION_TYPES } from '../utils/constants';
 
 export class StudentService {
      private studentSelect = {
@@ -161,7 +163,7 @@ export class StudentService {
      }
 
      async transitionToUniversity(userId: string, data: any) {
-          return await prisma.user.update({
+          const updated = await prisma.user.update({
                where: { id: userId },
                data: {
                     studentProfile: {
@@ -177,6 +179,15 @@ export class StudentService {
                },
                select: this.studentSelect
           });
+
+          // Background notification to admins
+          notifySystemAdmins({
+               title: "Egyetemi profil váltás",
+               message: `${updated.fullName || 'Hallgató'} átváltott középiskolai profilról egyetemire (Neptun: ${data.neptunCode}).`,
+               type: NOTIFICATION_TYPES.STUDENT_TRANSITION
+          }).catch(err => console.error('[StudentService.transitionToUniversity] Notification error:', err));
+
+          return updated;
      }
 
      async toggleAvailableForWork(userId: string) {

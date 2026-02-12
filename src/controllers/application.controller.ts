@@ -30,9 +30,6 @@ export const applyToPosition = async (req: Request, res: Response, next: NextFun
             details: { studentId: studentProfile.id, positionId }
         });
 
-        // Értesítések küldése
-        await sendNewApplicationNotifications(application);
-
         res.status(201).json({
             success: true,
             message: "Sikeres jelentkezés",
@@ -43,29 +40,7 @@ export const applyToPosition = async (req: Request, res: Response, next: NextFun
     }
 };
 
-/**
- * Segédfüggvény az új jelentkezésről szóló értesítések kiküldéséhez
- */
-async function sendNewApplicationNotifications(application: any) {
-    const companyAdmins = await prisma.user.findMany({
-        where: {
-            role: Role.COMPANY_ADMIN,
-            companyEmployee: {
-                companyId: application.position.company.id
-            }
-        },
-        select: { id: true }
-    });
 
-    for (const admin of companyAdmins) {
-        await notificationService.create({
-            userId: admin.id,
-            title: "Új jelentkezés érkezett",
-            message: `Új jelentkezés érkezett a(z) ${application.position.title ?? 'pozíció'} pozícióra: ${application.student.user.fullName}`,
-            type: NOTIFICATION_TYPES.NEW_APPLICATION
-        });
-    }
-}
 
 export const getMyApplications = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -172,25 +147,6 @@ export const evaluateApplication = async (req: Request, res: Response, next: Nex
             entityId: id,
             details: { status, evaluatedBy: userId }
         });
-
-        // Értesítés küldése a diáknak a státuszváltozásról
-        const statusMessages: Record<ApplicationStatus, { title: string; type: string }> = {
-            [ApplicationStatus.ACCEPTED]: { title: "Jelentkezésed elfogadva!", type: NOTIFICATION_TYPES.APPLICATION_ACCEPTED },
-            [ApplicationStatus.REJECTED]: { title: "Jelentkezésed elutasítva", type: NOTIFICATION_TYPES.APPLICATION_REJECTED },
-            [ApplicationStatus.NO_RESPONSE]: { title: "Jelentkezésedre nem érkezett válasz.", type: NOTIFICATION_TYPES.APPLICATION_NO_RESPONSE },
-            [ApplicationStatus.SUBMITTED]: { title: "Jelentkezésed beérkezett", type: NOTIFICATION_TYPES.APPLICATION_SUBMITTED },
-            [ApplicationStatus.RETRACTED]: { title: "Jelentkezésed visszavonva", type: NOTIFICATION_TYPES.APPLICATION_RETRACTED }
-        };
-
-        const statusInfo = statusMessages[status as ApplicationStatus];
-        if (statusInfo) {
-            await notificationService.create({
-                userId: application.student.userId,
-                title: statusInfo.title,
-                message: `A(z) ${application.position.company.name} cégnél a(z) ${application.position.title ?? 'pozíció'} pozícióra beadott jelentkezésed státusza: ${status}`,
-                type: statusInfo.type
-            });
-        }
 
         res.json({
             success: true,
@@ -347,8 +303,6 @@ A csatolt dokumentumok:
             details: { studentId: studentProfile.id, positionId, filesForwardedToHR: true }
         });
 
-        // Értesítés küldése a céges adminoknak
-        await sendNewApplicationNotifications(application);
 
         // A buffer-ek automatikusan törlődnek a garbage collection által
 

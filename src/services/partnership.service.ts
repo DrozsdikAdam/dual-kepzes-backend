@@ -4,6 +4,9 @@ import { PartnershipStatus, ApplicationStatus } from '@prisma/client';
 import { getCompanyIdForUser } from '../utils/company.util';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 import { validatePartnershipTransition } from '../utils/status-transition.util';
+import { notificationService } from './notification.service';
+import { notifySystemAdmins } from '../utils/notification.util';
+import { NOTIFICATION_TYPES } from '../utils/constants';
 
 export class PartnershipService {
      async getById(partnershipId: string, userId: string) {
@@ -68,11 +71,40 @@ export class PartnershipService {
 
           const { id: _, studentId: __, positionId: ___, ...updateData } = data;
 
-          return await prisma.dualPartnership.update({
+          const updated = await prisma.dualPartnership.update({
                where: { id },
                data: updateData,
                select: this.getPartnershipSelect()
           });
+
+          // Notifications
+          if (data.status) {
+               notificationService.create({
+                    userId: (updated as any).student.userId,
+                    title: "Partnerség státusza megváltozott",
+                    message: `A(z) ${(updated as any).position?.company.name || "érintett"} céggel kötött partnerséged státusza megváltozott: ${data.status}`,
+                    type: NOTIFICATION_TYPES.PARTNERSHIP_STATUS_UPDATE
+               }).catch(err => console.error('[PartnershipService.update] Notification error:', err));
+
+               if (data.status === PartnershipStatus.PENDING_UNIVERSITY) {
+                    notifySystemAdmins({
+                         title: "Új jóváhagyásra váró partnerség",
+                         message: `Egy új duális partnerség mentor kijelölése megtörtént, és egyetemi jóváhagyásra vár: ${(updated as any).student.user.fullName} - ${(updated as any).position?.company.name || "Ismeretlen cég"}`,
+                         type: NOTIFICATION_TYPES.PARTNERSHIP_PENDING_UNIVERSITY
+                    }).catch(err => console.error('[PartnershipService.update] Admin notification error:', err));
+               }
+          }
+
+          if (data.mentorId && (updated as any).mentor) {
+               notificationService.create({
+                    userId: (updated as any).mentor.userId,
+                    title: "Új hallgató hozzárendelve",
+                    message: `Új hallgatót rendeltek hozzád mentorálásra: ${(updated as any).student.user.fullName}`,
+                    type: NOTIFICATION_TYPES.STUDENT_ASSIGNED_TO_MENTOR
+               }).catch(err => console.error('[PartnershipService.update] Mentor notification error:', err));
+          }
+
+          return updated;
      }
 
      async delete(id: string, userId: string) {
@@ -111,11 +143,21 @@ export class PartnershipService {
           // Státusz átmenet validálása
           validatePartnershipTransition(partnership.status, PartnershipStatus.TERMINATED);
 
-          return await prisma.dualPartnership.update({
+          const updated = await prisma.dualPartnership.update({
                where: { id: partnershipId },
                data: { status: PartnershipStatus.TERMINATED },
                select: this.getPartnershipSelect()
           });
+
+          // Notification
+          notificationService.create({
+               userId: (updated as any).student.userId,
+               title: "Partnerség megszakítva",
+               message: `A(z) ${(updated as any).position?.company.name || "érintett"} céggel kötött partnerséged megszakításra került.`,
+               type: NOTIFICATION_TYPES.PARTNERSHIP_TERMINATED
+          }).catch(err => console.error('[PartnershipService.terminate] Notification error:', err));
+
+          return updated;
      }
 
      async complete(partnershipId: string, userId: string) {
@@ -130,7 +172,7 @@ export class PartnershipService {
           // Státusz átmenet validálása (ACTIVE -> FINISHED)
           validatePartnershipTransition(partnership.status, PartnershipStatus.FINISHED);
 
-          return await prisma.dualPartnership.update({
+          const updated = await prisma.dualPartnership.update({
                where: { id: partnershipId },
                data: {
                     status: PartnershipStatus.FINISHED,
@@ -138,6 +180,16 @@ export class PartnershipService {
                },
                select: this.getPartnershipSelect()
           });
+
+          // Notification
+          notificationService.create({
+               userId: (updated as any).student.userId,
+               title: "Partnerség befejezve",
+               message: `A(z) ${(updated as any).position?.company.name || "érintett"} céggel kötött partnerséged sikeresen befejeződött.`,
+               type: NOTIFICATION_TYPES.PARTNERSHIP_COMPLETED
+          }).catch(err => console.error('[PartnershipService.complete] Notification error:', err));
+
+          return updated;
      }
 
      async assignMentor(
@@ -178,7 +230,7 @@ export class PartnershipService {
           // Resolve mentor ID (handle both employee ID and user ID)
           const finalMentorId = await this.resolveMentorId(mentorId, companyId);
 
-          return await prisma.dualPartnership.update({
+          const updated = await prisma.dualPartnership.update({
                where: { id: partnershipId },
                data: {
                     mentorId: finalMentorId,
@@ -186,6 +238,31 @@ export class PartnershipService {
                },
                select: this.getPartnershipSelect()
           });
+
+          // Notifications
+          notificationService.create({
+               userId: (updated as any).student.userId,
+               title: "Mentor hozzárendelve",
+               message: `A(z) ${(updated as any).position?.company.name || "érintett"} cégnél kijelöltek számodra egy mentort. A partnerség mostantól az egyetemi jóváhagyásra vár.`,
+               type: NOTIFICATION_TYPES.MENTOR_ASSIGNED
+          }).catch(err => console.error('[PartnershipService.assignMentor] Student notification error:', err));
+
+          notifySystemAdmins({
+               title: "Új jóváhagyásra váró partnerség",
+               message: `Egy új duális partnerség mentor kijelölése megtörtént, és egyetemi jóváhagyásra vár: ${(updated as any).student.user.fullName} - ${(updated as any).position?.company.name || "Ismeretlen cég"}`,
+               type: NOTIFICATION_TYPES.PARTNERSHIP_PENDING_UNIVERSITY
+          }).catch(err => console.error('[PartnershipService.assignMentor] Admin notification error:', err));
+
+          if ((updated as any).mentor) {
+               notificationService.create({
+                    userId: (updated as any).mentor.userId,
+                    title: "Új hallgató hozzárendelve",
+                    message: `Új hallgatót rendeltek hozzád mentorálásra: ${(updated as any).student.user.fullName}`,
+                    type: NOTIFICATION_TYPES.STUDENT_ASSIGNED_TO_MENTOR
+               }).catch(err => console.error('[PartnershipService.assignMentor] Mentor notification error:', err));
+          }
+
+          return updated;
      }
 
      async assignUniversityUser(id: string, uniEmployeeId: string, userId: string) {
@@ -220,6 +297,23 @@ export class PartnershipService {
                     data: { isAvailableForWork: false }
                })
           ]);
+
+          // Notifications
+          notificationService.create({
+               userId: (updatedPartnership as any).student.userId,
+               title: "Egyetemi felelős hozzárendelve",
+               message: `A(z) ${(updatedPartnership as any).position?.company.name || "érintett"} céggel kötött partnerségedhez hozzárendelték az egyetemi felelőst. A partnerség aktívvá vált.`,
+               type: NOTIFICATION_TYPES.UNI_USER_ASSIGNED
+          }).catch(err => console.error('[PartnershipService.assignUniversityUser] Student notification error:', err));
+
+          if ((updatedPartnership as any).uniEmployee) {
+               notificationService.create({
+                    userId: (updatedPartnership as any).uniEmployee.id,
+                    title: "Új partnerség hozzárendelve",
+                    message: `Egy új aktív duális partnerséghez téged rendeltek hozzá egyetemi felelősként: ${(updatedPartnership as any).student.user.fullName} - ${(updatedPartnership as any).position?.company.name || "Ismeretlen cég"}`,
+                    type: NOTIFICATION_TYPES.PARTNERSHIP_ASSIGNED_TO_UNI_USER
+               }).catch(err => console.error('[PartnershipService.assignUniversityUser] Uni employee notification error:', err));
+          }
 
           return updatedPartnership;
      }

@@ -69,7 +69,6 @@ export class AuthService {
                          });
                          break;
                     case Role.UNIVERSITY_USER:
-                         // No extra data needed for now
                          break;
                     default:
                          throw new BadRequestError('Ismeretlen szerepkör a regisztráció során');
@@ -278,7 +277,6 @@ export class AuthService {
                return { success: true, message: 'Ha a megadott email cím regisztrálva van, elküldtük a jelszó visszaállító linket.' };
           }
 
-          // Token generálás és hash
           const resetToken = generateResetToken();
           const hashedToken = hashToken(resetToken);
 
@@ -293,12 +291,10 @@ export class AuthService {
                }
           });
 
-          // Email küldés
           const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
           const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
           const emailHtml = generatePasswordResetEmail(resetUrl, user.fullName);
 
-          // Notification létrehozása
           const notification = await prisma.notification.create({
                data: {
                     userId: user.id,
@@ -341,10 +337,8 @@ export class AuthService {
                throw new UnauthorizedError('A felhasználói fiók inaktív.');
           }
 
-          // Új jelszó hash-elése
           const hashedPassword = await hashPassword(newPassword);
 
-          // Jelszó frissítése és token törlése
           await prisma.user.update({
                where: { id: user.id },
                data: {

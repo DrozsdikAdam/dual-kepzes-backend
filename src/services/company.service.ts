@@ -6,6 +6,9 @@ import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/paginati
 import { hashPassword } from '../utils/auth.util';
 import { Role } from '@prisma/client';
 import { prepareLocationData } from '../utils/location.util';
+import { notificationService } from './notification.service';
+import { notifySystemAdmins } from '../utils/notification.util';
+import { NOTIFICATION_TYPES } from '../utils/constants';
 
 export class CompanyService {
      private companySelect = {
@@ -162,8 +165,7 @@ export class CompanyService {
           const { locations, ...companyData } = companyInput;
           const hashedPassword = await hashPassword(adminInput.password);
 
-          return await prisma.$transaction(async (tx) => {
-               // 1. Cég létrehozása
+          const company = await prisma.$transaction(async (tx) => {
                const company = await tx.company.create({
                     data: {
                          ...companyData,
@@ -174,7 +176,6 @@ export class CompanyService {
                     select: this.companySelect
                });
 
-               // 2. Felhasználó létrehozása
                const user = await tx.user.create({
                     data: {
                          email: adminInput.email,
@@ -182,11 +183,10 @@ export class CompanyService {
                          fullName: adminInput.fullName,
                          phoneNumber: adminInput.phoneNumber,
                          role: Role.COMPANY_ADMIN,
-                         isEmailVerified: true // Alapértelmezetten megerősített admin creation-nél
+                         isEmailVerified: true
                     }
                });
 
-               // 3. Kapcsolat létrehozása (CompanyEmployee)
                await tx.companyEmployee.create({
                     data: {
                          userId: user.id,
@@ -197,6 +197,15 @@ export class CompanyService {
 
                return company;
           });
+
+          // Background notification
+          notifySystemAdmins({
+               title: "Új cég regisztráció",
+               message: `Új cég regisztrált a rendszerbe: ${company.name}`,
+               type: NOTIFICATION_TYPES.COMPANY_CREATE
+          }).catch(err => console.error('[CompanyService.createWithAdmin] Notification error:', err));
+
+          return company;
      }
 
      async update(id: string, data: any) {
@@ -286,11 +295,48 @@ export class CompanyService {
                throw new NotFoundError('Cég');
           }
 
-          return await prisma.company.update({
+          const updated = await prisma.company.update({
                where: { id },
                data: { isActive },
                select: this.companySelect
           });
+
+          // Notifications
+          notifySystemAdmins({
+               title: "Cég státusz változás",
+               message: `A(z) ${updated.name} cég státusza megváltozott: ${isActive ? "Aktív" : "Inaktív"}`,
+               type: NOTIFICATION_TYPES.COMPANY_STATUS
+          }).catch(err => console.error('[CompanyService.setStatus] Admin notification error:', err));
+
+          // Notify company admins
+          this.notifyCompanyAdminsOfStatusChange(id, updated.name, isActive).catch(err =>
+               console.error('[CompanyService.setStatus] Company admin notification error:', err)
+          );
+
+          return updated;
+     }
+
+     private async notifyCompanyAdminsOfStatusChange(companyId: string, companyName: string, isActive: boolean) {
+          const companyAdmins = await prisma.user.findMany({
+               where: {
+                    role: Role.COMPANY_ADMIN,
+                    companyEmployee: {
+                         companyId: companyId
+                    }
+               },
+               select: { id: true }
+          });
+
+          const notifications = companyAdmins.map(admin =>
+               notificationService.create({
+                    userId: admin.id,
+                    title: "Cégstátusz váltás",
+                    message: `A cégetek (${companyName}) státusza megváltozott: ${isActive ? 'Aktív' : 'Inaktív'}`,
+                    type: NOTIFICATION_TYPES.COMPANY_STATUS
+               })
+          );
+
+          await Promise.all(notifications);
      }
 
      async getOwnApplicationCompanies(params: Required<PaginationParams>) {
