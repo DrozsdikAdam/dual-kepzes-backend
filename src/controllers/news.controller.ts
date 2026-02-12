@@ -2,11 +2,17 @@ import { Request, Response, NextFunction } from "express";
 import { newsService } from "../services/news.service";
 import { notificationService } from "../services/notification.service";
 import { logAction } from "../utils/logger.util";
+import { NOTIFICATION_TYPES } from "../utils/constants";
 import { getPaginationParams } from "../utils/pagination.util";
 import prisma from "../config/prisma";
 import { Role } from "@prisma/client";
+import { CreateNewsInput, UpdateNewsInput } from "../schemas/news.schema";
 
-export const createNews = async (req: Request, res: Response, next: NextFunction) => {
+export const createNews = async (
+     req: Request<{}, {}, CreateNewsInput>,
+     res: Response,
+     next: NextFunction
+) => {
      try {
           const news = await newsService.create(req.body);
 
@@ -20,31 +26,6 @@ export const createNews = async (req: Request, res: Response, next: NextFunction
                     targetGroup: news.targetGroup
                }
           });
-
-          // Értesítés küldése a célcsoport tagjainak
-          const targetGroup = news.targetGroup?.toUpperCase();
-          let targetUsers: { id: string }[] = [];
-
-          if (targetGroup === "ALL") {
-               targetUsers = await prisma.user.findMany({
-                    where: { isActive: true, deletedAt: null },
-                    select: { id: true }
-               });
-          } else if (Object.values(Role).includes(targetGroup as Role)) {
-               targetUsers = await prisma.user.findMany({
-                    where: { role: targetGroup as Role, isActive: true, deletedAt: null },
-                    select: { id: true }
-               });
-          }
-
-          for (const user of targetUsers) {
-               await notificationService.create({
-                    userId: user.id,
-                    title: news.isImportant ? "🔔 Fontos hír!" : "Új hír érkezett",
-                    message: news.title,
-                    type: "NEW_NEWS"
-               });
-          }
 
           res.status(201).json({
                success: true,
@@ -164,7 +145,11 @@ export const unarchiveNews = async (req: Request, res: Response, next: NextFunct
      }
 };
 
-export const updateNews = async (req: Request, res: Response, next: NextFunction) => {
+export const updateNews = async (
+     req: Request<{ id: string }, {}, UpdateNewsInput>,
+     res: Response,
+     next: NextFunction
+) => {
      try {
           const { id } = req.params;
           const news = await newsService.update(id, req.body);

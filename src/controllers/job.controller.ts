@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { jobService } from "../services/job.service";
-import { PositionInput, TagInput } from "../schemas/job.schema";
+import { PositionInput, TagInput, PositionUpdateInput } from "../schemas/job.schema";
 import { logAction } from "../utils/logger.util";
 import { mapPosition } from "../utils/mapper.util";
 import { getCompanyIdForUser, checkPositionOwnership } from "../utils/company.util";
@@ -166,7 +166,7 @@ export const createPosition = async (
     }
 };
 
-export const updatePosition = async (req: Request, res: Response, next: NextFunction) => {
+export const updatePosition = async (req: Request<{ id: string }, {}, PositionUpdateInput>, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
         const { userId } = req.user!;
@@ -178,7 +178,7 @@ export const updatePosition = async (req: Request, res: Response, next: NextFunc
         }
 
         // Body-ból érkező companyId figyelmen kívül hagyása
-        const { companyId: _ignoredCompanyId, ...positionData } = req.body;
+        const positionData = req.body;
 
         const updated = await jobService.update(id, positionData);
 

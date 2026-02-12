@@ -1,7 +1,11 @@
 import prisma from '../config/prisma';
 import { NotFoundError } from '../errors/AppError';
-import { Role } from '@prisma/client';
+import { Role, Location } from '@prisma/client';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
+import { prepareLocationData } from '../utils/location.util';
+import { notifySystemAdmins } from '../utils/notification.util';
+import { NOTIFICATION_TYPES } from '../utils/constants';
+import { StudentUpdateInput, UniversityTransitionInput } from '../schemas/student.schema';
 
 export class StudentService {
      private studentSelect = {
@@ -114,9 +118,8 @@ export class StudentService {
           );
      }
 
-     async updateProfile(userId: string, data: any) {
-          const { fullName, phoneNumber, ...profileData } = data;
-          const { location, ...otherProfileData } = profileData;
+     async updateProfile(userId: string, data: StudentUpdateInput) {
+          const { fullName, phoneNumber, location, ...profileData } = data;
 
           const currentUser = await prisma.user.findUnique({
                where: { id: userId },
@@ -137,7 +140,7 @@ export class StudentService {
                     phoneNumber,
                     studentProfile: {
                          update: {
-                              ...otherProfileData,
+                              ...profileData,
                               locations: locationsUpdate
                          }
                     }
@@ -159,8 +162,8 @@ export class StudentService {
           });
      }
 
-     async transitionToUniversity(userId: string, data: any) {
-          return await prisma.user.update({
+     async transitionToUniversity(userId: string, data: UniversityTransitionInput) {
+          const updated = await prisma.user.update({
                where: { id: userId },
                data: {
                     studentProfile: {
@@ -176,6 +179,15 @@ export class StudentService {
                },
                select: this.studentSelect
           });
+
+          // Background notification to admins
+          notifySystemAdmins({
+               title: "Egyetemi profil váltás",
+               message: `${updated.fullName || 'Hallgató'} átváltott középiskolai profilról egyetemire (Neptun: ${data.neptunCode}).`,
+               type: NOTIFICATION_TYPES.STUDENT_TRANSITION
+          }).catch(err => console.error('[StudentService.transitionToUniversity] Notification error:', err));
+
+          return updated;
      }
 
      async toggleAvailableForWork(userId: string) {
@@ -201,7 +213,7 @@ export class StudentService {
           });
      }
 
-     private prepareLocationUpdate(existingLocation: any, newLocation: any) {
+     private prepareLocationUpdate(existingLocation: Location | undefined, newLocation: StudentUpdateInput['location']) {
           if (!newLocation) return undefined;
 
           if (existingLocation) {
@@ -218,12 +230,7 @@ export class StudentService {
                };
           } else {
                return {
-                    create: {
-                         country: newLocation.country || "Magyarország",
-                         zipCode: newLocation.zipCode ? String(newLocation.zipCode) : "",
-                         city: newLocation.city || "",
-                         address: newLocation.address || ""
-                    }
+                    create: prepareLocationData(newLocation as any)
                };
           }
      }

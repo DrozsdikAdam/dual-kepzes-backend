@@ -2,24 +2,20 @@ import prisma from '../config/prisma';
 import { hashPassword, comparePassword, generateToken, generateResetToken, hashToken } from '../utils/auth.util';
 import { RegisterInput, LoginInput, CompanyAdminRegisterInput, SystemAdminRegisterInput } from '../schemas/auth.schema';
 import { BadRequestError, UnauthorizedError, ForbiddenError } from '../errors/AppError';
-import { Role } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 import { generateVerificationEmail, generatePasswordResetEmail } from '../utils/email.util';
 import { addEmailToQueue } from './email.queue';
 import { notificationService } from './notification.service';
+import { prepareLocationData } from '../utils/location.util';
+import { NOTIFICATION_TYPES, SECURITY } from '../utils/constants';
 
 export class AuthService {
      async register(data: RegisterInput) {
-          const existingUser = await prisma.user.findUnique({
-               where: { email: data.email }
-          });
-
-          if (existingUser) {
-               throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
-          }
+          await this.ensureEmailNotTaken(data.email);
 
           const hashedPassword = await hashPassword(data.password);
 
-          const result: any = await prisma.$transaction(async (tx) => {
+          const result = await prisma.$transaction(async (tx) => {
                const user = await tx.user.create({
                     data: {
                          email: data.email,
@@ -39,11 +35,11 @@ export class AuthService {
                                    mothersName: data.mothersName!,
                                    birthDate: data.dateOfBirth!,
                                    locations: {
-                                        create: {
-                                             country: data.location?.country || "Magyarország",
-                                             zipCode: data.location?.zipCode ? String(data.location.zipCode) : "",
-                                             city: data.location?.city || "",
-                                             address: data.location?.address || ""
+                                        create: data.location ? prepareLocationData(data.location) : {
+                                             country: "Magyarország",
+                                             zipCode: "",
+                                             city: "",
+                                             address: ""
                                         }
                                    },
                                    highSchool: data.highSchool!,
@@ -73,7 +69,6 @@ export class AuthService {
                          });
                          break;
                     case Role.UNIVERSITY_USER:
-                         // No extra data needed for now
                          break;
                     default:
                          throw new BadRequestError('Ismeretlen szerepkör a regisztráció során');
@@ -94,13 +89,7 @@ export class AuthService {
      }
 
      async registerCompanyAdmin(data: CompanyAdminRegisterInput) {
-          const existingUser = await prisma.user.findUnique({
-               where: { email: data.email }
-          });
-
-          if (existingUser) {
-               throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
-          }
+          await this.ensureEmailNotTaken(data.email);
 
           const hashedPassword = await hashPassword(data.password);
 
@@ -131,13 +120,7 @@ export class AuthService {
      }
 
      async registerSystemAdmin(data: SystemAdminRegisterInput) {
-          const existingUser = await prisma.user.findUnique({
-               where: { email: data.email }
-          });
-
-          if (existingUser) {
-               throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
-          }
+          await this.ensureEmailNotTaken(data.email);
 
           const hashedPassword = await hashPassword(data.password);
 
@@ -294,13 +277,11 @@ export class AuthService {
                return { success: true, message: 'Ha a megadott email cím regisztrálva van, elküldtük a jelszó visszaállító linket.' };
           }
 
-          // Token generálás és hash
           const resetToken = generateResetToken();
           const hashedToken = hashToken(resetToken);
 
-          // Token tárolása 2 órás lejárattal (UTC időben)
-          // Használjunk milliszekundumot a pontosság érdekében
-          const tokenExpiry = new Date(Date.now() + 2 * 60 * 60 * 1000); // +2 óra
+          // Token tárolása lejárattal (UTC időben)
+          const tokenExpiry = new Date(Date.now() + SECURITY.PASSWORD_RESET_EXPIRY_MS);
 
           await prisma.user.update({
                where: { id: user.id },
@@ -310,12 +291,10 @@ export class AuthService {
                }
           });
 
-          // Email küldés
           const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
           const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
           const emailHtml = generatePasswordResetEmail(resetUrl, user.fullName);
 
-          // Notification létrehozása
           const notification = await prisma.notification.create({
                data: {
                     userId: user.id,
@@ -358,10 +337,8 @@ export class AuthService {
                throw new UnauthorizedError('A felhasználói fiók inaktív.');
           }
 
-          // Új jelszó hash-elése
           const hashedPassword = await hashPassword(newPassword);
 
-          // Jelszó frissítése és token törlése
           await prisma.user.update({
                where: { id: user.id },
                data: {
@@ -372,6 +349,16 @@ export class AuthService {
           });
 
           return { success: true, message: 'Jelszó sikeresen megváltoztatva.' };
+     }
+
+     private async ensureEmailNotTaken(email: string) {
+          const existingUser = await prisma.user.findUnique({
+               where: { email }
+          });
+
+          if (existingUser) {
+               throw new BadRequestError('A megadott email címmel már létezik felhasználó.');
+          }
      }
 }
 

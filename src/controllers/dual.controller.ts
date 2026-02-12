@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { partnershipService } from "../services/partnership.service";
 import { notificationService } from "../services/notification.service";
-import { userService } from "../services/user.service";
+import { notifySystemAdmins } from "../utils/notification.util";
+import { NOTIFICATION_TYPES } from "../utils/constants";
 import { Role, PartnershipStatus } from "@prisma/client";
 import { DualPartnershipUpdateRequest } from "../schemas/dual.schema";
 import { logAction } from "../utils/logger.util";
@@ -43,36 +44,6 @@ export const updatePartnership = async (
             entityId: id,
             details: { updatedById: userId, changedFields: Object.keys(data) }
         });
-
-        if (data.status) {
-            await notificationService.create({
-                userId: updated.student.userId,
-                title: "Partnerség státusza megváltozott",
-                message: `A(z) ${updated.position?.company.name || "érintett"} céggel kötött partnerséged státusza megváltozott: ${data.status}`,
-                type: "PARTNERSHIP_STATUS_UPDATE"
-            });
-
-            if (data.status === PartnershipStatus.PENDING_UNIVERSITY) {
-                const systemAdmins = await userService.getAllByRole(Role.SYSTEM_ADMIN) as any[];
-                for (const admin of systemAdmins) {
-                    await notificationService.create({
-                        userId: admin.id,
-                        title: "Új jóváhagyásra váró partnerség",
-                        message: `Egy új duális partnerség mentor kijelölése megtörtént, és egyetemi jóváhagyásra vár: ${updated.student.user.fullName} - ${updated.position?.company.name || "Ismeretlen cég"}`,
-                        type: "PARTNERSHIP_PENDING_UNIVERSITY"
-                    });
-                }
-            }
-        }
-
-        if (data.mentorId && updated.mentor) {
-            await notificationService.create({
-                userId: updated.mentor.userId,
-                title: "Új hallgató hozzárendelve",
-                message: `Új hallgatót rendeltek hozzád mentorálásra: ${updated.student.user.fullName}`,
-                type: "STUDENT_ASSIGNED_TO_MENTOR"
-            });
-        }
 
         res.json({
             success: true,
@@ -118,12 +89,6 @@ export const terminatePartnership = async (req: Request, res: Response, next: Ne
             details: { terminatedBy: userId }
         });
 
-        await notificationService.create({
-            userId: updated.student.userId,
-            title: "Partnerség megszakítva",
-            message: `A(z) ${updated.position?.company.name || "érintett"} céggel kötött partnerséged megszakításra került.`,
-            type: "PARTNERSHIP_TERMINATED"
-        });
 
         res.json({
             success: true,
@@ -149,12 +114,6 @@ export const completePartnership = async (req: Request, res: Response, next: Nex
             details: { completedBy: userId }
         });
 
-        await notificationService.create({
-            userId: updated.student.userId,
-            title: "Partnerség befejezve",
-            message: `A(z) ${updated.position?.company.name || "érintett"} céggel kötött partnerséged sikeresen befejeződött.`,
-            type: "PARTNERSHIP_COMPLETED"
-        });
 
         res.json({
             success: true,
@@ -181,33 +140,6 @@ export const assignMentor = async (req: Request, res: Response, next: NextFuncti
             details: { assignedMentorId: mentorId, assignedBy: userId }
         });
 
-        await notificationService.create({
-            userId: updated.student.userId,
-            title: "Mentor hozzárendelve",
-            message: `A(z) ${updated.position?.company.name || "érintett"} cégnél kijelöltek számodra egy mentort. A partnerség mostantól az egyetemi jóváhagyásra vár.`,
-            type: "MENTOR_ASSIGNED"
-        });
-
-        // Notify system admins as well
-        const systemAdmins = await userService.getAllByRole(Role.SYSTEM_ADMIN) as any[];
-        for (const admin of systemAdmins) {
-            await notificationService.create({
-                userId: admin.id,
-                title: "Új jóváhagyásra váró partnerség",
-                message: `Egy új duális partnerség mentor kijelölése megtörtént, és egyetemi jóváhagyásra vár: ${updated.student.user.fullName} - ${updated.position?.company.name || "Ismeretlen cég"}`,
-                type: "PARTNERSHIP_PENDING_UNIVERSITY"
-            });
-        }
-
-        // Notify assigned mentor
-        if (updated.mentor) {
-            await notificationService.create({
-                userId: updated.mentor.userId,
-                title: "Új hallgató hozzárendelve",
-                message: `Új hallgatót rendeltek hozzád mentorálásra: ${updated.student.user.fullName}`,
-                type: "STUDENT_ASSIGNED_TO_MENTOR"
-            });
-        }
 
         res.json({
             success: true,
@@ -233,21 +165,6 @@ export const assignUniversityUser = async (req: Request, res: Response, next: Ne
             details: { assignedUniUserId: uniEmployeeId, assignedBy: userId }
         });
 
-        await notificationService.create({
-            userId: updated.student.userId,
-            title: "Egyetemi felelős hozzárendelve",
-            message: `A(z) ${updated.position?.company.name || "érintett"} céggel kötött partnerségedhez hozzárendelték az egyetemi felelőst. A partnerség aktívvá vált.`,
-            type: "UNI_USER_ASSIGNED"
-        });
-
-        if (updated.uniEmployee) {
-            await notificationService.create({
-                userId: updated.uniEmployee.id,
-                title: "Új partnerség hozzárendelve",
-                message: `Egy új aktív duális partnerséghez téged rendeltek hozzá egyetemi felelősként: ${updated.student.user.fullName} - ${updated.position?.company.name || "Ismeretlen cég"}`,
-                type: "PARTNERSHIP_ASSIGNED_TO_UNI_USER"
-            });
-        }
 
         res.json({
             success: true,

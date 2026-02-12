@@ -1,6 +1,6 @@
 import prisma from '../config/prisma';
-import { NotFoundError } from '../errors/AppError';
-import { PositionInput } from '../schemas/job.schema';
+import { NotFoundError, BadRequestError } from '../errors/AppError';
+import { PositionInput, PositionUpdateInput } from '../schemas/job.schema';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 
 export class JobService {
@@ -124,7 +124,7 @@ export class JobService {
           });
 
           if (!location) {
-               throw new Error("A megadott helyszín nem tartozik ehhez a céghez.");
+               throw new BadRequestError("A megadott helyszín nem tartozik ehhez a céghez.");
           }
 
           return await prisma.position.create({
@@ -147,8 +147,8 @@ export class JobService {
           });
      }
 
-     async update(id: string, data: any) {
-          const { tagNames, locationId, majorId, ...rest } = data;
+     async update(id: string, data: PositionUpdateInput) {
+          const { tags, locationId, majorId, ...rest } = data;
 
           if (locationId) {
                const position = await prisma.position.findUnique({
@@ -166,7 +166,7 @@ export class JobService {
                });
 
                if (!location) {
-                    throw new Error("A megadott helyszín nem tartozik ehhez a céghez.");
+                    throw new BadRequestError("A megadott helyszín nem tartozik ehhez a céghez.");
                }
           }
 
@@ -180,11 +180,11 @@ export class JobService {
                     major: majorId !== undefined
                          ? (majorId ? { connect: { id: majorId } } : { disconnect: true })
                          : undefined,
-                    tags: tagNames ? {
+                    tags: tags ? {
                          set: [],
-                         connectOrCreate: tagNames.map((name: string) => ({
-                              where: { name },
-                              create: { name, category: "Technology" }
+                         connectOrCreate: tags.map((tag) => ({
+                              where: { name: tag.name },
+                              create: { name: tag.name, category: tag.category }
                          }))
                     } : undefined
                },

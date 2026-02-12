@@ -3,6 +3,9 @@ import { NotFoundError } from '../errors/AppError';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 
 import { Role } from '@prisma/client';
+import { notificationService } from './notification.service';
+import { NOTIFICATION_TYPES } from '../utils/constants';
+import { CreateNewsInput, UpdateNewsInput } from '../schemas/news.schema';
 
 export class NewsService {
      private newsSelect = {
@@ -16,17 +19,46 @@ export class NewsService {
           isArchived: true
      };
 
-     async create(data: {
-          title: string;
-          content: string;
-          isImportant?: boolean;
-          targetGroup?: string;
-          tags?: string[];
-     }) {
-          return await prisma.news.create({
+     async create(data: CreateNewsInput) {
+          const news = await prisma.news.create({
                data,
                select: this.newsSelect
           });
+
+          // Background notification
+          this.notifyTargetUsers(news).catch(err =>
+               console.error('[NewsService.create] Notification error:', err)
+          );
+
+          return news;
+     }
+
+     private async notifyTargetUsers(news: { title: string; targetGroup: string; isImportant: boolean }) {
+          const targetGroup = news.targetGroup?.toUpperCase();
+          let targetUsers: { id: string }[] = [];
+
+          if (targetGroup === "ALL") {
+               targetUsers = await prisma.user.findMany({
+                    where: { isActive: true, deletedAt: null },
+                    select: { id: true }
+               });
+          } else if (Object.values(Role).includes(targetGroup as Role)) {
+               targetUsers = await prisma.user.findMany({
+                    where: { role: targetGroup as Role, isActive: true, deletedAt: null },
+                    select: { id: true }
+               });
+          }
+
+          const notifications = targetUsers.map(user =>
+               notificationService.create({
+                    userId: user.id,
+                    title: news.isImportant ? "🔔 Fontos hír!" : "Új hír érkezett",
+                    message: news.title,
+                    type: NOTIFICATION_TYPES.NEW_NEWS
+               })
+          );
+
+          await Promise.all(notifications);
      }
 
      async getAll(params: Required<PaginationParams>, role?: Role, isArchived: boolean = false) {
@@ -77,8 +109,8 @@ export class NewsService {
           return news;
      }
 
-     async update(id: string, data: any) {
-          const { id: _, ...updateData } = data;
+     async update(id: string, data: UpdateNewsInput) {
+          const { ...updateData } = data;
           return await prisma.news.update({
                where: { id },
                data: updateData,
