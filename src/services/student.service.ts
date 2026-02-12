@@ -1,10 +1,11 @@
 import prisma from '../config/prisma';
 import { NotFoundError } from '../errors/AppError';
-import { Role } from '@prisma/client';
+import { Role, Location } from '@prisma/client';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 import { prepareLocationData } from '../utils/location.util';
 import { notifySystemAdmins } from '../utils/notification.util';
 import { NOTIFICATION_TYPES } from '../utils/constants';
+import { StudentUpdateInput, UniversityTransitionInput } from '../schemas/student.schema';
 
 export class StudentService {
      private studentSelect = {
@@ -117,9 +118,8 @@ export class StudentService {
           );
      }
 
-     async updateProfile(userId: string, data: any) {
-          const { fullName, phoneNumber, ...profileData } = data;
-          const { location, ...otherProfileData } = profileData;
+     async updateProfile(userId: string, data: StudentUpdateInput) {
+          const { fullName, phoneNumber, location, ...profileData } = data;
 
           const currentUser = await prisma.user.findUnique({
                where: { id: userId },
@@ -140,7 +140,7 @@ export class StudentService {
                     phoneNumber,
                     studentProfile: {
                          update: {
-                              ...otherProfileData,
+                              ...profileData,
                               locations: locationsUpdate
                          }
                     }
@@ -162,7 +162,7 @@ export class StudentService {
           });
      }
 
-     async transitionToUniversity(userId: string, data: any) {
+     async transitionToUniversity(userId: string, data: UniversityTransitionInput) {
           const updated = await prisma.user.update({
                where: { id: userId },
                data: {
@@ -213,7 +213,7 @@ export class StudentService {
           });
      }
 
-     private prepareLocationUpdate(existingLocation: any, newLocation: any) {
+     private prepareLocationUpdate(existingLocation: Location | undefined, newLocation: StudentUpdateInput['location']) {
           if (!newLocation) return undefined;
 
           if (existingLocation) {
@@ -230,7 +230,7 @@ export class StudentService {
                };
           } else {
                return {
-                    create: prepareLocationData(newLocation)
+                    create: prepareLocationData(newLocation as any)
                };
           }
      }
