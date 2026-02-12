@@ -5,6 +5,7 @@ import { CompanyWithAdminInput } from '../schemas/company.schema';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 import { hashPassword } from '../utils/auth.util';
 import { Role } from '@prisma/client';
+import { prepareLocationData } from '../utils/location.util';
 
 export class CompanyService {
      private companySelect = {
@@ -131,12 +132,7 @@ export class CompanyService {
                data: {
                     ...companyData,
                     location: {
-                         create: locations ? locations.map(loc => ({
-                              country: loc.country || "Magyarország",
-                              zipCode: loc.zipCode ? String(loc.zipCode) : "",
-                              city: loc.city || "",
-                              address: loc.address || ""
-                         })) : []
+                         create: locations ? locations.map(prepareLocationData) : []
                     },
                },
                select: this.companySelect
@@ -172,12 +168,7 @@ export class CompanyService {
                     data: {
                          ...companyData,
                          location: {
-                              create: locations ? locations.map(loc => ({
-                                   country: loc.country || "Magyarország",
-                                   zipCode: loc.zipCode ? String(loc.zipCode) : "",
-                                   city: loc.city || "",
-                                   address: loc.address || ""
-                              })) : []
+                              create: locations ? locations.map(prepareLocationData) : []
                          },
                     },
                     select: this.companySelect
@@ -219,12 +210,7 @@ export class CompanyService {
                const toUpdate = locations.filter((l: any) => l.id);
 
                if (startNew.length > 0) {
-                    locationOperations.create = startNew.map((loc: any) => ({
-                         country: loc.country || "Magyarország",
-                         zipCode: loc.zipCode ? String(loc.zipCode) : "",
-                         city: loc.city || "",
-                         address: loc.address || ""
-                    }));
+                    locationOperations.create = startNew.map(prepareLocationData);
                }
 
                if (toUpdate.length > 0) {

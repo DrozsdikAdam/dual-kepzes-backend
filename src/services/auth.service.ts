@@ -6,6 +6,7 @@ import { Role } from '@prisma/client';
 import { generateVerificationEmail, generatePasswordResetEmail } from '../utils/email.util';
 import { addEmailToQueue } from './email.queue';
 import { notificationService } from './notification.service';
+import { prepareLocationData } from '../utils/location.util';
 
 export class AuthService {
      async register(data: RegisterInput) {
@@ -39,11 +40,11 @@ export class AuthService {
                                    mothersName: data.mothersName!,
                                    birthDate: data.dateOfBirth!,
                                    locations: {
-                                        create: {
-                                             country: data.location?.country || "Magyarország",
-                                             zipCode: data.location?.zipCode ? String(data.location.zipCode) : "",
-                                             city: data.location?.city || "",
-                                             address: data.location?.address || ""
+                                        create: data.location ? prepareLocationData(data.location) : {
+                                             country: "Magyarország",
+                                             zipCode: "",
+                                             city: "",
+                                             address: ""
                                         }
                                    },
                                    highSchool: data.highSchool!,

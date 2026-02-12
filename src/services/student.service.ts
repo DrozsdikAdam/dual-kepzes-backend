@@ -2,6 +2,7 @@ import prisma from '../config/prisma';
 import { NotFoundError } from '../errors/AppError';
 import { Role } from '@prisma/client';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
+import { prepareLocationData } from '../utils/location.util';
 
 export class StudentService {
      private studentSelect = {
@@ -218,12 +219,7 @@ export class StudentService {
                };
           } else {
                return {
-                    create: {
-                         country: newLocation.country || "Magyarország",
-                         zipCode: newLocation.zipCode ? String(newLocation.zipCode) : "",
-                         city: newLocation.city || "",
-                         address: newLocation.address || ""
-                    }
+                    create: prepareLocationData(newLocation)
                };
           }
      }

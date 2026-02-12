@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { companyService } from "../services/company.service";
-import { userService } from "../services/user.service";
-import { notificationService } from "../services/notification.service";
+import { notifySystemAdmins } from "../utils/notification.util";
 import { NotFoundError } from "../errors/AppError";
 import { logAction } from "../utils/logger.util";
 import { CompanyInput } from "../schemas/job.schema";
@@ -101,15 +100,11 @@ export const createCompanyWithAdmin = async (
           });
 
           // Értesítés a rendszergazdáknak
-          const admins = (await userService.getAllByRole(Role.SYSTEM_ADMIN)) as any[];
-          for (const admin of admins) {
-               await notificationService.create({
-                    userId: admin.id,
-                    title: "Új cég regisztráció",
-                    message: `Új cég került rögzítésre: "${newCompany!.name}" (adószám: ${newCompany!.taxId}).`,
-                    type: "COMPANY_CREATE"
-               });
-          }
+          await notifySystemAdmins({
+               title: "Új cég regisztráció",
+               message: `Új cég került rögzítésre: "${newCompany!.name}" (adószám: ${newCompany!.taxId}).`,
+               type: "COMPANY_CREATE"
+          });
      } catch (error) {
           next(error);
      }
@@ -134,15 +129,11 @@ export const updateCompany = async (req: Request, res: Response, next: NextFunct
           });
 
           // Értesítés a rendszergazdáknak
-          const admins = (await userService.getAllByRole(Role.SYSTEM_ADMIN)) as any[];
-          for (const admin of admins) {
-               await notificationService.create({
-                    userId: admin.id,
-                    title: "Cégadatok változása",
-                    message: `A(z) "${updated.name}" cég adatai frissültek.`,
-                    type: "COMPANY_UPDATE"
-               });
-          }
+          await notifySystemAdmins({
+               title: "Cégadatok változása",
+               message: `A(z) "${updated.name}" cég adatai frissültek.`,
+               type: "COMPANY_UPDATE"
+          });
      } catch (error) {
           next(error);
      }
@@ -199,15 +190,11 @@ export const reactivateCompany = async (req: Request, res: Response, next: NextF
           });
 
           // Értesítés a rendszergazdáknak
-          const admins = (await userService.getAllByRole(Role.SYSTEM_ADMIN)) as any[];
-          for (const admin of admins) {
-               await notificationService.create({
-                    userId: admin.id,
-                    title: "Cég újraaktiválva",
-                    message: `A(z) "${updatedCompany.name}" cég újraaktiválásra került.`,
-                    type: "COMPANY_STATUS"
-               });
-          }
+          await notifySystemAdmins({
+               title: "Cég újraaktiválva",
+               message: `A(z) "${updatedCompany.name}" cég újraaktiválásra került.`,
+               type: "COMPANY_STATUS"
+          });
      } catch (error) {
           next(error);
      }
@@ -232,15 +219,11 @@ export const deactivateCompany = async (req: Request, res: Response, next: NextF
           });
 
           // Értesítés a rendszergazdáknak
-          const admins = (await userService.getAllByRole(Role.SYSTEM_ADMIN)) as any[];
-          for (const admin of admins) {
-               await notificationService.create({
-                    userId: admin.id,
-                    title: "Cég deaktiválva",
-                    message: `A(z) "${updatedCompany.name}" cég deaktiválásra került.`,
-                    type: "COMPANY_STATUS"
-               });
-          }
+          await notifySystemAdmins({
+               title: "Cég deaktiválva",
+               message: `A(z) "${updatedCompany.name}" cég deaktiválásra került.`,
+               type: "COMPANY_STATUS"
+          });
      } catch (error) {
           next(error);
      }
