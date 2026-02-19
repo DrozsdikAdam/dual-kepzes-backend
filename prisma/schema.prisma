@@ -59,6 +59,8 @@ model User {
   phoneNumber String
   role        Role
 
+  isEmailEnabled Boolean @default(true)
+
   isEmailVerified         Boolean   @default(false)
   verificationToken       String?
   verificationTokenExpiry DateTime?
