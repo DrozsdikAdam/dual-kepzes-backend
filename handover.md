@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-12 (Típusbiztonsági refaktor, Clean Code fejlesztések, Role-Based Security)  
+> **Utolsó frissítés**: 2026-02-19 (Email Opt-out, Új regisztrációs végpontok, Student Notification finomítások)  
 > **Projekt státusz**: Production-ready
 
 ---
@@ -251,12 +251,6 @@ dual-kepzes-backend/
 │   ├── schema.prisma      # Adatbázis modellek
 │   ├── seed.ts            # Seed szkript
 │   └── migrations/        # DB migrációk
-├── scripts/
-│   ├── api-tests/         # API teszt szkriptek
-│   ├── email/             # Email tesztelés
-│   ├── notifications/     # Notification tesztek
-│   ├── password/          # Jelszó kezelő eszközök
-│   └── seed/              # Extra seed szkriptek
 ├── src/
 │   ├── app.ts             # Express app inicializálás
 │   ├── server.ts          # Szerver belépési pont
@@ -347,6 +341,16 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
   - **Értesítések**: Központosított `notifySystemAdmins` segédfüggvény és service-szintű értesítéskezelés (SRP elv követése).
   - **Email validáció**: `ensureEmailNotTaken` helper az `AuthService`-ben.
 
+- **Email Opt-out (`isEmailEnabled`)**:
+  - Új mező a `User` modellen.
+  - Zod sémák frissítve.
+  - `NotificationService` és `email.worker.ts` figyelembe veszi a beállítást (kivéve kritikus emailek: jelszó-visszaállítás, verifikáció).
+- **Regisztrációs logika finomítása**:
+  - Hallgató regisztrációkor az `isAvailableForWork` nem állítható, csak profilból utólag.
+  - Motivációs levél 500 karakteres limit és feltételes kötelezőség.
+  - `highSchoolLocation` kötelező mező lett.
+- **Hallgatói Érdeklődés Végpont**: Dedikált végpont (`POST /api/students/:id/interest`) a hallgató iránti érdeklődés jelzésére (email + belső értesítés).
+
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
 - Tesztkörnyezet (Jest - alap konfig kész)
@@ -369,7 +373,6 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 | [API_PAGINATION.md](./API_PAGINATION.md) | Lapozás és válasz formátum |
 | [CHECKLIST.md](./CHECKLIST.md) | Fejlesztési teendők |
 | Swagger UI | Interaktív API dokumentáció (helyi: `http://localhost:3000/api-docs`) |
-| [scripts/README.md](./scripts/README.md) | Segéd szkriptek leírása |
 
 ---
 

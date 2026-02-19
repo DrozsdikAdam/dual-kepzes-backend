@@ -11,7 +11,8 @@ Ez az útmutató a cégadminisztrátorok számára készült, akik a teljes vál
 - **Kezelés**: Módosíthatja a meglévő hirdetéseket, beállíthat jelentkezési határidőket.
 
 ## 📩 Jelentkezések Értékelése
-- **Beérkező jelentkezések**: Itt láthatja az összes hallgatót, aki jelentkezett a céghez.
+- **Beérkező jelentkezések**: Itt láthatja az összes hallgatót, aki jelentkezett a céghez. Megtekintheti a CV-ket és motivációs leveleket is.
+- **Hallgatók böngészése**: Az elérhető hallgatók listájában kereshet, és az "Érdeklődés kifejezése" (`/:id/interest`) funkcióval közvetlenül jelezheti a hallgatónak, ha szimpatikus a profilja.
 - **Folyamat és Mentorkezelés**:
 ```mermaid
 graph LR
