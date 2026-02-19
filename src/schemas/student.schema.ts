@@ -9,6 +9,7 @@ export const StudentUpdateSchema = z.object({
         // Alapadatok (User)
         fullName: z.string().min(2).optional(),
         phoneNumber: z.string().optional(),
+        isEmailEnabled: z.boolean().optional(),
 
         // Profil adatok (StudentProfile)
         neptunCode: z.string().optional(),

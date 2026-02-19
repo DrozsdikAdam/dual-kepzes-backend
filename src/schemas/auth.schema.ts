@@ -15,6 +15,7 @@ const baseUserSchema = z.object({
     password: z.string().trim().regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,64}$/, { message: "A jelszónak legalább 12 karakter hosszúnak kell lennie, és tartalmaznia kell kis- és nagybetűt, számot és speciális karaktert." }),
     fullName: z.string().trim().includes(" ", { message: "A teljes név legalább egy szóközt tartalmaz" }).min(1),
     phoneNumber: z.string().trim().regex(/^\+?[0-9]{7,15}$/, { message: "Érvénytelen telefonszám formátum" }),
+    isEmailEnabled: z.boolean().optional(),
 });
 
 export const studentSchema = baseUserSchema.extend({
