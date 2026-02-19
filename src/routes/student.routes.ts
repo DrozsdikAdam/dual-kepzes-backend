@@ -11,9 +11,10 @@ import {
     deleteStudentById,
     transitionToUniversity,
     getAvailableStudents,
-    toggleAvailableForWork
+    toggleAvailableForWork,
+    expressInterest
 } from "../controllers/student.controller";
-import { MyProfileUpdateSchema, StudentUpdateSchema, UniversityTransitionSchema } from "../schemas/student.schema";
+import { MyProfileUpdateSchema, StudentUpdateSchema, UniversityTransitionSchema, ExpressInterestSchema } from "../schemas/student.schema";
 
 const router = Router();
 
@@ -196,11 +197,13 @@ router.get("/:id", authenticateToken, isStaff, getStudentById)
  */
 router.delete("/:id", authenticateToken, isSystemAdmin, deleteStudentById)
 
+router.patch("/:id", authenticateToken, isSystemAdmin, validate(StudentUpdateSchema), updateStudentById);
+
 /**
  * @swagger
- * /api/students/{id}:
- *   patch:
- *     summary: Update a student profile by ID (Admin)
+ * /api/students/{id}/interest:
+ *   post:
+ *     summary: Express interest in a student
  *     tags: [Students]
  *     security:
  *       - bearerAuth: []
@@ -210,16 +213,20 @@ router.delete("/:id", authenticateToken, isSystemAdmin, deleteStudentById)
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateStudent'
+ *             type: object
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 maxLength: 500
  *     responses:
  *       200:
- *         description: Student profile updated successfully
+ *         description: Interest expressed successfully
  */
-router.patch("/:id", authenticateToken, isSystemAdmin, validate(StudentUpdateSchema), updateStudentById);
+router.post("/:id/interest", authenticateToken, isStaff, validate(ExpressInterestSchema), expressInterest);
 
 export default router;
