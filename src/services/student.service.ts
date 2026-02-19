@@ -29,6 +29,7 @@ export class StudentService {
                          }
                     },
                     highSchool: true,
+                    highSchoolLocation: true,
                     graduationYear: true,
                     neptunCode: true,
                     majorId: true,
@@ -60,6 +61,7 @@ export class StudentService {
                     },
                     language: true,
                     languageLevel: true,
+                    motivationLetter: true,
                     isAvailableForWork: true
                }
           }
