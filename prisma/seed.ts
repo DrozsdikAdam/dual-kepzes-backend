@@ -119,6 +119,7 @@ async function main() {
                         }
                     },
                     highSchool: 'Tóth Árpád Gimnázium',
+                    highSchoolLocation: 'Debrecen',
                     graduationYear: 2019,
                     neptunCode: 'ABC123',
                     majorId: mernokInfoMajor?.id,
