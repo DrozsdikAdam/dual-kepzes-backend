@@ -24,6 +24,11 @@ const VALID_APPLICATION_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus
      ],
      [ApplicationStatus.ACCEPTED]: [], // Végleges státusz
      [ApplicationStatus.REJECTED]: [], // Végleges státusz
+     [ApplicationStatus.PENDING]: [
+          ApplicationStatus.ACCEPTED,
+          ApplicationStatus.REJECTED,
+          ApplicationStatus.NO_RESPONSE
+     ],
      [ApplicationStatus.NO_RESPONSE]: [
           ApplicationStatus.ACCEPTED,
           ApplicationStatus.REJECTED

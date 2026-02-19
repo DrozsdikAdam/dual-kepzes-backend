@@ -20,9 +20,13 @@ jest.mock('../../config/prisma', () => ({
                findUnique: jest.fn(),
           },
      },
+     $transaction: jest.fn(async (cb) => cb(prisma)),
+     user: {
+          findMany: jest.fn(),
+     }
 }));
 
-jest.mock('../../utils/companyUtils', () => ({
+jest.mock('../../utils/company.util', () => ({
      getCompanyIdForUser: jest.fn(),
 }));
 
@@ -43,7 +47,7 @@ describe('ApplicationService', () => {
           it('should create application successfully', async () => {
                (prisma.position.findUnique as jest.Mock).mockResolvedValue({ id: 'p1', isActive: true });
                (prisma.application.findUnique as jest.Mock).mockResolvedValue(null);
-               (prisma.application.create as jest.Mock).mockResolvedValue({ id: 'a1' });
+               (prisma.application.create as jest.Mock).mockResolvedValue({ id: 'a1', status: 'SUBMITTED' });
 
                const result = await applicationService.apply('s1', 'p1');
                expect(result.id).toBe('a1');
@@ -53,7 +57,7 @@ describe('ApplicationService', () => {
 
      describe('getCompanyApplications', () => {
           it('should throw ForbiddenError if user has no companyId', async () => {
-               const { getCompanyIdForUser } = require('../../utils/companyUtils');
+               const { getCompanyIdForUser } = require('../../utils/company.util');
                getCompanyIdForUser.mockResolvedValue(null);
 
                await expect(

@@ -16,6 +16,17 @@ jest.mock('../../config/prisma', () => ({
           companyEmployee: {
                findUnique: jest.fn(),
           },
+          notification: {
+               create: jest.fn(),
+          },
+          $transaction: jest.fn(async (cb) => cb(prisma)),
+     },
+}));
+
+jest.mock('../notification.service', () => ({
+     notificationService: {
+          create: jest.fn().mockReturnValue(Promise.resolve({ id: 'n1' })),
+          shouldSendEmail: jest.fn().mockReturnValue(true),
      },
 }));
 
@@ -31,7 +42,7 @@ describe('PartnershipService', () => {
 
                await expect(
                     partnershipService.getById('non-existent-id', 'user-id')
-               ).rejects.toThrow('Partnerség nem található.');
+               ).rejects.toThrow('Partneri kapcsolat nem található.');
           });
 
           it('should return partnership if found for student', async () => {
@@ -49,9 +60,17 @@ describe('PartnershipService', () => {
 
      describe('terminate', () => {
           it('should update status to TERMINATED', async () => {
-               const mockPartnership = { id: 'p1' };
+               const mockPartnership = {
+                    id: 'p1',
+                    status: 'ACTIVE',
+                    student: { userId: 'u-student' },
+                    position: { company: { name: 'Company A' } }
+               };
                (prisma.dualPartnership.findUnique as jest.Mock).mockResolvedValue(mockPartnership);
-               (prisma.dualPartnership.update as jest.Mock).mockResolvedValue({ ...mockPartnership, status: 'TERMINATED' });
+               (prisma.dualPartnership.update as jest.Mock).mockResolvedValue({
+                    ...mockPartnership,
+                    status: 'TERMINATED'
+               });
 
                const result = await partnershipService.terminate('p1', 'u1');
                expect(result.status).toBe('TERMINATED');
