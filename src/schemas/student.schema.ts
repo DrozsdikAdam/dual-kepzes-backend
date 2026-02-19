@@ -64,6 +64,16 @@ export const UniversityTransitionSchema = z.object({
     })
 });
 
+export const ExpressInterestSchema = z.object({
+    params: z.object({
+        id: z.string().uuid("Érvénytelen hallgató azonosító"),
+    }),
+    body: z.object({
+        message: z.string().max(500, { message: "Az üzenet maximum 500 karakter lehet." }).optional(),
+    })
+});
+
 export type StudentUpdateInput = z.infer<typeof StudentUpdateSchema>["body"];
 export type MyProfileUpdateInput = z.infer<typeof MyProfileUpdateSchema>["body"];
 export type UniversityTransitionInput = z.infer<typeof UniversityTransitionSchema>["body"];
+export type ExpressInterestInput = z.infer<typeof ExpressInterestSchema>["body"];
