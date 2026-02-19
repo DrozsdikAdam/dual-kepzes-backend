@@ -43,6 +43,7 @@ export class AuthService {
                                         }
                                    },
                                    highSchool: data.highSchool!,
+                                   highSchoolLocation: data.highSchoolLocation!,
                                    graduationYear: data.graduationYear!,
                                    neptunCode: data.neptunCode,
                                    majorId: data.majorId,
@@ -210,7 +211,7 @@ export class AuthService {
                }
           });
 
-          if (notificationService.shouldSendEmail(user.role, 'EMAIL_VERIFICATION')) {
+          if (notificationService.shouldSendEmail(user.role, 'EMAIL_VERIFICATION', user.isEmailEnabled)) {
                await addEmailToQueue({
                     notificationId: notification.id,
                     email: user.email,
@@ -305,7 +306,7 @@ export class AuthService {
                }
           });
 
-          if (notificationService.shouldSendEmail(user.role, 'PASSWORD_RESET')) {
+          if (notificationService.shouldSendEmail(user.role, 'PASSWORD_RESET', user.isEmailEnabled)) {
                await addEmailToQueue({
                     notificationId: notification.id,
                     email: user.email,
