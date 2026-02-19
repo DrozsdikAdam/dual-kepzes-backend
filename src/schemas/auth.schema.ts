@@ -31,6 +31,7 @@ export const studentSchema = baseUserSchema.extend({
         address: z.string().trim().includes(" ").optional(),
     }).optional(),
     highSchool: z.string().trim().min(1),
+    highSchoolLocation: z.string().trim().min(1, { message: "A középiskola helyszíne kötelező." }),
     neptunCode: z.string().trim().length(6, { message: "A neptun kód pontosan 6 karakter hosszú." }).optional(),
     majorId: z.string().uuid("Érvénytelen szak azonosító").optional(),
     studyMode: z.enum(["NAPPALI", "LEVELEZŐ"]),
@@ -44,6 +45,9 @@ export const studentSchema = baseUserSchema.extend({
     hasLanguageCert: z.boolean(),
     language: z.string().trim().min(1).optional(),
     languageLevel: z.string().trim().min(1).optional(),
+
+    motivationLetter: z.string().trim().max(500, { message: "A motivációs levél maximum 500 karakter lehet." }).optional(),
+    isAvailableForWork: z.boolean().default(false),
 }).superRefine((data, ctx) => {
     // Ha középiskolás, akkor firstChoiceId és secondChoiceId kötelező
     if (data.isInHighSchool) {
@@ -79,6 +83,15 @@ export const studentSchema = baseUserSchema.extend({
                 path: ["languageLevel"]
             });
         }
+    }
+
+    // Ha keres munkát, a motivációs levél kötelező
+    if (data.isAvailableForWork && !data.motivationLetter) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "A motivációs levél megadása kötelező, ha munkát keresel.",
+            path: ["motivationLetter"]
+        });
     }
 });
 

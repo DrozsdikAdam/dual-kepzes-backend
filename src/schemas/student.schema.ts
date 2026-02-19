@@ -14,6 +14,7 @@ export const StudentUpdateSchema = z.object({
         neptunCode: z.string().optional(),
         mothersName: z.string().optional(),
         highSchool: z.string().optional(),
+        highSchoolLocation: z.string().min(1, { message: "A középiskola helyszíne kötelező." }).optional(),
         graduationYear: z.number().optional(),
         studyMode: z.string().optional(),
         location: z.object({
@@ -31,6 +32,16 @@ export const StudentUpdateSchema = z.object({
         hasLanguageCert: z.boolean().optional(),
         language: z.string().optional(),
         languageLevel: z.string().optional(),
+        motivationLetter: z.string().max(500, { message: "A motivációs levél maximum 500 karakter lehet." }).optional(),
+        isAvailableForWork: z.boolean().optional(),
+    }).superRefine((data, ctx) => {
+        if (data.isAvailableForWork && !data.motivationLetter) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "A motivációs levél megadása kötelező, ha munkát keresel.",
+                path: ["motivationLetter"]
+            });
+        }
     })
 });
 
