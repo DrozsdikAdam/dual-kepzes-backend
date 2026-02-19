@@ -9,11 +9,13 @@ export const StudentUpdateSchema = z.object({
         // Alapadatok (User)
         fullName: z.string().min(2).optional(),
         phoneNumber: z.string().optional(),
+        isEmailEnabled: z.boolean().optional(),
 
         // Profil adatok (StudentProfile)
         neptunCode: z.string().optional(),
         mothersName: z.string().optional(),
         highSchool: z.string().optional(),
+        highSchoolLocation: z.string().min(1, { message: "A középiskola helyszíne kötelező." }).optional(),
         graduationYear: z.number().optional(),
         studyMode: z.string().optional(),
         location: z.object({
@@ -31,17 +33,39 @@ export const StudentUpdateSchema = z.object({
         hasLanguageCert: z.boolean().optional(),
         language: z.string().optional(),
         languageLevel: z.string().optional(),
+        motivationLetter: z.string().max(500, { message: "A motivációs levél maximum 500 karakter lehet." }).optional(),
+        isAvailableForWork: z.boolean().optional(),
+    }).superRefine((data, ctx) => {
+        if (data.isAvailableForWork && !data.motivationLetter) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "A motivációs levél megadása kötelező, ha munkát keresel.",
+                path: ["motivationLetter"]
+            });
+        }
     })
 });
 
 export const MyProfileUpdateSchema = z.object({
     body: studentSchema
+        .extend({
+            isAvailableForWork: z.boolean().optional(),
+        })
         .omit({
             role: true,
             email: true,
             password: true
         })
         .partial()
+        .superRefine((data, ctx) => {
+            if (data.isAvailableForWork && !data.motivationLetter) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "A motivációs levél megadása kötelező, ha munkát keresel.",
+                    path: ["motivationLetter"]
+                });
+            }
+        })
 });
 
 
@@ -53,6 +77,16 @@ export const UniversityTransitionSchema = z.object({
     })
 });
 
+export const ExpressInterestSchema = z.object({
+    params: z.object({
+        id: z.string().uuid("Érvénytelen hallgató azonosító"),
+    }),
+    body: z.object({
+        message: z.string().max(500, { message: "Az üzenet maximum 500 karakter lehet." }).optional(),
+    })
+});
+
 export type StudentUpdateInput = z.infer<typeof StudentUpdateSchema>["body"];
 export type MyProfileUpdateInput = z.infer<typeof MyProfileUpdateSchema>["body"];
 export type UniversityTransitionInput = z.infer<typeof UniversityTransitionSchema>["body"];
+export type ExpressInterestInput = z.infer<typeof ExpressInterestSchema>["body"];

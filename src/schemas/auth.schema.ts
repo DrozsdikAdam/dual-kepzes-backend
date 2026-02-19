@@ -15,6 +15,7 @@ const baseUserSchema = z.object({
     password: z.string().trim().regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,64}$/, { message: "A jelszónak legalább 12 karakter hosszúnak kell lennie, és tartalmaznia kell kis- és nagybetűt, számot és speciális karaktert." }),
     fullName: z.string().trim().includes(" ", { message: "A teljes név legalább egy szóközt tartalmaz" }).min(1),
     phoneNumber: z.string().trim().regex(/^\+?[0-9]{7,15}$/, { message: "Érvénytelen telefonszám formátum" }),
+    isEmailEnabled: z.boolean().optional(),
 });
 
 export const studentSchema = baseUserSchema.extend({
@@ -31,6 +32,7 @@ export const studentSchema = baseUserSchema.extend({
         address: z.string().trim().includes(" ").optional(),
     }).optional(),
     highSchool: z.string().trim().min(1),
+    highSchoolLocation: z.string().trim().min(1, { message: "A középiskola helyszíne kötelező." }),
     neptunCode: z.string().trim().length(6, { message: "A neptun kód pontosan 6 karakter hosszú." }).optional(),
     majorId: z.string().uuid("Érvénytelen szak azonosító").optional(),
     studyMode: z.enum(["NAPPALI", "LEVELEZŐ"]),
@@ -44,6 +46,8 @@ export const studentSchema = baseUserSchema.extend({
     hasLanguageCert: z.boolean(),
     language: z.string().trim().min(1).optional(),
     languageLevel: z.string().trim().min(1).optional(),
+
+    motivationLetter: z.string().trim().max(500, { message: "A motivációs levél maximum 500 karakter lehet." }).optional(),
 }).superRefine((data, ctx) => {
     // Ha középiskolás, akkor firstChoiceId és secondChoiceId kötelező
     if (data.isInHighSchool) {

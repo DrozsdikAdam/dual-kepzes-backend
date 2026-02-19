@@ -235,3 +235,31 @@ export const toggleAvailableForWork = async (req: Request, res: Response, next: 
         next(error);
     }
 };
+
+export const expressInterest = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const studentId = req.params.id;
+        const interestedUserId = req.user?.userId;
+        const { message } = req.body;
+
+        if (!interestedUserId) {
+            throw new UnauthorizedError("Nincs azonosítva a felhasználó.");
+        }
+
+        await studentService.expressInterest(studentId, interestedUserId, message);
+
+        await logAction(req, {
+            action: "EXPRESS_INTEREST",
+            entity: "User",
+            entityId: studentId,
+            details: { interestedUserId, hasMessage: !!message }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Érdeklődésedet sikeresen elküldtük a hallgatónak!"
+        });
+    } catch (error) {
+        next(error);
+    }
+};

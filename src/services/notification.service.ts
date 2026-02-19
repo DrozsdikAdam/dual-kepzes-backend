@@ -88,14 +88,24 @@ export class NotificationService {
       * Determins if an automated email should be sent to a user based on their role and notification type.
       * @param role The user's role
       * @param type The notification type
+      * @param isEmailEnabled User's email preference
       * @returns boolean
       */
-     shouldSendEmail(role: Role, type: string): boolean {
+     shouldSendEmail(role: Role, type: string, isEmailEnabled: boolean = true): boolean {
+          // Exceptions that are ALWAYS sent
+          if ([NOTIFICATION_TYPES.EMAIL_VERIFICATION, NOTIFICATION_TYPES.PASSWORD_RESET].includes(type)) {
+               return true;
+          }
+
+          if (!isEmailEnabled) {
+               return false;
+          }
+
           if (role === Role.SYSTEM_ADMIN) {
-               // System Admins only receive critical account emails
+               // System Admins only receive critical account emails (already handled by exceptions above, but kept for future types)
                return [NOTIFICATION_TYPES.EMAIL_VERIFICATION, NOTIFICATION_TYPES.PASSWORD_RESET].includes(type);
           }
-          // All other roles receive all emails by default
+          // All other roles receive all emails by default if enabled
           return true;
      }
 }

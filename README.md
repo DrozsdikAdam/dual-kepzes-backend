@@ -157,6 +157,7 @@ erDiagram
         string phoneNumber
         Role role
         boolean isEmailVerified
+        boolean isEmailEnabled
         boolean isActive
     }
     StudentProfile {
@@ -686,6 +687,7 @@ curl http://localhost:3000/api/students/me \
 | `PATCH` | `/me` | Saját profil frissítése. | Student |
 | `PATCH` | `/me/university-transition` | Átváltás középiskolai profilról egyetemire (Neptun kód, Szak). | Student |
 | `PATCH` | `/me/toggle-availability` | Munkakeresési elérhetőség ki-/bekapcsolása (`isAvailableForWork` toggle). | Student |
+| `POST` | `/:id/interest` | Érdeklődés kifejezése egy hallgató iránt (Értesítést küld). | Staff |
 | `DELETE` | `/me` | Saját profil törlése. | Student |
 | `GET` | `/:id` | Hallgató lekérése ID alapján. | Staff |
 | `PATCH` | `/:id` | Hallgató módosítása (Admin). | SystemAdmin |

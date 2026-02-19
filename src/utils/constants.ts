@@ -36,6 +36,7 @@ export const NOTIFICATION_TYPES = {
 
      // Student related
      STUDENT_TRANSITION: "STUDENT_TRANSITION",
+     STUDENT_INTEREST: "STUDENT_INTEREST",
 
      // Application related
      NEW_APPLICATION: "NEW_APPLICATION",

@@ -8,7 +8,7 @@ A profilod az alapja minden jelentkezésnek. Tartsd naprakészen!
 - **Saját profil megtekintése**: Bármikor láthatod az adataidat a `/api/students/me` végponton (vagy a profil felületen).
 - **Profil frissítése**: Ha változnak az adataid (telefonszám, lakcím), egyszerűen módosíthatod.
 - **Egyetemi átállás**: Ha középiskolából egyetemre kerülsz, használd a "University Transition" funkciót a Neptun kódod és szakod rögzítéséhez.
-- **Munkakeresési állapot**: Beállíthatod, hogy éppen keresel-e munkát (`isAvailableForWork`). Ha aktív vagy, a cégek láthatnak téged a keresőben!
+- **Munkakeresési állapot**: Bármikor beállíthatod a profilodban, hogy éppen keresel-e munkát (`isAvailableForWork`). Alapértelmezés szerint ez kikapcsolt, de ha aktiválod, a cégek láthatnak téged a keresőben! Regisztrációkor ez még nem állítható, csak a profilod elkészülte után.
 
 ## 💼 Jelentkezés Állásokra
 Böngéssz a pozíciók között és találd meg a számodra megfelelőt.
@@ -16,7 +16,8 @@ Böngéssz a pozíciók között és találd meg a számodra megfelelőt.
 - **Pozíciók böngészése**: Szűrj duális vagy nem duális állásokra, szakok vagy cégek szerint.
 - **Jelentkezés leadása**: 
     - Csak egy gombnyomás, ha már van profilod.
-    - **GDPR barát fájlfeltöltés**: Feltöltheted az önéletrajzodat (CV) és motivációs leveledet. Ezeket a szerver nem tárolja el, csak közvetlenül a cégnek küldi el emailben a biztonságod érdekében.
+    - **Önéletrajz és Motivációs levél**: Feltöltheted az önéletrajzodat (CV) és motivációs leveledet. A motivációs levél maximum 500 karakter lehet.
+    - **GDPR barát fájlfeltöltés**: A fájlokat a szerver nem tárolja el, csak közvetlenül a cégnek küldi el emailben a biztonságod érdekében.
 - **Jelentkezések kezelése**: Nyomon követheted a leadott jelentkezéseid állapotát (Leadva, Elfogadva, Elutasítva) és bármikor visszavonhatod őket.
 
 ## 🤝 Duális Partnerségek

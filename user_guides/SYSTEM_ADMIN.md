@@ -8,6 +8,7 @@
     - Új cégek és cégadminok létrehozása.
     - Cégek aktiválása/deaktiválása és módosítása.
 - **Audit Napló**: Bármikor visszakövetheti, hogy ki, mikor és milyen műveletet végzett a rendszerben.
+- **Email beállítások**: Kezelheti a felhasználók email fogadási beállításait (`isEmailEnabled`).
 
 ## 📢 Közlemények és Hírek
 - **Hírek létrehozása**: Megcélozhat konkrét szerepköröket (pl. csak hallgatók, csak egyetem) vagy küldhet üzenetet mindenkinek.
