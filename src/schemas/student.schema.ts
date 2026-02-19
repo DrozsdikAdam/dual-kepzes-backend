@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { studentSchema } from "./auth.schema";
+import { studentBaseSchema } from "./auth.schema";
 
 export const StudentUpdateSchema = z.object({
     params: z.object({
@@ -47,7 +47,7 @@ export const StudentUpdateSchema = z.object({
 });
 
 export const MyProfileUpdateSchema = z.object({
-    body: studentSchema
+    body: studentBaseSchema
         .extend({
             isAvailableForWork: z.boolean().optional(),
         })

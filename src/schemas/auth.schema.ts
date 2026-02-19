@@ -18,7 +18,7 @@ const baseUserSchema = z.object({
     isEmailEnabled: z.boolean().optional(),
 });
 
-export const studentSchema = baseUserSchema.extend({
+export const studentBaseSchema = baseUserSchema.extend({
     role: z.literal(RoleEnum.enum.STUDENT),
 
     mothersName: z.string().trim().includes(" ", { message: "Az anyja neve legalább egy szóközt tartalmaz" }).min(1),
@@ -48,7 +48,9 @@ export const studentSchema = baseUserSchema.extend({
     languageLevel: z.string().trim().min(1).optional(),
 
     motivationLetter: z.string().trim().max(500, { message: "A motivációs levél maximum 500 karakter lehet." }).optional(),
-}).superRefine((data, ctx) => {
+});
+
+export const studentSchema = studentBaseSchema.superRefine((data, ctx) => {
     // Ha középiskolás, akkor firstChoiceId és secondChoiceId kötelező
     if (data.isInHighSchool) {
         if (!data.firstChoiceId) {
