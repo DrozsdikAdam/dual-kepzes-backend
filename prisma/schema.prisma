@@ -26,6 +26,7 @@ enum Role {
 enum ApplicationStatus {
   SUBMITTED
   ACCEPTED
+  PENDING
   REJECTED
   NO_RESPONSE
   RETRACTED
@@ -90,20 +91,23 @@ model StudentProfile {
   birthDate   DateTime
 
   // Egy felhasználónak több helyszíne is lehet (pl. otthoni, munkahelyi)
-  locations       Location[]
-  highSchool      String
-  graduationYear  Int
-  neptunCode      String?
-  majorId         String?
-  major           Major?     @relation("CurrentMajor", fields: [majorId], references: [id])
-  studyMode       String
-  hasLanguageCert Boolean    @default(false)
+  locations          Location[]
+  highSchool         String
+  highSchoolLocation String
+  graduationYear     Int
+  neptunCode         String?
+  majorId            String?
+  major              Major?     @relation("CurrentMajor", fields: [majorId], references: [id])
+  studyMode          String
+  hasLanguageCert    Boolean    @default(false)
 
   isInHighSchool Boolean @default(false)
   firstChoiceId  String?
   firstChoice    Major?  @relation("FirstChoice", fields: [firstChoiceId], references: [id])
   secondChoiceId String?
   secondChoice   Major?  @relation("SecondChoice", fields: [secondChoiceId], references: [id])
+
+  motivationLetter String?
 
   language      String?
   languageLevel String?
