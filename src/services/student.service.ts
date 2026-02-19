@@ -6,6 +6,8 @@ import { prepareLocationData } from '../utils/location.util';
 import { notifySystemAdmins } from '../utils/notification.util';
 import { NOTIFICATION_TYPES } from '../utils/constants';
 import { StudentUpdateInput, UniversityTransitionInput } from '../schemas/student.schema';
+import { notificationService } from './notification.service';
+import { addEmailToQueue } from './email.queue';
 
 export class StudentService {
      private studentSelect = {
@@ -213,6 +215,46 @@ export class StudentService {
                },
                select: this.studentSelect
           });
+     }
+
+     async expressInterest(studentId: string, interestedUserId: string, message?: string) {
+          const student = await prisma.user.findUnique({
+               where: { id: studentId, role: Role.STUDENT },
+               select: { id: true, email: true, fullName: true }
+          });
+
+          if (!student) {
+               throw new NotFoundError('Hallgatói profil');
+          }
+
+          const interestedUser = await prisma.user.findUnique({
+               where: { id: interestedUserId },
+               select: { fullName: true, email: true }
+          });
+
+          if (!interestedUser) {
+               throw new NotFoundError('Érdeklődő felhasználó');
+          }
+
+          const notificationTitle = "Érdeklődés";
+          const notificationMessage = `${interestedUser.fullName} (${interestedUser.email}) érdeklődik irántad.${message ? `\n\nÜzenet:\n${message}` : ""}`;
+
+          const notification = await notificationService.create({
+               userId: studentId,
+               title: notificationTitle,
+               message: notificationMessage,
+               type: NOTIFICATION_TYPES.STUDENT_INTEREST
+          });
+
+          // Send email
+          await addEmailToQueue({
+               notificationId: notification.id,
+               email: student.email,
+               subject: notificationTitle,
+               body: notificationMessage
+          });
+
+          return { success: true };
      }
 
      private prepareLocationUpdate(existingLocation: Location | undefined, newLocation: StudentUpdateInput['location']) {
