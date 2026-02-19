@@ -108,6 +108,7 @@ export const mapStudentProfile = (profile: (Partial<StudentProfile> & {
           mothersName: rest.mothersName!,
           birthDate: rest.birthDate!,
           highSchool: rest.highSchool!,
+          highSchoolLocation: rest.highSchoolLocation!,
           graduationYear: rest.graduationYear!,
           neptunCode: rest.neptunCode,
           major: mapMajor(major || null),
@@ -118,6 +119,7 @@ export const mapStudentProfile = (profile: (Partial<StudentProfile> & {
           secondChoice: mapMajor(secondChoice || null),
           language: rest.language,
           languageLevel: rest.languageLevel,
+          motivationLetter: rest.motivationLetter,
           location: mainLocation ? {
                id: mainLocation.id,
                country: mainLocation.country!,
@@ -140,6 +142,7 @@ export const mapPublicStudentProfile = (profile: (Partial<StudentProfile> & {
      return {
           id: rest.id!,
           highSchool: rest.highSchool!,
+          highSchoolLocation: rest.highSchoolLocation!,
           graduationYear: rest.graduationYear!,
           major: mapMajor(major || null),
           studyMode: rest.studyMode!,
@@ -147,6 +150,7 @@ export const mapPublicStudentProfile = (profile: (Partial<StudentProfile> & {
           isInHighSchool: rest.isInHighSchool ?? false,
           language: rest.language,
           languageLevel: rest.languageLevel,
+          motivationLetter: rest.motivationLetter,
           isAvailableForWork: rest.isAvailableForWork ?? false
      };
 };

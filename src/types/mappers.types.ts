@@ -53,6 +53,7 @@ export interface MappedStudentProfile {
      mothersName: string;
      birthDate: Date;
      highSchool: string;
+     highSchoolLocation: string;
      graduationYear: number;
      neptunCode?: string | null;
      major?: MappedMajor | null;
@@ -64,12 +65,14 @@ export interface MappedStudentProfile {
      language?: string | null;
      languageLevel?: string | null;
      location?: MappedLocation | null;
+     motivationLetter?: string | null;
      isAvailableForWork: boolean;
 }
 
 export interface PublicStudentProfile {
      id: string;
      highSchool: string;
+     highSchoolLocation: string;
      graduationYear: number;
      major?: MappedMajor | null;
      studyMode: string;
@@ -77,6 +80,7 @@ export interface PublicStudentProfile {
      isInHighSchool: boolean;
      language?: string | null;
      languageLevel?: string | null;
+     motivationLetter?: string | null;
      isAvailableForWork: boolean;
 }
 
