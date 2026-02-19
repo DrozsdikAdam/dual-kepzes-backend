@@ -48,7 +48,6 @@ export const studentSchema = baseUserSchema.extend({
     languageLevel: z.string().trim().min(1).optional(),
 
     motivationLetter: z.string().trim().max(500, { message: "A motivációs levél maximum 500 karakter lehet." }).optional(),
-    isAvailableForWork: z.boolean().default(false),
 }).superRefine((data, ctx) => {
     // Ha középiskolás, akkor firstChoiceId és secondChoiceId kötelező
     if (data.isInHighSchool) {
@@ -84,15 +83,6 @@ export const studentSchema = baseUserSchema.extend({
                 path: ["languageLevel"]
             });
         }
-    }
-
-    // Ha keres munkát, a motivációs levél kötelező
-    if (data.isAvailableForWork && !data.motivationLetter) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "A motivációs levél megadása kötelező, ha munkát keresel.",
-            path: ["motivationLetter"]
-        });
     }
 });
 
