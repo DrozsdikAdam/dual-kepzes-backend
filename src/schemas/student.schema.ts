@@ -48,12 +48,24 @@ export const StudentUpdateSchema = z.object({
 
 export const MyProfileUpdateSchema = z.object({
     body: studentSchema
+        .extend({
+            isAvailableForWork: z.boolean().optional(),
+        })
         .omit({
             role: true,
             email: true,
             password: true
         })
         .partial()
+        .superRefine((data, ctx) => {
+            if (data.isAvailableForWork && !data.motivationLetter) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "A motivációs levél megadása kötelező, ha munkát keresel.",
+                    path: ["motivationLetter"]
+                });
+            }
+        })
 });
 
 
