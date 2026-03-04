@@ -1,5 +1,5 @@
 import prisma from '../config/prisma';
-import { NotFoundError } from '../errors/AppError';
+import { NotFoundError, ValidationError } from '../errors/AppError';
 import { Role, Location } from '@prisma/client';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 import { prepareLocationData } from '../utils/location.util';
@@ -196,14 +196,24 @@ export class StudentService {
           return updated;
      }
 
-     async toggleAvailableForWork(userId: string) {
+     async toggleAvailableForWork(userId: string, motivationLetter?: string) {
           const user = await prisma.user.findUnique({
                where: { id: userId, role: Role.STUDENT },
-               select: { studentProfile: { select: { isAvailableForWork: true } } }
+               select: { studentProfile: { select: { isAvailableForWork: true, motivationLetter: true } } }
           });
 
           if (!user?.studentProfile) {
                throw new NotFoundError('Hallgatói profil');
+          }
+
+          const newAvailability = !user.studentProfile.isAvailableForWork;
+
+          // Ha elérhetőre váltunk, motivációs levél kötelező
+          if (newAvailability) {
+               const effectiveMotivation = motivationLetter ?? user.studentProfile.motivationLetter;
+               if (!effectiveMotivation) {
+                    throw new ValidationError('A motivációs levél megadása kötelező, ha munkát keresel.');
+               }
           }
 
           return await prisma.user.update({
@@ -211,7 +221,10 @@ export class StudentService {
                data: {
                     studentProfile: {
                          update: {
-                              isAvailableForWork: !user.studentProfile.isAvailableForWork
+                              isAvailableForWork: newAvailability,
+                              motivationLetter: newAvailability
+                                   ? (motivationLetter ?? user.studentProfile.motivationLetter)
+                                   : null
                          }
                     }
                },

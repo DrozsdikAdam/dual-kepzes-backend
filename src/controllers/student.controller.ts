@@ -215,7 +215,8 @@ export const toggleAvailableForWork = async (req: Request, res: Response, next: 
             throw new UnauthorizedError("Nincs azonosítva a felhasználó.");
         }
 
-        const updated = await studentService.toggleAvailableForWork(userId);
+        const { motivationLetter } = req.body || {};
+        const updated = await studentService.toggleAvailableForWork(userId, motivationLetter);
 
         await logAction(req, {
             action: "TOGGLE_AVAILABLE_FOR_WORK",
