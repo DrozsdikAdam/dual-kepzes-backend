@@ -808,6 +808,14 @@ A képzési szakok (Major) kezelése. A hallgatói profil szakválasztáshoz kap
 | `PATCH` | `/:id` | Szak frissítése. | SystemAdmin |
 | `DELETE` | `/:id` | Szak törlése. | SystemAdmin |
 
+### Helyszínek (`/api/locations`)
+
+Az összes céghez tartozó helyszín listázása, a hozzájuk rendelt pozíciók számával.
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Összes céghelyszín listázása (cím, cég, pozíciók száma). | Auth |
+
 ### Cég Adminisztrátorok (`/api/company-admins`)
 
 A cégek adminisztrátorainak kezelése.
@@ -880,4 +888,4 @@ A platform üzemeltetői. Minden végpont `SYSTEM_ADMIN` jogosultságot igényel
 | `PATCH` | `/:id/deactivate` | Felhasználó felfüggesztése. | SystemAdmin |
 
 ---
-**Megjegyzés**: Ez a dokumentáció a projekt 2026-02-11-i állapotát tükrözi. API változtatások esetén kérjük a dokumentáció frissítését.
+**Megjegyzés**: Ez a dokumentáció a projekt 2026-03-11-i állapotát tükrözi. API változtatások esetén kérjük a dokumentáció frissítését.

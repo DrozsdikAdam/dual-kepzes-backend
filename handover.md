@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-02-19 (Email Opt-out, Új regisztrációs végpontok, Student Notification finomítások)  
+> **Utolsó frissítés**: 2026-03-11 (Helyszínek végpont, Location mapper)
 > **Projekt státusz**: Production-ready
 
 ---
@@ -120,6 +120,7 @@ npm run prisma:format
 - **StudentProfile** - Hallgatói profil adatok
 - **CompanyEmployee** - Céges munkavállalók/mentorok
 - **Company** - Cég adatok
+- **Location** - Helyszínek (cégekhez és hallgatói profilokhoz)
 - **Position** - Állásajánlatok/pozíciók
 - **Application** - Jelentkezések
 - **DualPartnership** - Duális partneri kapcsolatok
@@ -350,6 +351,7 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
   - Motivációs levél 500 karakteres limit és feltételes kötelezőség.
   - `highSchoolLocation` kötelező mező lett.
 - **Hallgatói Érdeklődés Végpont**: Dedikált végpont (`POST /api/students/:id/interest`) a hallgató iránti érdeklődés jelzésére (email + belső értesítés).
+- **Helyszínek végpont**: Dedikált végpont (`GET /api/locations`) az összes céghelyszín listázására, beleértve a címet, a cég adatait és a hozzárendelt pozíciók számát. A válasz a `mapLocationWithCompany` mapper függvényen keresztül kerül feldolgozásra.
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
@@ -389,4 +391,4 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 
 ---
 
-> **Megjegyzés**: Ez a dokumentáció a projekt 2026-02-11-i állapotát tükrözi. Kérd az aktualizálását, ha jelentős változások történnek.
+> **Megjegyzés**: Ez a dokumentáció a projekt 2026-03-11-i állapotát tükrözi. Kérd az aktualizálását, ha jelentős változások történnek.
