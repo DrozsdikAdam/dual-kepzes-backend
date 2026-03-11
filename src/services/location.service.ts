@@ -1,4 +1,5 @@
 import prisma from '../config/prisma';
+import { locationSelectDto } from '../dtos/location.dto';
 
 export class LocationService {
      async getAll() {
@@ -6,24 +7,7 @@ export class LocationService {
                where: {
                     companyId: { not: null }
                },
-               select: {
-                    id: true,
-                    country: true,
-                    zipCode: true,
-                    city: true,
-                    address: true,
-                    company: {
-                         select: {
-                              id: true,
-                              name: true
-                         }
-                    },
-                    _count: {
-                         select: {
-                              positions: true
-                         }
-                    }
-               },
+               select: locationSelectDto,
                orderBy: { city: 'asc' }
           });
 
