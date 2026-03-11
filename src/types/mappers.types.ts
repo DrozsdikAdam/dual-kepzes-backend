@@ -14,6 +14,19 @@ export interface MappedLocation {
      address: string;
 }
 
+export interface MappedLocationWithCompany {
+     id: string;
+     country: string;
+     zipCode: string;
+     city: string;
+     address: string;
+     company: {
+          id: string;
+          name: string;
+     } | null;
+     positionCount: number;
+}
+
 export interface MappedCompany {
      id: string;
      name: string;
