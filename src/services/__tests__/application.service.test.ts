@@ -55,7 +55,12 @@ describe('ApplicationService', () => {
           it('should create application successfully', async () => {
                (prisma.position.findUnique as jest.Mock).mockResolvedValue({ id: 'p1', isActive: true });
                (prisma.application.findUnique as jest.Mock).mockResolvedValue(null);
-               (prisma.application.create as jest.Mock).mockResolvedValue({ id: 'a1', status: 'SUBMITTED' });
+               (prisma.application.create as jest.Mock).mockResolvedValue({
+                    id: 'a1',
+                    status: 'SUBMITTED',
+                    position: { title: 'P1', company: { id: 'c1' } },
+                    student: { user: { fullName: 'S1' } }
+               });
 
                const result = await applicationService.apply('s1', 'p1');
                expect(result.id).toBe('a1');
@@ -90,7 +95,12 @@ describe('ApplicationService', () => {
                     position: { companyId: 'company-id-1' }
                });
                (prisma.dualPartnership.findFirst as jest.Mock).mockResolvedValue(null);
-               (prisma.application.update as jest.Mock).mockResolvedValue({ id: 'app1', status: 'ACCEPTED' });
+               (prisma.application.update as jest.Mock).mockResolvedValue({
+                    id: 'app1',
+                    status: 'ACCEPTED',
+                    position: { title: 'P1', company: { id: 'c1', name: 'C1' } },
+                    student: { userId: 'u1' }
+               });
 
                const { ApplicationStatus } = require('@prisma/client');
                

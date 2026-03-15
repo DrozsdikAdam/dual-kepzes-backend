@@ -1,20 +1,22 @@
-import { MaterialService } from '../material.service';
-import { PrismaClient } from '@prisma/client';
-
-const mockPrisma = {
-  materialCompletion: {
+jest.mock('@prisma/client', () => {
+  const mockMaterialCompletion = {
     findUnique: jest.fn(),
     create: jest.fn(),
     findMany: jest.fn(),
     groupBy: jest.fn(),
-  },
-};
-
-jest.mock('@prisma/client', () => {
+  };
   return {
-    PrismaClient: jest.fn(() => mockPrisma)
+    PrismaClient: jest.fn().mockImplementation(() => ({
+      materialCompletion: mockMaterialCompletion,
+    })),
   };
 });
+
+import { MaterialService } from '../material.service';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+const mockPrisma = (prisma as any);
 
 describe('MaterialService', () => {
     
