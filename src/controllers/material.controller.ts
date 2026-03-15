@@ -30,34 +30,31 @@ export const materialController = {
    * Saját tananyag elvégzéseinek letöltése
    */
   async getMyProgress(req: Request, res: Response) {
-      try {
-          const studentProfileId = (req as any).user?.studentProfileId || (req.user as any)?.studentProfileId;
-    
-          if (!studentProfileId) {
-            return res.status(403).json({ message: 'Hozzáférés megtagadva: csak diákok számára elérhető.' });
-          }
+    try {
+      const studentProfileId = (req as any).user?.studentProfileId || (req.user as any)?.studentProfileId;
 
-          const progress = await MaterialService.getStudentProgress(studentProfileId);
-          return res.status(200).json(progress);
-
-      } catch (error) {
-           return res.status(500).json({ message: 'Belső szerverhiba', error: error instanceof Error ? error.message : String(error) });
+      if (!studentProfileId) {
+        return res.status(403).json({ message: 'Hozzáférés megtagadva: csak diákok számára elérhető.' });
       }
+
+      const progress = await MaterialService.getStudentProgress(studentProfileId);
+      return res.status(200).json(progress);
+
+    } catch (error) {
+      return res.status(500).json({ message: 'Belső szerverhiba', error: error instanceof Error ? error.message : String(error) });
+    }
   },
 
   /**
    * Általános statisztikák az elvégzésekről.
    */
   async getStatistics(req: Request, res: Response) {
-      try {
-          // Itt tehetsz be role checket, ha pl csak admin/mentor láthatja. 
-          // Jelenleg mindenkinek visszaadja az összesített eredményt.
-          
-          const stats = await MaterialService.getGeneralStatistics();
-          return res.status(200).json(stats);
-      } catch (error) {
-           return res.status(500).json({ message: 'Belső szerverhiba', error: error instanceof Error ? error.message : String(error) });
-      }
+    try {
+      const stats = await MaterialService.getGeneralStatistics();
+      return res.status(200).json(stats);
+    } catch (error) {
+      return res.status(500).json({ message: 'Belső szerverhiba', error: error instanceof Error ? error.message : String(error) });
+    }
   }
 
 };
