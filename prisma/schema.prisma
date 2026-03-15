@@ -118,8 +118,9 @@ model StudentProfile {
 
   deletedAt DateTime?
 
-  applications Application[]
-  partnerships DualPartnership[]
+  applications        Application[]
+  partnerships        DualPartnership[]
+  materialCompletions MaterialCompletion[]
 }
 
 model CompanyEmployee {
@@ -344,4 +345,24 @@ model News {
   isArchived Boolean   @default(false)
   createdAt  DateTime  @default(now())
   deletedAt  DateTime?
+}
+
+// ---------------------------------------------------------
+// TANANYAGOK (LEARNING MATERIALS)
+// ---------------------------------------------------------
+
+model MaterialCompletion {
+  id String @id @default(uuid())
+
+  materialId String
+
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id])
+
+  isCompleted Boolean @default(true)
+  rating      Int? // Opcionális értékelés (pl. 1-5, vagy 1-10)
+
+  completedAt DateTime @default(now())
+
+  @@unique([studentProfileId, materialId]) // Egy diák egy adott tananyagot csak egyszer végezhet el
 }
