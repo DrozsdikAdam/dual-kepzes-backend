@@ -10,6 +10,7 @@ import {
 } from '@prisma/client';
 import {
      MappedLocation,
+     MappedLocationWithCompany,
      MappedCompany,
      MappedPosition,
      MappedStudentProfile,
@@ -21,6 +22,23 @@ import {
 } from '../types/mappers.types';
 
 type PartialLocation = Partial<Location>;
+
+export const mapLocationWithCompany = (location: (Partial<Location> & {
+     company?: { id: string; name: string } | null,
+     _count?: { positions: number }
+}) | null): MappedLocationWithCompany | null => {
+     if (!location) return null;
+
+     return {
+          id: location.id!,
+          country: location.country || 'Magyarország',
+          zipCode: location.zipCode!,
+          city: location.city!,
+          address: location.address!,
+          company: location.company || null,
+          positionCount: location._count?.positions ?? 0
+     };
+};
 
 export const mapCompany = (company: (Partial<Company> & { location?: PartialLocation[] }) | null): MappedCompany | null => {
      if (!company) return null;

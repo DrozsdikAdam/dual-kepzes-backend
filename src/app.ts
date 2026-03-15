@@ -27,6 +27,7 @@ import newsRoutes from "./routes/news.routes";
 import notificationRoutes from "./routes/notification.routes";
 import dualRoutes from "./routes/dual.routes";
 import majorRoutes from "./routes/major.routes";
+import locationRoutes from "./routes/location.routes";
 
 const app: Application = express();
 app.set("trust proxy", 1);
@@ -55,6 +56,7 @@ app.use("/api/users", genericUserRoutes);
 //company endpoints
 app.use("/api/companies", companyRoutes);
 app.use("/api/jobs", jobRoutes);
+app.use("/api/locations", locationRoutes);
 
 //news endpoints
 app.use("/api/news", newsRoutes);
