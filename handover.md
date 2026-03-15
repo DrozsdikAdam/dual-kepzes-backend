@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-03-11 (Helyszínek végpont, Location mapper)
+> **Utolsó frissítés**: 2026-03-15 (Tananyagok modul, MaterialCompletion)
 > **Projekt státusz**: Production-ready
 
 ---
@@ -127,6 +127,7 @@ npm run prisma:format
 - **Notification** - Értesítések
 - **News** - Hírek/közlemények
 - **AuditLog** - Audit napló
+- **MaterialCompletion** - Tananyag elvégzések és értékelések
 
 ### Felhasználói Szerepkörök (Role enum)
 | Szerepkör | Leírás |
@@ -352,6 +353,10 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
   - `highSchoolLocation` kötelező mező lett.
 - **Hallgatói Érdeklődés Végpont**: Dedikált végpont (`POST /api/students/:id/interest`) a hallgató iránti érdeklődés jelzésére (email + belső értesítés).
 - **Helyszínek végpont**: Dedikált végpont (`GET /api/locations`) az összes céghelyszín listázására, beleértve a címet, a cég adatait és a hozzárendelt pozíciók számát. A válasz a `mapLocationWithCompany` mapper függvényen keresztül kerül feldolgozásra.
+- **Tananyagok (Learning Materials)**: Új modul a tananyagok elvégzésének rögzítésére és statisztikák vezetésére.
+  - Opcionális csillagos értékelés (1-5)
+  - Diák saját előrehaladásának lekérése
+  - Összesített statisztikák adminoknak és mentoroknak
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
@@ -391,4 +396,4 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 
 ---
 
-> **Megjegyzés**: Ez a dokumentáció a projekt 2026-03-11-i állapotát tükrözi. Kérd az aktualizálását, ha jelentős változások történnek.
+> **Megjegyzés**: Ez a dokumentáció a projekt 2026-03-15-i állapotát tükrözi. Kérd az aktualizálását, ha jelentős változások történnek.
