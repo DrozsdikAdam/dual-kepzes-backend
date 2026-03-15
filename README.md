@@ -465,7 +465,11 @@ flowchart TD
     
     Status -->|REJECTED| End1([Application Closed])
     
-    Status -->|ACCEPTED| CreatePartnership[Auto-create Partnership]
+    Status -->|ACCEPTED| CheckActive{Student has active<br/>partnership?}
+    
+    CheckActive -->|Yes| End4([Error: 400 Bad Request])
+    CheckActive -->|No| CreatePartnership[Auto-create Partnership]
+    
     CreatePartnership --> P1[Partnership: PENDING_MENTOR]
     
     P1 --> AssignMentor{Company Assigns Mentor?}
