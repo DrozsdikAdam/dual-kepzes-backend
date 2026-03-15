@@ -177,6 +177,8 @@ router.get("/company", isCompanyEmployee, getMyCompanyApplications)
  *     responses:
  *       200:
  *         description: Application evaluated successfully
+ *       400:
+ *         description: A hallgatónak már van aktív vagy folyamatban lévő duális kapcsolata.
  */
 router.patch("/company/:id/evaluate", isCompanyEmployee, validate(EvaluateApplicationSchema), evaluateApplication)
 

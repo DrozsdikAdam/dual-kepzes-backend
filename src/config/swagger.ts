@@ -63,7 +63,8 @@ const options: swaggerJsdoc.Options = {
                          properties: {
                               status: { type: 'string', enum: ['ACCEPTED', 'REJECTED'] },
                               companyNote: { type: 'string' }
-                         }
+                         },
+                         description: 'A státusz ACCEPTED esetén automatikusan létrejön egy duális partnerség. Ha a hallgatónak már van aktív vagy folyamatban lévő kapcsolata, a rendszer 400 Bad Request hibát dob.'
                     },
                     UpdateEvaluation: {
                          type: 'object',
