@@ -254,6 +254,14 @@ erDiagram
         boolean isImportant
         boolean isArchived
     }
+    MaterialCompletion {
+        string id PK
+        string studentProfileId FK
+        string materialId
+        int rating
+        boolean isCompleted
+        datetime completedAt
+    }
 
     User ||--o| StudentProfile : "has profile"
     User ||--o| CompanyEmployee : "works as"
@@ -274,6 +282,7 @@ erDiagram
     DualPartnership }o--|| CompanyEmployee : "mentored by"
     DualPartnership }o--|| User : "uni supervisor"
     DualPartnership }o--|| Position : "linked to"
+    StudentProfile ||--o{ MaterialCompletion : "completes"
 ```
 
 **Részletes sémát** lásd: `prisma/schema.prisma` vagy Prisma Studio (`npm run prisma:studio`)
@@ -743,6 +752,14 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `PATCH` | `/admin/:id` | Jelentkezés módosítása. | Admin |
 | `POST` | `/submit-with-files` | **[ÚJ]** Jelentkezés CV és motivációs levél fájlok feltöltésével. GDPR-kompatibilis: a fájlok nem kerülnek tárolásra, csak emailben továbbítódnak a céges adminoknak. | Student |
 
+### Tananyagok (`/api/materials`)
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/complete` | Tananyag elvégzésének és értékelésének rögzítése. | Student |
+| `GET` | `/progress` | Saját előrehaladás (elvégzett anyagok) lekérése. | Student |
+| `GET` | `/statistics` | Összesített statisztika a tananyagokról. | Admin/Mentor |
+
 ### Hírek (`/api/news`)
 
 | Metódus | Végpont | Leírás | Jogosultság |
@@ -892,4 +909,4 @@ A platform üzemeltetői. Minden végpont `SYSTEM_ADMIN` jogosultságot igényel
 | `PATCH` | `/:id/deactivate` | Felhasználó felfüggesztése. | SystemAdmin |
 
 ---
-**Megjegyzés**: Ez a dokumentáció a projekt 2026-03-11-i állapotát tükrözi. API változtatások esetén kérjük a dokumentáció frissítését.
+**Megjegyzés**: Ez a dokumentáció a projekt 2026-03-15-i állapotát tükrözi. API változtatások esetén kérjük a dokumentáció frissítését.

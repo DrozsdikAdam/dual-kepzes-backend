@@ -25,7 +25,10 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
         try {
             // Verify user exists in database and is active
             const dbUser = await prisma.user.findUnique({
-                where: { id: user.userId }
+                where: { id: user.userId },
+                include: {
+                    studentProfile: true
+                }
             });
 
             if (!dbUser) {
@@ -42,6 +45,9 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
             }
 
             req.user = user;
+            if (dbUser.studentProfile && req.user) {
+                req.user.studentProfileId = dbUser.studentProfile.id;
+            }
             next();
         } catch (dbError) {
             console.error("Auth middleware db error:", dbError);

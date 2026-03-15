@@ -52,15 +52,20 @@ describe('StudentService', () => {
 
      describe('toggleAvailableForWork', () => {
           it('should toggle availability', async () => {
-               const mockUser = { id: 's1', studentProfile: { isAvailableForWork: false } };
+               const mockUser = { id: 's1', studentProfile: { isAvailableForWork: false, motivationLetter: 'Existing letter' } };
                (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
                (prisma.user.update as jest.Mock).mockResolvedValue({ ...mockUser, studentProfile: { isAvailableForWork: true } });
 
                const result = await studentService.toggleAvailableForWork('s1');
                expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
-                    data: {
-                         studentProfile: { update: { isAvailableForWork: true } }
-                    }
+                    data: expect.objectContaining({
+                         studentProfile: expect.objectContaining({
+                              update: expect.objectContaining({
+                                   isAvailableForWork: true,
+                                   motivationLetter: 'Existing letter'
+                              })
+                         })
+                    })
                }));
           });
      });
