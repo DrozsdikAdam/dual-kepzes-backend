@@ -162,6 +162,24 @@ export class ApplicationService {
 
                // If accepted, create a dual partnership
                if (status === ApplicationStatus.ACCEPTED) {
+                    // Check for existing active or pending partnerships
+                    const activePartnership = await tx.dualPartnership.findFirst({
+                         where: {
+                              studentId: application.studentId,
+                              status: {
+                                   in: [
+                                        PartnershipStatus.PENDING_MENTOR,
+                                        PartnershipStatus.PENDING_UNIVERSITY,
+                                        PartnershipStatus.ACTIVE
+                                   ]
+                              }
+                         }
+                    });
+
+                    if (activePartnership) {
+                         throw new BadRequestError('A hallgatónak már van aktív vagy folyamatban lévő duális kapcsolata.');
+                    }
+
                     await tx.dualPartnership.create({
                          data: {
                               studentId: application.studentId,
