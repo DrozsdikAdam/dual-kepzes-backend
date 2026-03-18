@@ -107,7 +107,7 @@ src/
 ├── middlewares/    # Express middleware-ek (Auth, Validáció, RateLimit)
 ├── routes/         # API végpontok definíciói
 ├── schemas/        # Zod validációs definíciók
-├── services/       # Komplex üzleti logika (opcionális réteg)
+├── services/       # Komplex üzleti logika (opcionális réteg - Auth, Anonymize, stb.)
 ├── utils/          # Segédfüggvények (Logger, Token, Mapper)
 └── app.ts          # Express App inicializálás
 prisma/
@@ -617,6 +617,9 @@ A kritikus műveletek (pl. jelentkezés leadása, pozíció létrehozása) védv
 
 ### 6. Audit és Biztonsági Naplózás
 Minden kritikus esemény és jogosultsági hiba (401, 403) automatikusan naplózásra kerül az adatbázisba, lehetővé téve a biztonsági auditokat és a rendellenes viselkedés észlelését.
+
+### 7. Anonimizáló Szolgáltatás (GDPR)
+A rendszer rendelkezik egy központosított `AnonymizeService`-szel, amely lehetővé teszi a hallgatók, cégek és munkavállalók adatainak végleges anonimizálását. A funkció törli a PII adatokat, miközben az adatbázis integritását (pl. egyedi email kényszer) placeholder értékekkel tartja fenn.
 
 ## Quick Start - API Használat
 
