@@ -160,6 +160,64 @@ export const getInactiveCompanies = async (req: Request, res: Response, next: Ne
      }
 };
 
+export const getPendingCompanies = async (req: Request, res: Response, next: NextFunction) => {
+     try {
+          const params = getPaginationParams(req.query);
+          const result = await companyService.getPending(params);
+          res.json({
+               success: true,
+               data: result.data.map(mapCompany),
+               pagination: result.pagination
+          });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const approveCompany = async (req: Request, res: Response, next: NextFunction) => {
+     try {
+          const { id } = req.params;
+          const updatedCompany = await companyService.approve(id);
+
+          await logAction(req, {
+               action: "APPROVE_COMPANY",
+               entity: "Company",
+               entityId: id,
+               details: { approvedBy: req.user?.userId }
+          });
+
+          res.json({
+               success: true,
+               message: "Cég regisztrációja sikeresen jóváhagyva.",
+               data: mapCompany(updatedCompany)
+          });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const rejectCompany = async (req: Request, res: Response, next: NextFunction) => {
+     try {
+          const { id } = req.params;
+          const updatedCompany = await companyService.reject(id);
+
+          await logAction(req, {
+               action: "REJECT_COMPANY",
+               entity: "Company",
+               entityId: id,
+               details: { rejectedBy: req.user?.userId }
+          });
+
+          res.json({
+               success: true,
+               message: "Cég regisztrációja elutasítva.",
+               data: mapCompany(updatedCompany)
+          });
+     } catch (error) {
+          next(error);
+     }
+};
+
 export const reactivateCompany = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const { id } = req.params;
