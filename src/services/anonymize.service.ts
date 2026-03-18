@@ -59,12 +59,23 @@ export class AnonymizeService {
     }
 
     /**
-     * Anonimizál egy céget és a hozzá tartozó helyszíneket.
+     * Anonimizál egy céget, a hozzá tartozó helyszíneket, pozíciókat és munkavállalókat.
      */
     async anonymizeCompany(companyId: string) {
+        const SALT_ROUNDS = 10;
+        const anonymizedPassword = await bcrypt.hash("ANONYMIZED_COMPANY_USER_123!", SALT_ROUNDS);
+
         return await prisma.$transaction(async (tx) => {
             const company = await tx.company.findUnique({
-                where: { id: companyId }
+                where: { id: companyId },
+                include: {
+                    employees: {
+                        select: { userId: true, id: true }
+                    },
+                    positions: {
+                        select: { id: true }
+                    }
+                }
             });
 
             if (!company) {
@@ -96,7 +107,43 @@ export class AnonymizeService {
                 }
             });
 
-            return { success: true, message: "A cég sikeresen anonimizálva." };
+            // 3. Pozíciók (Position) anonimizálása
+            await tx.position.updateMany({
+                where: { companyId },
+                data: {
+                    title: "Anonimizált Pozíció",
+                    description: "Pozíció leírása törölve.",
+                    isActive: false,
+                    deletedAt: new Date()
+                }
+            });
+
+            // 4. Munkavállalók (User és CompanyEmployee) anonimizálása
+            for (const employee of company.employees) {
+                // User anonimizálása
+                await tx.user.update({
+                    where: { id: employee.userId },
+                    data: {
+                        email: `anonymized_emp_${employee.userId.substring(0, 8)}@deleted.com`,
+                        fullName: "Anonimizált Munkavállaló",
+                        phoneNumber: "00000000000",
+                        password: anonymizedPassword,
+                        isActive: false,
+                        deletedAt: new Date()
+                    }
+                });
+
+                // CompanyEmployee rekord törlése/jelölése (ha van deletedAt a modellben)
+                await tx.companyEmployee.update({
+                    where: { id: employee.id },
+                    data: {
+                        jobTitle: "Anonimizált munkakör",
+                        deletedAt: new Date()
+                    }
+                });
+            }
+
+            return { success: true, message: "A cég és minden kapcsolódó adat sikeresen anonimizálva." };
         });
     }
 }
