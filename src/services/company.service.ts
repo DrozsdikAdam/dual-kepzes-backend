@@ -172,6 +172,8 @@ export class CompanyService {
                          location: {
                               create: locations ? locations.map(prepareLocationData) : []
                          },
+                         status: 'PENDING',
+                         isActive: false
                     },
                     select: this.companySelect
                });
@@ -183,7 +185,8 @@ export class CompanyService {
                          fullName: adminInput.fullName,
                          phoneNumber: adminInput.phoneNumber,
                          role: Role.COMPANY_ADMIN,
-                         isEmailVerified: true
+                         isEmailVerified: true,
+                         isActive: false
                     }
                });
 
