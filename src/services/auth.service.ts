@@ -141,7 +141,19 @@ export class AuthService {
 
      async login(data: LoginInput) {
           const user = await prisma.user.findUnique({
-               where: { email: data.email }
+               where: { email: data.email },
+               include: {
+                    companyEmployee: {
+                         include: {
+                              company: {
+                                   select: {
+                                        status: true,
+                                        name: true
+                                   }
+                              }
+                         }
+                    }
+               }
           });
 
           if (!user) {
@@ -157,11 +169,15 @@ export class AuthService {
                throw new UnauthorizedError('A felhasználói fiók inaktív.');
           }
 
-          /*
-          if (process.env.NODE_ENV !== 'development' && !user.isEmailVerified) {
-               throw new UnauthorizedError('Kérjük, előbb erősítsd meg az email címedet.');
+          // Check company status if applicable
+          if (user.companyEmployee?.company) {
+               const companyStatus = user.companyEmployee.company.status;
+               if (companyStatus === 'PENDING') {
+                    throw new UnauthorizedError(`A(z) ${user.companyEmployee.company.name} cég még adminisztrátori jóváhagyásra vár.`);
+               } else if (companyStatus === 'REJECTED') {
+                    throw new UnauthorizedError(`A(z) ${user.companyEmployee.company.name} cég regisztrációja elutasításra került.`);
+               }
           }
-          */
 
           const token = generateToken(user.id, user.role);
 
