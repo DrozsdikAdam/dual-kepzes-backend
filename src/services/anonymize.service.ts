@@ -72,6 +72,17 @@ export class AnonymizeService {
                 }
             });
 
+            // 6. Értesítések (Notification) anonimizálása
+            await tx.notification.updateMany({
+                where: { userId: profile.userId },
+                data: {
+                    title: "Értesítés anonimizálva",
+                    message: "Az értesítés tartalma törlésre került a felhasználó anonimizálása miatt.",
+                    isRead: true,
+                    deletedAt: new Date()
+                }
+            });
+
             return { success: true, message: "A hallgatói profil és kapcsolódó adatok sikeresen anonimizálva." };
         });
     }
@@ -165,6 +176,17 @@ export class AnonymizeService {
                     where: { mentorId: employee.id },
                     data: {
                         contractNumber: "TÖRÖLT_SZERZŐDÉS",
+                        deletedAt: new Date()
+                    }
+                });
+
+                // Értesítések anonimizálása
+                await tx.notification.updateMany({
+                    where: { userId: employee.userId },
+                    data: {
+                        title: "Értesítés anonimizálva",
+                        message: "Az értesítés tartalma törlésre került a felhasználó anonimizálása miatt.",
+                        isRead: true,
                         deletedAt: new Date()
                     }
                 });
