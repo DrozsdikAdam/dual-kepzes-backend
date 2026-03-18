@@ -54,7 +54,25 @@ export class AnonymizeService {
                 }
             });
 
-            return { success: true, message: "A hallgatói profil sikeresen anonimizálva." };
+            // 4. Jelentkezések (Application) anonimizálása
+            await tx.application.updateMany({
+                where: { studentId: studentProfileId },
+                data: {
+                    companyNote: "Megjegyzés törölve.",
+                    deletedAt: new Date()
+                }
+            });
+
+            // 5. Duális partnerségek (DualPartnership) anonimizálása
+            await tx.dualPartnership.updateMany({
+                where: { studentId: studentProfileId },
+                data: {
+                    contractNumber: "TÖRÖLT_SZERZŐDÉS",
+                    deletedAt: new Date()
+                }
+            });
+
+            return { success: true, message: "A hallgatói profil és kapcsolódó adatok sikeresen anonimizálva." };
         });
     }
 
@@ -141,9 +159,33 @@ export class AnonymizeService {
                         deletedAt: new Date()
                     }
                 });
+
+                // Munkavállalóhoz tartozó aktív partnerségek anonimizálása
+                await tx.dualPartnership.updateMany({
+                    where: { mentorId: employee.id },
+                    data: {
+                        contractNumber: "TÖRÖLT_SZERZŐDÉS",
+                        deletedAt: new Date()
+                    }
+                });
             }
 
-            return { success: true, message: "A cég és minden kapcsolódó adat sikeresen anonimizálva." };
+            return { success: true, message: "A cég és minden kapcsolódó adat (munkavállalók, pozíciók, partnerségek) sikeresen anonimizálva." };
+        });
+    }
+
+    /**
+     * Anonimizál egy konkrét pozíciót.
+     */
+    async anonymizePosition(positionId: string) {
+        return await prisma.position.update({
+            where: { id: positionId },
+            data: {
+                title: "Anonimizált Pozíció",
+                description: "Pozíció leírása törölve.",
+                isActive: false,
+                deletedAt: new Date()
+            }
         });
     }
 }
