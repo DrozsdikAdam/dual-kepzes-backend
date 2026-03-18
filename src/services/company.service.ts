@@ -37,7 +37,11 @@ export class CompanyService {
 
      async getAll(params: Required<PaginationParams>) {
           const { skip, take } = getPrismaSkipTake(params);
-          const where = { deletedAt: null };
+          const where = {
+               isActive: true,
+               status: 'APPROVED' as const,
+               deletedAt: null
+          };
 
           return await paginate(
                params,
@@ -137,6 +141,8 @@ export class CompanyService {
                     location: {
                          create: locations ? locations.map(prepareLocationData) : []
                     },
+                    status: 'APPROVED',
+                    isActive: true
                },
                select: this.companySelect
           });
@@ -272,6 +278,7 @@ export class CompanyService {
           const { skip, take } = getPrismaSkipTake(params);
           const where = {
                isActive: false,
+               status: 'APPROVED' as const,
                deletedAt: null
           };
 
@@ -430,6 +437,7 @@ export class CompanyService {
           const { skip, take } = getPrismaSkipTake(params);
           const where = {
                isActive: true,
+               status: 'APPROVED' as const,
                hasOwnApplication: true,
                deletedAt: null
           };
