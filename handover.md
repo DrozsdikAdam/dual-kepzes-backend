@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-03-15 (Tananyagok modul, MaterialCompletion)
+> **Utolsó frissítés**: 2026-03-18 (Anonimizáló rendszer, AnonymizeService)
 > **Projekt státusz**: Production-ready
 
 ---
@@ -362,6 +362,10 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
   - Rendszeradminisztrátori jóváhagyás szükséges az aktiváláshoz és a belépéshez.
   - Új admin felület végpontok: `/api/companies/pending`, `/approve`, `/reject`.
   - A bejelentkezés (AuthService) ellenőrzi a cég státuszát.
+- **Anonimizáló Rendszer (PII Scrubbing)**:
+  - Központosított `AnonymizeService` a hallgatók, cégek és munkavállalók adatainak törlésére.
+  - Az összes kapcsolódó entitás (Jelentkezések, Partnerségek, Értesítések, Helyszínek) automatikus anonimizálása.
+  - Placeholder alapú, nulla-függőségű implementáció.
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
