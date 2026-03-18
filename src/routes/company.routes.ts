@@ -4,6 +4,9 @@ import { requireRole } from "../middlewares/auth.middleware";
 import { Role } from "@prisma/client";
 import {
      getInactiveCompanies,
+     getPendingCompanies,
+     approveCompany,
+     rejectCompany,
      reactivateCompany,
      deactivateCompany,
      getAllCompanies,
@@ -86,6 +89,20 @@ router.use(authenticateToken);
  *         description: List of inactive companies
  */
 router.get("/inactive", isSystemAdmin, getInactiveCompanies);
+
+/**
+ * @swagger
+ * /api/companies/pending:
+ *   get:
+ *     summary: List companies pending approval (Admin)
+ *     tags: [Companies]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of pending companies
+ */
+router.get("/pending", isSystemAdmin, getPendingCompanies);
 
 /**
  * @swagger
@@ -256,5 +273,45 @@ router.patch("/:id/reactivate", isSystemAdmin, reactivateCompany);
  *         description: Company deactivated successfully
  */
 router.patch("/:id/deactivate", isSystemAdmin, deactivateCompany);
+
+/**
+ * @swagger
+ * /api/companies/{id}/approve:
+ *   patch:
+ *     summary: Approve a pending company registration (Admin)
+ *     tags: [Companies]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Company approved successfully
+ */
+router.patch("/:id/approve", isSystemAdmin, approveCompany);
+
+/**
+ * @swagger
+ * /api/companies/{id}/reject:
+ *   patch:
+ *     summary: Reject a pending company registration (Admin)
+ *     tags: [Companies]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Company registration rejected
+ */
+router.patch("/:id/reject", isSystemAdmin, rejectCompany);
 
 export default router;

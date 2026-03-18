@@ -47,6 +47,12 @@ enum PartnershipStatus {
   TERMINATED
 }
 
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 // ---------------------------------------------------------
 // FELHASZNÁLÓK ÉS PROFILOK
 // ---------------------------------------------------------
@@ -194,7 +200,8 @@ model Company {
 
   hasOwnApplication Boolean @default(false)
 
-  isActive  Boolean   @default(true)
+  status    RegistrationStatus @default(PENDING)
+  isActive  Boolean            @default(true)
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
   deletedAt DateTime?
