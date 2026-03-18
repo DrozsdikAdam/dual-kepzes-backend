@@ -357,6 +357,11 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
   - Opcionális csillagos értékelés (1-5)
   - Diák saját előrehaladásának lekérése
   - Összesített statisztikák adminoknak és mentoroknak
+- **Cég jóváhagyási folyamat**:
+  - Az új cégek regisztráció után `PENDING` státuszba kerülnek és inaktívak.
+  - Rendszeradminisztrátori jóváhagyás szükséges az aktiváláshoz és a belépéshez.
+  - Új admin felület végpontok: `/api/companies/pending`, `/approve`, `/reject`.
+  - A bejelentkezés (AuthService) ellenőrzi a cég státuszát.
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)

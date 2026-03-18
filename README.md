@@ -139,7 +139,7 @@ A listázó végpontok egységes válaszstruktúrát és lekérdezési paraméte
 |:----------|:-------|:-------------------|
 | `STUDENT` | Hallgató | Saját profil, jelentkezések, partnerségek megtekintése, **egyetemi profilra váltás**. |
 | `MENTOR` | Céges munkavállaló/Mentor | Cég pozíciói, jelentkezések megtekintése, mentor funkciók. |
-| `COMPANY_ADMIN` | Cégadmin | Teljes cégkezelés, jelentkezések értékelése, pozíciók és munkavállalók kezelése. |
+| `COMPANY_ADMIN` | Cégadmin | Teljes cégkezelés, jelentkezések értékelése, pozíciók és munkavállalók kezelése. (Regisztráció után rendszeradminisztrátori jóváhagyásra vár). |
 | `UNIVERSITY_USER` | Egyetemi kapcsolattartó | Partnerségek jóváhagyása, hallgatók felügyelete. |
 | `SYSTEM_ADMIN` | Rendszergazda | Teljes rendszer adminisztráció, minden entitás kezelése. (Email policy: Csak biztonsági emaileket kap). |
 
@@ -185,6 +185,7 @@ erDiagram
         string contactEmail
         string website
         boolean hasOwnApplication
+        RegistrationStatus status
         boolean isActive
     }
     CompanyEmployee {
@@ -392,26 +393,21 @@ sequenceDiagram
         DB-->>API: Email already registered
         API-->>User: 409 Conflict
     else New user
-        API->>API: Hash password (bcrypt)
-        API->>DB: Create new user
-        DB-->>API: User created
-        API->>API: Send verification email
-        API-->>User: 201 Created (Verification required)
+        API->>DB: Hash password (bcrypt)
+        API->>DB: Create new user & company (status: PENDING)
+        DB-->>API: Created (Inactive)
+        API->>API: Notify System Admins
+        API-->>User: 201 Created (Approval required)
     end
 
-    User->>API: POST /api/auth/verify-email (token)
-    API->>DB: Check token & verify user
-    DB-->>API: User verified
-    API-->>User: 200 OK
-
     User->>API: POST /api/auth/login (email, password)
-    API->>DB: Find user by email
-    DB-->>API: User data
-    API->>API: Compare password hash
+    API->>DB: Find user by email & check company status
     
-    alt Password invalid
-        API-->>User: 401 Unauthorized
-    else Password valid
+    alt Company PENDING/REJECTED
+        API-->>User: 401 Unauthorized (Waiting for approval)
+    else Company APPROVED
+        API->>DB: Verify password & active status
+        DB-->>API: Valid
         API->>JWT: Generate token (userId, role)
         JWT-->>API: JWT Token
         API-->>User: 200 OK + Token
@@ -715,13 +711,16 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `GET` | `/` | Aktív cégek listázása. | Auth |
 | `POST` | `/` | Új cég létrehozása. | SystemAdmin |
 | `POST` | `/with-admin` | Új cég és hozzá tartozó cégadmin létrehozása egy lépésben. | Publikus |
-| `GET` | `/inactive` | Inaktív cégek listázása. | SystemAdmin |
+| `GET` | `/inactive` | Inaktív (jóváhagyott, de deaktivált) cégek listázása. | SystemAdmin |
+| `GET` | `/pending` | Jóváhagyásra váró cégek listázása. | SystemAdmin |
 | `GET` | `/own-application` | Saját jelentkezési felülettel rendelkező cégek listázása. | Auth |
 | `GET` | `/:id` | Cég részletei. | Auth |
 | `PATCH` | `/:id` | Cég adatainak frissítése. | CompanyAdmin / SystemAdmin |
 | `DELETE` | `/:id` | Cég törlése (Soft delete). | SystemAdmin |
 | `PATCH` | `/:id/reactivate` | Cég újraaktiválása. | SystemAdmin |
 | `PATCH` | `/:id/deactivate` | Cég inaktiválása. | SystemAdmin |
+| `PATCH` | `/:id/approve` | Cég regisztrációjának jóváhagyása. | SystemAdmin |
+| `PATCH` | `/:id/reject` | Cég regisztrációjának elutasítása. | SystemAdmin |
 
 ### Állások / Pozíciók (`/api/jobs/positions`)
 

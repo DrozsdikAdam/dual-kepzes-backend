@@ -5,7 +5,9 @@
 ## 🛡️ Rendszerszintű Adminisztráció
 - **Felhasználók kezelése**: Bármely felhasználó adatait módosíthatja, inaktiválhatja vagy törölheti őket.
 - **Cégek kezelése**: 
-    - Új cégek és cégadminok létrehozása.
+    - Új cégek és cégadminok létrehozása (automatikusan jóváhagyott).
+    - **Cég jóváhagyás**: A regisztrált cégek ellenőrzése a "Függőben lévő cégek" (`/pending`) listában.
+    - Jóváhagyás (`/approve`) vagy elutasítás (`/reject`) kezelése.
     - Cégek aktiválása/deaktiválása és módosítása.
 - **Audit Napló**: Bármikor visszakövetheti, hogy ki, mikor és milyen műveletet végzett a rendszerben.
 - **Email beállítások**: Kezelheti a felhasználók email fogadási beállításait (`isEmailEnabled`).

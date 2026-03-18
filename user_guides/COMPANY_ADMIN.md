@@ -2,6 +2,9 @@
 
 Ez az útmutató a cégadminisztrátorok számára készült, akik a teljes vállalati jelenlétet kezelik a rendszerben.
 
+> [!IMPORTANT]
+> **Regisztráció utáni jóváhagyás**: Az új cégregisztrációk alapértelmezetten inaktívak. A rendszeradminisztrátornak jóvá kell hagynia a regisztrációt, mielőtt bárki bejelentkezhetne a cég nevében. A jóváhagyásról értesítést fog kapni.
+
 ## 🏗️ Cégkezelés
 - **Cégprofil**: Karbantarthatja a cég adatait (adószám, weboldal, elérhetőségek).
 - **Helyszínek**: Létrehozhat és kezelhet különböző telephelyeket a céghez.
