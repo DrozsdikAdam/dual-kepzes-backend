@@ -288,6 +288,91 @@ export class CompanyService {
           );
      }
 
+     async getPending(params: Required<PaginationParams>) {
+          const { skip, take } = getPrismaSkipTake(params);
+          const where = {
+               status: 'PENDING' as const,
+               deletedAt: null
+          };
+
+          return await paginate(
+               params,
+               prisma.company.findMany({
+                    where,
+                    select: this.companySelect,
+                    orderBy: { createdAt: "desc" as const },
+                    skip,
+                    take
+               }),
+               prisma.company.count({ where })
+          );
+     }
+
+     async approve(id: string) {
+          const company = await prisma.company.findUnique({
+               where: { id },
+               include: { employees: true }
+          });
+
+          if (!company) throw new NotFoundError('Cég');
+
+          return await prisma.$transaction(async (tx) => {
+               // Activate company
+               const updatedCompany = await tx.company.update({
+                    where: { id },
+                    data: {
+                         status: 'APPROVED',
+                         isActive: true
+                    },
+                    select: this.companySelect
+               });
+
+               // Activate company employees (admins/mentors)
+               await tx.user.updateMany({
+                    where: {
+                         companyEmployee: {
+                              companyId: id
+                         }
+                    },
+                    data: { isActive: true }
+               });
+
+               // Notifications
+               notifySystemAdmins({
+                    title: "Cég jóváhagyva",
+                    message: `A(z) ${updatedCompany.name} cég regisztrációja jóváhagyásra került.`,
+                    type: NOTIFICATION_TYPES.COMPANY_STATUS
+               }).catch(err => console.error('[CompanyService.approve] Admin notification error:', err));
+
+               return updatedCompany;
+          });
+     }
+
+     async reject(id: string) {
+          const company = await prisma.company.findUnique({
+               where: { id }
+          });
+
+          if (!company) throw new NotFoundError('Cég');
+
+          const updated = await prisma.company.update({
+               where: { id },
+               data: {
+                    status: 'REJECTED',
+                    isActive: false
+               },
+               select: this.companySelect
+          });
+
+          notifySystemAdmins({
+               title: "Cég elutasítva",
+               message: `A(z) ${updated.name} cég regisztrációja elutasításra került.`,
+               type: NOTIFICATION_TYPES.COMPANY_STATUS
+          }).catch(err => console.error('[CompanyService.reject] Admin notification error:', err));
+
+          return updated;
+     }
+
      async setStatus(id: string, isActive: boolean) {
           const company = await prisma.company.findFirst({
                where: { id, deletedAt: null }
