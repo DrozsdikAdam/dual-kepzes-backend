@@ -32,7 +32,10 @@ export class CompanyService {
           hasOwnApplication: true,
           isActive: true,
           createdAt: true,
-          deletedAt: true
+          deletedAt: true,
+          images: {
+               orderBy: { order: 'asc' as const }
+          }
      };
 
      async getAll(params: Required<PaginationParams>) {
