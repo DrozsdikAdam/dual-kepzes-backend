@@ -128,6 +128,8 @@ npm run prisma:format
 - **News** - Hírek/közlemények
 - **AuditLog** - Audit napló
 - **MaterialCompletion** - Tananyag elvégzések és értékelések
+- **GalleryGroup** / **GalleryImage** - Rendszerszintű tematikus galéria albumok és optimalizált képek.
+- **CompanyImage** - Cégek szabadon feltöltött galériaképei.
 
 ### Felhasználói Szerepkörök (Role enum)
 | Szerepkör | Leírás |
@@ -299,6 +301,7 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - Profil szerkesztés (Hallgatói és Céges)
 - Szűrés duális/nem duális pozíciókra
 - Alapvető statisztikák
+- **Képkezelő Galéria Rendszer (Céges és Globális)**: Lehetőséget ad a Rendszeradminoknak tematikus képgalériák publikálására, a Cégadminok számára pedig az irodai/csapatképek menedzselésére. A feltöltés mögött robusztus middleware áll, amely `sharp` segítségével a RAM-ban átméretezi és modern `.webp` formátumra tömöríti a fájlokat, garantálva az extra-gyors betöltést és alacsony lemezterület-fogyasztást.
 - **GDPR-kompatibilis fájlfeltöltés** (CV kötelező, motivációs levél opcionális)
   - Fájlok csak memóriában, nem kerülnek tárolásra
   - Automatikus továbbítás céges adminoknak emailben
