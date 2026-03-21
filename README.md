@@ -528,6 +528,33 @@ sequenceDiagram
 
 > **GDPR megfelelőség**: A fájlok csak a memóriában (RAM) tárolódnak a feldolgozás idejére. Az email küldés után a JavaScript garbage collection automatikusan törli a buffer-eket. Semmilyen fájl nem kerül lemezre vagy adatbázisba.
 
+## Optimalizált Képfeltöltési és Galéria Folyamat
+
+A rendszer két független képgalériát biztosít: Rendszerszintű "Albumokat" a fő adminisztrátornak, és dedikált Céges galériákat a partnereknek. Mivel ezek a képek minden felhasználó (publikum) számára letölthetővé válnak a frontendről, a feltöltés egy szigorú és teljesítmény-optimalizált (memória -> libvips C++ -> lemez) folyamaton megy keresztül a `sharp` és `multer` könyvtárak alkalmazásával.
+
+```mermaid
+sequenceDiagram
+    participant C as Kliens (Böngésző)
+    participant MW as Multer Middleware
+    participant U as Kép optimalizáló (Sharp)
+    participant FS as Helyi fájlrendszer
+    participant S as Controller & Service
+    participant DB as PostgreSQL (Prisma)
+
+    C->>MW: POST (multipart/form-data) kép
+    MW->>MW: Kiterjesztés és méret (max 10MB) ellenőrzése
+    MW->>U: Fájl átadása memóriapufferként
+    U->>U: C++ (libvips) átméretezés (max 1920px width)
+    U->>U: Tömörítés és .webp formátumba konvertálás
+    U->>FS: Optimalizált fájl mentése az uploads/ mappába
+    FS-->>S: random_uuid.webp fájlnév és relatív URL
+    S->>DB: Kép adatainak és elérhetőségének rögzítése
+    DB-->>S: Rekord létrehozva
+    S->>C: 201 Created (Kép URL)
+```
+
+> **Miért így csináljuk? Mi történik és miért?** Ezzel a folyamattal biztosítjuk, hogy az esetenként hatalmas méretű és felbontású (akár 10 MB-os) fájlok letisztított és web-barát tömörítésű (`.webp`) képekké legyenek konvertálva még a fizikai lementés előtt (kb. 100-300KB-os méretűre). Ez drasztikusan lecsökkenti a szerveren szükséges tárhelyigényt (A Render környezetében különösen spórolva a szűkös Storage hellyel), meggátolja a képekkel hordozható esetleges memóriavírusok lemezre kerülését, és biztosítja, hogy a böngészők a lehető leggyorsabban betöltsék a képeket, jelentős mobiladat-forgalmat is megtakarítva a végfelhasználóknak.
+
 ## Deployment Architecture
 
 Éles környezet (Railway) architektúrája:
@@ -775,6 +802,26 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `PATCH` | `/admin/:id/archive` | Hír archiválása. | SystemAdmin |
 | `PATCH` | `/admin/:id/unarchive` | Hír visszaállítása. | SystemAdmin |
 | `DELETE` | `/admin/:id` | Hír végleges törlése vagy soft delete. | SystemAdmin |
+
+### Rendszerszintű Galéria (`/api/galleries`)
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Nyilvános képcsoportok (albumok) és bennük lévő képeik lekérése. | Publikus |
+| `POST` | `/` | Új üres képcsoport létrehozása (pl. "Rendezvény 2026"). | SystemAdmin |
+| `POST` | `/:groupId/images` | Kép feltöltése és optimalizálása (`sharp`) egy létező csoportba. | SystemAdmin |
+| `DELETE` | `/:groupId` | Egész képcsoport és a benne lévő képek törlése a szerverről. | SystemAdmin |
+| `DELETE` | `/images/:imageId` | Egyedi kép törlése egy csoportból (fizikailag is törlődik). | SystemAdmin |
+
+### Céges Képek (`/api/companies/:companyId/images`)
+
+A cégek saját bemutató képeinek (iroda, csapat) kezelésére. Végpontok a `Company` routerbe vannak beágyazva felülről.
+
+| Metódus | Végpont | Leírás | Jogosultság |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Egy konkrét cég összes regisztrált képének lekérése. | Publikus |
+| `POST` | `/` | Új kép feltöltése és automatikus formátum optimalizálása. | CompanyAdmin |
+| `DELETE` | `/:imageId` | Kép törlése a cég galériájából. | CompanyAdmin |
 
 ### Értesítések (`/api/notifications`)
 
