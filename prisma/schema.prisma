@@ -202,14 +202,15 @@ model Company {
 
   status    RegistrationStatus @default(PENDING)
   isActive  Boolean            @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  createdAt DateTime           @default(now())
+  updatedAt DateTime?          @updatedAt
   deletedAt DateTime?
 
   employees CompanyEmployee[]
   positions Position[]
 
   location Location[]
+  images   CompanyImage[]
 }
 
 model Position {
@@ -372,4 +373,47 @@ model MaterialCompletion {
   completedAt DateTime @default(now())
 
   @@unique([studentProfileId, materialId]) // Egy diák egy adott tananyagot csak egyszer végezhet el
+}
+
+// ---------------------------------------------------------
+// GALÉRIÁK ÉS KÉPEK
+// ---------------------------------------------------------
+
+model GalleryGroup {
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+
+  images GalleryImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GalleryImage {
+  id             String       @id @default(uuid())
+  galleryGroupId String
+  galleryGroup   GalleryGroup @relation(fields: [galleryGroupId], references: [id], onDelete: Cascade)
+
+  url      String // Fájl relatív elérhetősége / uploads/...
+  publicId String? // felhő alapú tárolás esetén a public ID
+  caption  String?
+  order    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CompanyImage {
+  id        String  @id @default(uuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  url      String
+  publicId String?
+  caption  String?
+  order    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
