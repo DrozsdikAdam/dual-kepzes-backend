@@ -29,6 +29,8 @@ import dualRoutes from "./routes/dual.routes";
 import majorRoutes from "./routes/major.routes";
 import locationRoutes from "./routes/location.routes";
 import materialRoutes from "./routes/material.routes";
+import galleryRoutes from "./routes/gallery.routes";
+import companyImageRoutes from "./routes/companyImage.routes";
 
 const app: Application = express();
 app.set("trust proxy", 1);
@@ -56,6 +58,8 @@ app.use("/api/users", genericUserRoutes);
 
 //company endpoints
 app.use("/api/companies", companyRoutes);
+// A company router alá nesteljük be a companyImages-t
+app.use("/api/companies/:companyId/images", companyImageRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/locations", locationRoutes);
 
@@ -76,6 +80,9 @@ app.use("/api/majors", majorRoutes);
 
 //material endpoints
 app.use("/api/materials", materialRoutes);
+
+//gallery endpoints
+app.use("/api/galleries", galleryRoutes);
 
 // Test Route
 app.get("/", (req: Request, res: Response) => {
