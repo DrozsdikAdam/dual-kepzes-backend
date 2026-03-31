@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-03-18 (Anonimizáló rendszer, AnonymizeService)
+> **Utolsó frissítés**: 2026-03-31 (Képkezelés S3 integráció, Supabase Storage)
 > **Projekt státusz**: Production-ready
 
 ---
@@ -83,6 +83,16 @@ REDIS_HOST="localhost"
 REDIS_PORT=6379
 REDIS_PASSWORD="optional_password"
 REDIS_USERNAME="optional_username"
+
+### Képkezelés (S3)
+```env
+SUPABASE_S3_REGION="eu-central-1"
+SUPABASE_S3_ENDPOINT="https://txpkjkutdzholuwatpot.supabase.co/storage/v1/s3"
+SUPABASE_S3_ACCESS_KEY_ID="your_access_key"
+SUPABASE_S3_SECRET_ACCESS_KEY="your_secret_key"
+SUPABASE_S3_BUCKET_NAME="ImageBucket"
+SUPABASE_PUBLIC_URL="https://txpkjkutdzholuwatpot.supabase.co/storage/v1/object/public"
+```
 ```
 
 > **Megjegyzés**: Ha nincs Redis konfigurálva, az email küldés szinkron módon vagy mock-olva működik.
@@ -244,6 +254,8 @@ npm run dev
 | `npm run test` | Jest tesztek futtatása |
 | `npm run lint` | ESLint ellenőrzés |
 | `npm run format` | Prettier formázás |
+| `npx tsx scripts/test-image-upload.ts` | Képfeltöltés tesztelése (admin) |
+| `npx tsx scripts/test-image-delete.ts <ID>` | Kép törlése ID alapján |
 
 ---
 
@@ -301,7 +313,7 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - Profil szerkesztés (Hallgatói és Céges)
 - Szűrés duális/nem duális pozíciókra
 - Alapvető statisztikák
-- **Képkezelő Galéria Rendszer (Céges és Globális)**: Lehetőséget ad a Rendszeradminoknak tematikus képgalériák publikálására, a Cégadminok számára pedig az irodai/csapatképek menedzselésére. A feltöltés mögött robusztus middleware áll, amely `sharp` segítségével a RAM-ban átméretezi és modern `.webp` formátumra tömöríti a fájlokat, garantálva az extra-gyors betöltést és alacsony lemezterület-fogyasztást.
+- **Képkezelő Galéria Rendszer (S3 Integráció)**: A korábbi lokális tárolásról a rendszer átállt **S3 (Supabase Storage)** alapú megoldásra. A feltöltés mögött robusztus middleware áll, amely `sharp` segítségével a RAM-ban átméretezi és modern `.webp` formátumre tömöríti a fájlokat, majd feltölti a felhőbe. Ez garantálja a korlátlan skálázhatóságot és a gyors betöltést a CDN-en keresztül.
 - **GDPR-kompatibilis fájlfeltöltés** (CV kötelező, motivációs levél opcionális)
   - Fájlok csak memóriában, nem kerülnek tárolásra
   - Automatikus továbbítás céges adminoknak emailben
