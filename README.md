@@ -65,7 +65,15 @@ A fejlesztői környezet futtatásához szükséges szoftverek:
     # Redis (Opcionális, BullMQ-hoz)
     REDIS_HOST="localhost"
     REDIS_PORT=6379
-    REDIS_ENABLED="false" # Állítsd true-ra a háttérfolyamatok engedélyezéséhez
+    REDIS_ENABLED="false"
+
+    # Supabase S3 (Képkezelés)
+    SUPABASE_S3_REGION="eu-central-1"
+    SUPABASE_S3_ENDPOINT="https://txpkjkutdzholuwatpot.supabase.co/storage/v1/s3"
+    SUPABASE_S3_ACCESS_KEY_ID="your_access_key"
+    SUPABASE_S3_SECRET_ACCESS_KEY="your_secret_key"
+    SUPABASE_S3_BUCKET_NAME="ImageBucket"
+    SUPABASE_PUBLIC_URL="https://txpkjkutdzholuwatpot.supabase.co/storage/v1/object/public"
     ```
 
 
@@ -96,6 +104,8 @@ A `package.json`-ben definiált főbb parancsok:
 | `npm run test` | Unit és integrációs tesztek futtatása. |
 | `npm run lint` | Kódminőség ellenőrzése (ESLint v9). |
 | `npm run format` | Kód automatikus formázása (Prettier). |
+| `npx tsx scripts/test-image-upload.ts` | **[ÚJ]** Képfeltöltés tesztelése localhoston (admin profil). |
+| `npx tsx scripts/test-image-delete.ts <ID>` | **[ÚJ]** Kép törlésének tesztelése ID alapján. |
 | `npx prisma db seed` | Adatbázis feltöltése tesztadatokkal (`prisma/seed.ts`). |
 
 ## Projekt Struktúra
@@ -528,16 +538,16 @@ sequenceDiagram
 
 > **GDPR megfelelőség**: A fájlok csak a memóriában (RAM) tárolódnak a feldolgozás idejére. Az email küldés után a JavaScript garbage collection automatikusan törli a buffer-eket. Semmilyen fájl nem kerül lemezre vagy adatbázisba.
 
-## Optimalizált Képfeltöltési és Galéria Folyamat
+## Optimalizált Képfeltöltési és Galéria Folyamat (S3 / Supabase)
 
-A rendszer két független képgalériát biztosít: Rendszerszintű "Albumokat" a fő adminisztrátornak, és dedikált Céges galériákat a partnereknek. Mivel ezek a képek minden felhasználó (publikum) számára letölthetővé válnak a frontendről, a feltöltés egy szigorú és teljesítmény-optimalizált (memória -> libvips C++ -> lemez) folyamaton megy keresztül a `sharp` és `multer` könyvtárak alkalmazásával.
+A rendszer két független képgalériát biztosít: Rendszerszintű "Albumokat" a fő adminisztrátornak, és dedikált Céges galériákat a partnereknek. Mivel ezek a képek minden felhasználó (publikum) számára letölthetővé válnak a frontendről, a feltöltés egy szigorú és teljesítmény-optimalizált (memória -> libvips C++ -> S3 Storage) folyamaton megy keresztül a `sharp` és `@aws-sdk/client-s3` könyvtárak alkalmazásával.
 
 ```mermaid
 sequenceDiagram
     participant C as Kliens (Böngésző)
     participant MW as Multer Middleware
     participant U as Kép optimalizáló (Sharp)
-    participant FS as Helyi fájlrendszer
+    participant S3 as S3 Bucket (Supabase)
     participant S as Controller & Service
     participant DB as PostgreSQL (Prisma)
 
@@ -546,14 +556,14 @@ sequenceDiagram
     MW->>U: Fájl átadása memóriapufferként
     U->>U: C++ (libvips) átméretezés (max 1920px width)
     U->>U: Tömörítés és .webp formátumba konvertálás
-    U->>FS: Optimalizált fájl mentése az uploads/ mappába
-    FS-->>S: random_uuid.webp fájlnév és relatív URL
-    S->>DB: Kép adatainak és elérhetőségének rögzítése
+    U->>S3: Optimalizált fájl feltöltése S3-ra
+    S3-->>S: random_uuid.webp elérhetőség
+    S->>DB: Kép adatainak és S3 URL rögzítése
     DB-->>S: Rekord létrehozva
     S->>C: 201 Created (Kép URL)
 ```
 
-> **Miért így csináljuk? Mi történik és miért?** Ezzel a folyamattal biztosítjuk, hogy az esetenként hatalmas méretű és felbontású (akár 10 MB-os) fájlok letisztított és web-barát tömörítésű (`.webp`) képekké legyenek konvertálva még a fizikai lementés előtt (kb. 100-300KB-os méretűre). Ez drasztikusan lecsökkenti a szerveren szükséges tárhelyigényt (A Render környezetében különösen spórolva a szűkös Storage hellyel), meggátolja a képekkel hordozható esetleges memóriavírusok lemezre kerülését, és biztosítja, hogy a böngészők a lehető leggyorsabban betöltsék a képeket, jelentős mobiladat-forgalmat is megtakarítva a végfelhasználóknak.
+> **Miért így csináljuk? Mi történik és miért?** Ezzel a folyamattal biztosítjuk, hogy az esetenként hatalmas méretű és felbontású (akár 10 MB-os) fájlok letisztított és web-barát tömörítésű (`.webp`) képekké legyenek konvertálva még a tárolás előtt. Az S3 (Supabase Storage) használatával a képek skálázhatóan, biztonságosan és a szervertől függetlenül érhetőek el a CDN-en keresztül. A `.webp` formátum drasztikusan lecsökkenti a sávszélesség-igényt a végfelhasználók számára.
 
 ## Deployment Architecture
 

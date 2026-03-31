@@ -1,54 +1,70 @@
 import sharp from 'sharp';
-import path from 'path';
-import fs from 'fs/promises';
 import crypto from 'crypto';
-
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+import { uploadToS3, deleteFromS3 } from './s3.util';
 
 /**
- * Feldolgozza és elmenti a memóriában lévő képet.
+ * Feldolgozza és elmenti a memóriában lévő képet az S3 bucketbe.
  * Átméretezi max 1920px szélességre (arányos magassággal), és wepb formátumba konvertálja.
  * @param buffer Kép puffer a multer-ből
  * @param entityType Milyen entitáshoz tartozik (pl. 'company', 'gallery')
  * @returns {Promise<{ filename: string, url: string }>} A fájl neve és az URL elérhetőség
  */
 export const processAndSaveImage = async (buffer: Buffer, entityType: string): Promise<{ filename: string, url: string }> => {
-  // Győződjünk meg róla, hogy létezik a mappa (uploads/company vagy uploads/gallery)
-  const targetDir = path.join(UPLOADS_DIR, entityType);
-  await fs.mkdir(targetDir, { recursive: true });
-
   const filename = `${crypto.randomUUID()}.webp`;
-  const filePath = path.join(targetDir, filename);
+  const key = `${entityType}/${filename}`;
 
-  // Kép feldolgozása libvips segítségével (sharp)
-  await sharp(buffer)
+  // Kép feldolgozása libvips segítségével (sharp) - bufferbe
+  const processedBuffer = await sharp(buffer)
     .resize(1920, 1920, {
       fit: sharp.fit.inside,
       withoutEnlargement: true
     })
     .webp({ quality: 80 })
-    .toFile(filePath);
+    .toBuffer();
 
-  // Visszaadjuk a relatív url-t, amelyet az express.static ki fog tudni szolgálni
-  const url = `/uploads/${entityType}/${filename}`;
+  // Fájl feltöltése az S3-ra
+  await uploadToS3(key, processedBuffer);
+
+  // Visszaadjuk a publikus S3 url-t, amelyet az objektum storage ad
+  const publicUrlPrefix = process.env.SUPABASE_PUBLIC_URL;
+  const bucketName = process.env.SUPABASE_S3_BUCKET_NAME;
+  
+  if(!publicUrlPrefix || !bucketName) {
+      throw new Error("Missing public URL prefix or bucket name environment variables.");
+  }
+  
+  const url = `${publicUrlPrefix}/${bucketName}/${key}`;
 
   return { filename, url };
 };
 
 /**
- * Kép fizikai törlése a szerverről
- * @param url A kép eltárolt relatív elérési útvonala (pl. /uploads/company/uuid.webp)
+ * Kép fizikai törlése az S3 bucketből
+ * @param url A kép eltárolt publikus URL-je
  */
 export const deleteImageFile = async (url: string) => {
   try {
-    if (!url || !url.startsWith('/uploads/')) return;
+    const publicUrlPrefix = process.env.SUPABASE_PUBLIC_URL;
+    const bucketName = process.env.SUPABASE_S3_BUCKET_NAME;
     
-    const relativePath = url.substring(1); // 'uploads/company/uuid.webp'
-    const fullPath = path.join(process.cwd(), relativePath);
+    if(!publicUrlPrefix || !bucketName) {
+      console.error("Missing config to delete from S3");
+      return;
+    }
+
+    const prefix = `${publicUrlPrefix}/${bucketName}/`;
     
-    await fs.unlink(fullPath);
+    // Ha a kapott URL tartalmazza a prefixet, kivágjuk az S3 kulcsot
+    if (url && url.startsWith(prefix)) {
+      const key = url.substring(prefix.length); 
+      await deleteFromS3(key);
+    } 
+    // Kompatibilitás a régi lokális képekkel
+    else if (url && url.startsWith('/uploads/')) {
+        console.warn(`Local file deletion not supported in S3 mode: ${url}`);
+    }
   } catch (err) {
     console.error(`Failed to delete file for url ${url}:`, err);
-    // Silent fail, ha a fájl már nincs a lemezen
+    // Silent fail
   }
 };
