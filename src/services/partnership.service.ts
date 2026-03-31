@@ -367,9 +367,14 @@ export class PartnershipService {
           );
      }
 
-     async getUniversityPartnerships(params: Required<PaginationParams>) {
+     async getUniversityPartnerships(userId: string, params: Required<PaginationParams>) {
           const { skip, take } = getPrismaSkipTake(params);
-          const where = {}; // Add University filters if needed (e.g. non-deleted)
+          const where = {
+               OR: [
+                    { uniEmployeeId: null },
+                    { uniEmployeeId: userId }
+               ]
+          };
 
           return await paginate(
                params,

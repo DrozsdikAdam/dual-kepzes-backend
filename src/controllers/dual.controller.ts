@@ -207,8 +207,9 @@ export const getCompanyPartnerships = async (req: Request, res: Response, next: 
 
 export const getUniversityPartnerships = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const { userId } = req.user!;
         const params = getPaginationParams(req.query);
-        const result = await partnershipService.getUniversityPartnerships(params);
+        const result = await partnershipService.getUniversityPartnerships(userId, params);
         res.json({
             success: true,
             data: result.data.map(mapDualPartnership),
