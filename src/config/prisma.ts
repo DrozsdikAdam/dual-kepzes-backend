@@ -2,6 +2,19 @@ import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
+// Adatbázis session időzóna: Europe/Budapest
+// A connection string-ben az options paraméter biztosítja,
+// hogy minden kapcsolat Budapest időzónát használjon (pgbouncer kompatibilis)
+function appendTimezoneToUrl(envVar: string) {
+    const url = process.env[envVar];
+    if (url && !url.includes("options=")) {
+        const separator = url.includes("?") ? "&" : "?";
+        process.env[envVar] = `${url}${separator}options=-c%20timezone%3DEurope/Budapest`;
+    }
+}
+appendTimezoneToUrl("DIRECT_URL");
+appendTimezoneToUrl("DATABASE_URL");
+
 const basePrisma = globalForPrisma.prisma || new PrismaClient();
 
 const softDeleteModels = [
