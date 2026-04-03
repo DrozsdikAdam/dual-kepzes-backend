@@ -88,6 +88,12 @@ model User {
 
   notifications Notification[]
   auditLogs     AuditLog[]
+
+  @@index([role])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@index([verificationToken])
+  @@index([passwordResetToken])
 }
 
 model StudentProfile {
@@ -127,6 +133,10 @@ model StudentProfile {
   applications        Application[]
   partnerships        DualPartnership[]
   materialCompletions MaterialCompletion[]
+
+  @@index([majorId])
+  @@index([firstChoiceId])
+  @@index([secondChoiceId])
 }
 
 model CompanyEmployee {
@@ -141,6 +151,8 @@ model CompanyEmployee {
   deletedAt DateTime?
 
   mentoredPartnerships DualPartnership[]
+
+  @@index([companyId])
 }
 
 model Location {
@@ -165,6 +177,9 @@ model Location {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([studentProfileId])
 }
 
 model Major {
@@ -239,6 +254,13 @@ model Position {
   location         Location?         @relation(fields: [locationId], references: [id])
   locationId       String?
   dualPartnerships DualPartnership[]
+
+  @@index([companyId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@index([majorId])
+  @@index([locationId])
+  @@index([deadline])
 }
 
 model Tag {
@@ -272,6 +294,12 @@ model Application {
   deletedAt   DateTime?
 
   @@unique([studentId, positionId])
+
+  @@index([studentId])
+  @@index([positionId])
+  @@index([status])
+  @@index([submittedAt])
+  @@index([deletedAt])
 }
 
 model DualPartnership {
@@ -299,6 +327,14 @@ model DualPartnership {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  @@index([studentId])
+  @@index([mentorId])
+  @@index([uniEmployeeId])
+  @@index([positionId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([deletedAt])
 }
 
 // ---------------------------------------------------------
@@ -324,6 +360,11 @@ model Notification {
   isArchived Boolean   @default(false)
   createdAt  DateTime  @default(now())
   deletedAt  DateTime?
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([userId, isArchived])
+  @@index([createdAt])
 }
 
 model AuditLog {
@@ -337,6 +378,10 @@ model AuditLog {
   details  Json?
 
   timestamp DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity])
+  @@index([timestamp])
 }
 
 model News {
@@ -353,6 +398,10 @@ model News {
   isArchived Boolean   @default(false)
   createdAt  DateTime  @default(now())
   deletedAt  DateTime?
+
+  @@index([isArchived])
+  @@index([deletedAt])
+  @@index([createdAt])
 }
 
 // ---------------------------------------------------------
@@ -373,6 +422,9 @@ model MaterialCompletion {
   completedAt DateTime @default(now())
 
   @@unique([studentProfileId, materialId]) // Egy diák egy adott tananyagot csak egyszer végezhet el
+
+  @@index([studentProfileId])
+  @@index([completedAt])
 }
 
 // ---------------------------------------------------------
@@ -402,6 +454,8 @@ model GalleryImage {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([galleryGroupId])
 }
 
 model CompanyImage {
@@ -416,4 +470,6 @@ model CompanyImage {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([companyId])
 }
