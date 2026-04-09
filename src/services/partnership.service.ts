@@ -369,12 +369,7 @@ export class PartnershipService {
 
      async getUniversityPartnerships(userId: string, params: Required<PaginationParams>) {
           const { skip, take } = getPrismaSkipTake(params);
-          const where = {
-               OR: [
-                    { uniEmployeeId: null },
-                    { uniEmployeeId: userId }
-               ]
-          };
+          const where = {};
 
           return await paginate(
                params,
