@@ -24,7 +24,7 @@ graph TD
 - **Új partnerségek**: Amikor egy cég mentort rendel egy hallgatóhoz, a partnerség Ön elé kerül jóváhagyásra.
 - **Egyetemi felelős kijelölése**: Ön rendelheti hozzá a rendszerben az egyetemi felügyelőt (supervisor) a partnerséghez.
 - **Aktiválás**: Ha kijelölte a felelőst, a partnerség **AKTÍV** állapotba kerül.
-- **Lezárás/Megszakítás**: Önnek van jogosultsága befejezni (`FINISHED`) vagy szükség esetén megszakítani (`TERMINATED`) a partnerségeket.
+- **Lezárás/Megszakítás**: Önnek van jogosultsága befejezni vagy szükség esetén megszakítani a partnerségeket.
 
 ## 📜 Szakok (Majors) Kezelése
 - Megtekintheti és karbantarthatja az elérhető szakok listáját, amelyre a hallgatók és a pozíciók hivatkoznak.

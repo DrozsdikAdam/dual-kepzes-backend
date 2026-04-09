@@ -6,11 +6,11 @@
 - **Felhasználók kezelése**: Bármely felhasználó adatait módosíthatja, inaktiválhatja vagy törölheti őket.
 - **Cégek kezelése**: 
     - Új cégek és cégadminok létrehozása (automatikusan jóváhagyott).
-    - **Cég jóváhagyás**: A regisztrált cégek ellenőrzése a "Függőben lévő cégek" (`/pending`) listában.
-    - Jóváhagyás (`/approve`) vagy elutasítás (`/reject`) kezelése.
+    - **Cég jóváhagyás**: A regisztrált cégek ellenőrzése a "Függőben lévő cégek" listában.
+    - Jóváhagyás vagy elutasítás kezelése.
     - Cégek aktiválása/deaktiválása és módosítása.
 - **Audit Napló**: Bármikor visszakövetheti, hogy ki, mikor és milyen műveletet végzett a rendszerben.
-- **Email beállítások**: Kezelheti a felhasználók email fogadási beállításait (`isEmailEnabled`).
+- **Email beállítások**: Kezelheti a felhasználók email fogadási beállításait.
 
 ## 📢 Közlemények és Hírek
 - **Hírek létrehozása**: Megcélozhat konkrét szerepköröket (pl. csak hallgatók, csak egyetem) vagy küldhet üzenetet mindenkinek.
