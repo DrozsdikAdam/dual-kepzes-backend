@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { statsService } from "../services/stats.service";
+import { employeeService } from "../services/employee.service";
 
 export const getSystemStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -40,6 +41,25 @@ export const getPositionStats = async (req: Request, res: Response, next: NextFu
 export const getTrendStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const stats = await statsService.getTrendStats();
+        res.json({ success: true, data: stats });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getMyCompanyStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "Nincs azonosított felhasználó." });
+        }
+
+        const profile = await employeeService.getProfile(userId);
+        if (!profile || !profile.companyId) {
+            return res.status(403).json({ success: false, message: "Nincs céghez rendelve." });
+        }
+
+        const stats = await statsService.getCompanyStats(profile.companyId);
         res.json({ success: true, data: stats });
     } catch (error) {
         next(error);
