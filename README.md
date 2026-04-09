@@ -781,7 +781,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | Metódus | Végpont | Leírás | Jogosultság |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/` | Jelentkezés leadása. | Student |
-| `GET` | `/` | Saját jelentkezések megtekintése. | Student |
+| `GET` | `/` | Saját jelentkezések megtekintése (leadott és elfogadott statisztikákkal együtt). | Student |
 | `PATCH` | `/:id/retract` | Jelentkezés visszavonása. | Student |
 | `GET` | `/company` | Céghez érkezett jelentkezések. | Company |
 | `PATCH` | `/company/:id/evaluate` | Jelentkezés értékelése. (`ACCEPTED` esetén automatikusan létrejön a partnerség). | Company |
@@ -853,6 +853,7 @@ A cégek saját bemutató képeinek (iroda, csapat) kezelésére. Végpontok a `
 | Metódus | Végpont | Leírás | Jogosultság |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/` | Rendszerszintű statisztikák (felhasználók, cégek, pozíciók, partnerségek). | SystemAdmin |
+| `GET` | `/company/me` | Céges adminisztrátornak statisztikák a saját cégéről (pozíciók, jelentkezések, alkalmazottak stb.). | CompanyAdmin |
 | `GET` | `/applications` | Jelentkezési statisztikák (státusz szerinti bontás, konverziós arány, átlag/pozíció, elmúlt 30 nap). | SystemAdmin |
 | `GET` | `/partnerships` | Partnerségi statisztikák (státusz és félév szerinti bontás, átlagos időtartam). | SystemAdmin |
 | `GET` | `/positions` | Pozíció statisztikák (7 napon belül lejáró, jelentkezés nélküli pozíciók). | SystemAdmin |
