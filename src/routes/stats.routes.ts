@@ -1,12 +1,14 @@
 import { Router } from "express";
-import { authenticateToken, isSystemAdmin } from "../middlewares/auth.middleware";
+import { authenticateToken, isSystemAdmin, isUniversityUser } from "../middlewares/auth.middleware";
 import {
      getSystemStats,
      getApplicationStats,
      getPartnershipStats,
      getPositionStats,
-     getTrendStats
+     getTrendStats,
+     getUniversityStudentDistribution
 } from "../controllers/stats.controller";
+
 
 const router = Router();
 
@@ -199,5 +201,43 @@ router.get("/positions", authenticateToken, isSystemAdmin, getPositionStats);
  *                             type: integer
  */
 router.get("/trends", authenticateToken, isSystemAdmin, getTrendStats);
+
+/**
+ * @swagger
+ * /api/stats/university/student-distribution:
+ *   get:
+ *     summary: Get student distribution by company and major for university user
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of companies with student counts by major
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       companyName:
+ *                         type: string
+ *                       majors:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             majorName:
+ *                               type: string
+ *                             count:
+ *                               type: integer
+ */
+router.get("/university/student-distribution", authenticateToken, isUniversityUser, getUniversityStudentDistribution);
+
 
 export default router;
