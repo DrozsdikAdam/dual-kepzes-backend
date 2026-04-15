@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { statsService } from "../services/stats.service";
+import { UnauthorizedError } from "../errors/AppError";
+
 
 export const getSystemStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -45,3 +47,15 @@ export const getTrendStats = async (req: Request, res: Response, next: NextFunct
         next(error);
     }
 };
+
+export const getUniversityStudentDistribution = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) throw new UnauthorizedError("Nincs azonosított felhasználó.");
+
+        const stats = await statsService.getUniversityStudentDistribution(userId);
+        res.json({ success: true, data: stats });
+    } catch (error) {
+        next(error);
+    }
+};
