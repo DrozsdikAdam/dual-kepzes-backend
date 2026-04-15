@@ -11,13 +11,15 @@ import {
      getMyAssignments,
      assignMajorsToReferent,
      assignCompaniesToReferent,
-     listAllReferents
+     listAllReferents,
+     getPotentialReferents
 } from "../controllers/universityUser.controller";
 import { validate } from "../middlewares/validate.middleware";
 import { 
      UniversityUserUpdateSchema, 
      AssignMajorsSchema, 
-     AssignCompaniesSchema 
+     AssignCompaniesSchema,
+     PotentialReferentsQuerySchema
 } from "../schemas/universityUser.schema";
 
 const router = Router();
@@ -178,6 +180,26 @@ router.get("/me/assignments", isUniversityUser, getMyAssignments);
  *     tags: [UniversityUsers]
  */
 router.get("/referents", isUniversityStaff, listAllReferents);
+
+/**
+ * @swagger
+ * /api/university-users/potential-referents:
+ *   get:
+ *     summary: List potential referents for a partnership (Staff/Admin)
+ *     tags: [UniversityUsers]
+ *     parameters:
+ *       - in: query
+ *         name: studentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: positionId
+ *         required: true
+ *         schema:
+ *           type: string
+ */
+router.get("/potential-referents", isUniversityStaff, validate(PotentialReferentsQuerySchema), getPotentialReferents);
 
 /**
  * @swagger
