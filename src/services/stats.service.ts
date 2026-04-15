@@ -343,7 +343,13 @@ export class StatsService {
           // 2. Get students (partnerships) at these companies with these majors
           const partnerships = await prisma.dualPartnership.findMany({
                where: {
-                    status: PartnershipStatus.ACTIVE,
+                    status: {
+                         in: [
+                              PartnershipStatus.ACTIVE,
+                              PartnershipStatus.PENDING_MENTOR,
+                              PartnershipStatus.PENDING_UNIVERSITY
+                         ]
+                    },
                     deletedAt: null,
                     position: {
                          companyId: { in: companyIds }
