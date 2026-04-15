@@ -11,4 +11,24 @@ export const UniversityUserUpdateSchema = z.object({
      }).strict()
 })
 
+export const AssignMajorsSchema = z.object({
+     params: z.object({
+          id: z.string().uuid()
+     }),
+     body: z.object({
+          majorIds: z.array(z.string().uuid())
+     })
+})
+
+export const AssignCompaniesSchema = z.object({
+     params: z.object({
+          id: z.string().uuid()
+     }),
+     body: z.object({
+          companyIds: z.array(z.string().uuid())
+     })
+})
+
 export type UniversityUserUpdateInput = z.infer<typeof UniversityUserUpdateSchema>["body"];
+export type AssignMajorsInput = z.infer<typeof AssignMajorsSchema>["body"];
+export type AssignCompaniesInput = z.infer<typeof AssignCompaniesSchema>["body"];

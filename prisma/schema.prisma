@@ -55,7 +55,7 @@ enum RegistrationStatus {
 
 enum PositionType {
   DUAL
-  INTERNSHIP
+  PROFESSIONAL_PRACTICE
   REGULAR_WORK
 }
 
