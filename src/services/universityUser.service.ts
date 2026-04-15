@@ -113,6 +113,43 @@ export class UniversityUserService {
 
           return referent?.id || null;
      }
+
+     async listPotentialReferents(studentId: string, positionId: string) {
+          const student = await prisma.studentProfile.findUnique({
+               where: { id: studentId },
+               select: { majorId: true }
+          });
+
+          const position = await prisma.position.findUnique({
+               where: { id: positionId },
+               select: { companyId: true }
+          });
+
+          if (!student?.majorId) return [];
+
+          // Find all referents for this major
+          const referents = await prisma.user.findMany({
+               where: {
+                    role: Role.UNIVERSITY_USER,
+                    isActive: true,
+                    managedMajors: { some: { id: student.majorId } }
+               },
+               select: {
+                    id: true,
+                    fullName: true,
+                    email: true,
+                    managedCompanies: { select: { id: true } }
+               }
+          });
+
+          // Tag those who also match the company
+          return referents.map(ref => ({
+               id: ref.id,
+               fullName: ref.fullName,
+               email: ref.email,
+               isCompanyMatch: position?.companyId ? ref.managedCompanies.some(c => c.id === position.companyId) : false
+          }));
+     }
 }
 
 export const universityUserService = new UniversityUserService();
