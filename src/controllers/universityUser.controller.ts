@@ -5,7 +5,7 @@ import { logAction } from "../utils/logger.util";
 import { Role } from "@prisma/client";
 import { getPaginationParams } from "../utils/pagination.util";
 import { ForbiddenError, UnauthorizedError } from "../errors/AppError";
-import { AssignMajorsInput, AssignCompaniesInput } from "../schemas/universityUser.schema";
+import { AssignMajorsInput, AssignCompaniesInput, PotentialReferentsQuery } from "../schemas/universityUser.schema";
 
 export const getMeUniversityUser = async (req: Request, res: Response, next: NextFunction) => {
      try {
@@ -202,6 +202,16 @@ export const assignCompaniesToReferent = async (
 export const listAllReferents = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const referents = await universityUserService.getAllReferents();
+          res.json({ success: true, data: referents });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const getPotentialReferents = async (req: Request, res: Response, next: NextFunction) => {
+     try {
+          const { studentId, positionId } = req.query as any;
+          const referents = await universityUserService.listPotentialReferents(studentId, positionId);
           res.json({ success: true, data: referents });
      } catch (error) {
           next(error);
