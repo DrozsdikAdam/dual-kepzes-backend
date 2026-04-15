@@ -52,10 +52,21 @@ export const getMyApplications = async (req: Request, res: Response, next: NextF
 
         const params = getPaginationParams(req.query);
         const result = await applicationService.getMyApplications(studentProfile.id, params);
+
+        const statusCounts = await prisma.application.groupBy({
+            by: ['status'],
+            where: { studentId: studentProfile.id, deletedAt: null },
+            _count: { _all: true }
+        });
+
         res.json({
             success: true,
             data: result.data.map(mapApplication),
-            pagination: result.pagination
+            pagination: result.pagination,
+            stats: {
+                submitted: statusCounts.find(s => s.status === ApplicationStatus.SUBMITTED)?._count._all || 0,
+                accepted: statusCounts.find(s => s.status === ApplicationStatus.ACCEPTED)?._count._all || 0
+            }
         });
     } catch (error) {
         next(error);

@@ -5,10 +5,10 @@
 ## 📱 Profil Kezelése
 A profilod az alapja minden jelentkezésnek. Tartsd naprakészen!
 
-- **Saját profil megtekintése**: Bármikor láthatod az adataidat a `/api/students/me` végponton (vagy a profil felületen).
+- **Saját profil megtekintése**: Bármikor láthatod az adataidat a profil felületen.
 - **Profil frissítése**: Ha változnak az adataid (telefonszám, lakcím), egyszerűen módosíthatod.
 - **Egyetemi átállás**: Ha középiskolából egyetemre kerülsz, használd a "University Transition" funkciót a Neptun kódod és szakod rögzítéséhez.
-- **Munkakeresési állapot**: Bármikor beállíthatod a profilodban, hogy éppen keresel-e munkát (`isAvailableForWork`). Alapértelmezés szerint ez kikapcsolt, de ha aktiválod, a cégek láthatnak téged a keresőben! Regisztrációkor ez még nem állítható, csak a profilod elkészülte után.
+- **Munkakeresési állapot**: Bármikor beállíthatod a profilodban, hogy éppen keresel-e munkát. Alapértelmezés szerint ez kikapcsolt, de ha aktiválod, a cégek láthatnak téged a keresőben! Regisztrációkor ez még nem állítható, csak a profilod elkészülte után.
 
 ## 💼 Jelentkezés Állásokra
 Böngéssz a pozíciók között és találd meg a számodra megfelelőt.
@@ -29,7 +29,7 @@ graph TD
     A[Böngészés és Választás] --> B[Jelentkezés Leadása]
     B --> C{Cég Értékelése}
     C -- Elutasítva --> D[Vége]
-    C -- Elfogadva --> E[Partnerség Létrejön: PENDING_MENTOR]
+    C -- Elfogadva --> E[Partnerség Létrejön: Mentorra Vár]
     E --> F[Cég Mentort Rendel Hozzá]
     F --> G[Egyetem Felügyelőt Rendel Hozzá]
     G --> H[Partnerség AKTÍV]

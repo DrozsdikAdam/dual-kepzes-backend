@@ -272,5 +272,57 @@ export class StatsService {
                majors: Object.values(companyStat.majors)
           }));
      }
+     async getCompanyStats(companyId: string) {
+          // Number of positions belonging to the company
+          const positionCount = await prisma.position.count({
+               where: { companyId, deletedAt: null }
+          });
+
+          // Number of active partnerships
+          const activePartnerships = await prisma.dualPartnership.count({
+               where: {
+                    OR: [
+                         { mentor: { companyId } },
+                         { position: { companyId } }
+                    ],
+                    status: PartnershipStatus.ACTIVE,
+                    deletedAt: null
+               }
+          });
+
+          // Number of submitted applications for the company
+          const applicationCount = await prisma.application.count({
+               where: {
+                    position: { companyId },
+                    deletedAt: null
+               }
+          });
+
+          // Applications by status for this company
+          const byStatus = await prisma.application.groupBy({
+               by: ['status'],
+               where: {
+                    position: { companyId },
+                    deletedAt: null
+               },
+               _count: { _all: true }
+          });
+
+          // Number of employees
+          const employeeCount = await prisma.companyEmployee.count({
+               where: { companyId, deletedAt: null }
+          });
+
+          return {
+               positions: positionCount,
+               activePartnerships,
+               applications: applicationCount,
+               employees: employeeCount,
+               applicationsByStatus: byStatus.map(s => ({
+                    status: s.status,
+                    count: s._count._all
+               }))
+          };
+     }
 }
 export const statsService = new StatsService();

@@ -69,16 +69,16 @@ model User {
 
   isEmailVerified         Boolean   @default(false)
   verificationToken       String?
-  verificationTokenExpiry DateTime?
+  verificationTokenExpiry DateTime? @db.Timestamptz(3)
 
   isActive Boolean @default(true)
 
   passwordResetToken String?
-  tokenExpiry        DateTime?
+  tokenExpiry        DateTime? @db.Timestamptz(3)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
 
   // Kapcsolatok
   studentProfile  StudentProfile?
@@ -88,6 +88,12 @@ model User {
 
   notifications Notification[]
   auditLogs     AuditLog[]
+
+  @@index([role])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@index([verificationToken])
+  @@index([passwordResetToken])
 }
 
 model StudentProfile {
@@ -96,7 +102,7 @@ model StudentProfile {
   user   User   @relation(fields: [userId], references: [id])
 
   mothersName String
-  birthDate   DateTime
+  birthDate   DateTime @db.Timestamptz(3)
 
   // Egy felhasználónak több helyszíne is lehet (pl. otthoni, munkahelyi)
   locations          Location[]
@@ -122,11 +128,15 @@ model StudentProfile {
 
   isAvailableForWork Boolean @default(false)
 
-  deletedAt DateTime?
+  deletedAt DateTime? @db.Timestamptz(3)
 
   applications        Application[]
   partnerships        DualPartnership[]
   materialCompletions MaterialCompletion[]
+
+  @@index([majorId])
+  @@index([firstChoiceId])
+  @@index([secondChoiceId])
 }
 
 model CompanyEmployee {
@@ -138,9 +148,11 @@ model CompanyEmployee {
   company   Company @relation(fields: [companyId], references: [id])
 
   jobTitle  String?
-  deletedAt DateTime?
+  deletedAt DateTime? @db.Timestamptz(3)
 
   mentoredPartnerships DualPartnership[]
+
+  @@index([companyId])
 }
 
 model Location {
@@ -163,8 +175,11 @@ model Location {
   // A pozíciók továbbra is mutathatnak egy konkrét helyszínre
   positions Position[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([companyId])
+  @@index([studentProfileId])
 }
 
 model Major {
@@ -202,9 +217,9 @@ model Company {
 
   status    RegistrationStatus @default(PENDING)
   isActive  Boolean            @default(true)
-  createdAt DateTime           @default(now())
-  updatedAt DateTime?          @updatedAt
-  deletedAt DateTime?
+  createdAt DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime?          @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime?          @db.Timestamptz(3)
 
   employees CompanyEmployee[]
   positions Position[]
@@ -228,24 +243,31 @@ model Position {
 
   tags Tag[]
 
-  deadline DateTime?
+  deadline DateTime? @db.Timestamptz(3)
 
   isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
-  deletedAt DateTime?
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
 
   applications     Application[]
   location         Location?         @relation(fields: [locationId], references: [id])
   locationId       String?
   dualPartnerships DualPartnership[]
+
+  @@index([companyId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@index([majorId])
+  @@index([locationId])
+  @@index([deadline])
 }
 
 model Tag {
   id        String    @id @default(uuid())
   name      String    @unique
   category  String    @default("Technology")
-  deletedAt DateTime?
+  deletedAt DateTime? @db.Timestamptz(3)
 
   positions Position[]
 }
@@ -267,11 +289,16 @@ model Application {
 
   companyNote String?
 
-  submittedAt DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
+  submittedAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt   DateTime? @db.Timestamptz(3)
 
   @@unique([studentId, positionId])
+  @@index([studentId])
+  @@index([positionId])
+  @@index([status])
+  @@index([submittedAt])
+  @@index([deletedAt])
 }
 
 model DualPartnership {
@@ -293,12 +320,20 @@ model DualPartnership {
   contractNumber String?
 
   status    PartnershipStatus @default(ACTIVE)
-  startDate DateTime
-  endDate   DateTime?
+  startDate DateTime          @db.Timestamptz(3)
+  endDate   DateTime?         @db.Timestamptz(3)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
+
+  @@index([studentId])
+  @@index([mentorId])
+  @@index([uniEmployeeId])
+  @@index([positionId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([deletedAt])
 }
 
 // ---------------------------------------------------------
@@ -319,11 +354,16 @@ model Notification {
 
   status String    @default("PENDING") // PENDING, SENT, FAILED
   error  String? // Hibaüzenet tárolása, ha nem sikerült
-  sentAt DateTime?
+  sentAt DateTime? @db.Timestamptz(3)
 
   isArchived Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  deletedAt  DateTime?
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  deletedAt  DateTime? @db.Timestamptz(3)
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([userId, isArchived])
+  @@index([createdAt])
 }
 
 model AuditLog {
@@ -336,7 +376,11 @@ model AuditLog {
   entityId String?
   details  Json?
 
-  timestamp DateTime @default(now())
+  timestamp DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([userId])
+  @@index([entity])
+  @@index([timestamp])
 }
 
 model News {
@@ -351,8 +395,12 @@ model News {
   tags String[]
 
   isArchived Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  deletedAt  DateTime?
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  deletedAt  DateTime? @db.Timestamptz(3)
+
+  @@index([isArchived])
+  @@index([deletedAt])
+  @@index([createdAt])
 }
 
 // ---------------------------------------------------------
@@ -370,9 +418,11 @@ model MaterialCompletion {
   isCompleted Boolean @default(true)
   rating      Int? // Opcionális értékelés (pl. 1-5, vagy 1-10)
 
-  completedAt DateTime @default(now())
+  completedAt DateTime @default(now()) @db.Timestamptz(3)
 
   @@unique([studentProfileId, materialId]) // Egy diák egy adott tananyagot csak egyszer végezhet el
+  @@index([studentProfileId])
+  @@index([completedAt])
 }
 
 // ---------------------------------------------------------
@@ -386,8 +436,8 @@ model GalleryGroup {
 
   images GalleryImage[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
 }
 
 model GalleryImage {
@@ -400,8 +450,10 @@ model GalleryImage {
   caption  String?
   order    Int     @default(0)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([galleryGroupId])
 }
 
 model CompanyImage {
@@ -414,6 +466,8 @@ model CompanyImage {
   caption  String?
   order    Int     @default(0)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([companyId])
 }

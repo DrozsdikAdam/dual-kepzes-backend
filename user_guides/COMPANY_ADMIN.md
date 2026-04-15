@@ -15,7 +15,7 @@ Ez az útmutató a cégadminisztrátorok számára készült, akik a teljes vál
 
 ## 📩 Jelentkezések Értékelése
 - **Beérkező jelentkezések**: Itt láthatja az összes hallgatót, aki jelentkezett a céghez. Megtekintheti a CV-ket és motivációs leveleket is.
-- **Hallgatók böngészése**: Az elérhető hallgatók listájában kereshet, és az "Érdeklődés kifejezése" (`/:id/interest`) funkcióval közvetlenül jelezheti a hallgatónak, ha szimpatikus a profilja.
+- **Hallgatók böngészése**: Az elérhető hallgatók listájában kereshet, és az "Érdeklődés kifejezése" funkcióval közvetlenül jelezheti a hallgatónak, ha szimpatikus a profilja.
 - **Folyamat és Mentorkezelés**:
 ```mermaid
 graph LR
@@ -28,7 +28,7 @@ graph LR
 ```
 
 - **Értékelés**: 
-    - Elfogadhatja (`ACCEPTED`) vagy elutasíthatja (`REJECTED`) a jelentkezéseket.
+    - Elfogadhatja vagy elutasíthatja a jelentkezéseket.
     - **Fontos**: Amint elfogad egy jelentkezést, a rendszer automatikusan létrehoz egy **Duális Partnerkapcsolatot** a hallgatóval.
 
 ## 👥 Munkatársak Kezelése

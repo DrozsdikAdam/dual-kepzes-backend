@@ -1,12 +1,13 @@
 import { Router } from "express";
-import { authenticateToken, isSystemAdmin, isUniversityUser } from "../middlewares/auth.middleware";
+import { authenticateToken, isSystemAdmin, isUniversityUser, isCompanyAdmin } from "../middlewares/auth.middleware";
 import {
      getSystemStats,
      getApplicationStats,
      getPartnershipStats,
      getPositionStats,
      getTrendStats,
-     getUniversityStudentDistribution
+     getUniversityStudentDistribution,
+     getMyCompanyStats
 } from "../controllers/stats.controller";
 
 
@@ -31,6 +32,21 @@ const router = Router();
  *       200:
  *         description: Object containing system stats
  */
+// Rendszeradminnak dedikált globális statisztikák
+/**
+ * @swagger
+ * /api/stats/company/me:
+ *   get:
+ *     summary: Get statistics for the admin's company
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Company statistics
+ */
+router.get("/company/me", authenticateToken, isCompanyAdmin, getMyCompanyStats);
+
 router.get("/", authenticateToken, isSystemAdmin, getSystemStats);
 
 /**

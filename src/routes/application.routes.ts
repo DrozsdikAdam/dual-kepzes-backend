@@ -114,7 +114,29 @@ router.post(
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of own applications
+ *         description: List of own applications with statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Application'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/PaginationMeta'
+ *                 stats:
+ *                   type: object
+ *                   properties:
+ *                     submitted:
+ *                       type: integer
+ *                       description: Number of submitted applications
+ *                     accepted:
+ *                       type: integer
+ *                       description: Number of accepted applications
  */
 router.get("/", isStudent, getMyApplications)
 
