@@ -50,7 +50,7 @@ export interface MappedPosition {
      description?: string | null;
      majorId?: string | null;
      major?: MappedMajor | null;
-     isDual: boolean;
+     type: string;
      deadline?: Date | null;
      isActive: boolean;
      createdAt?: Date;

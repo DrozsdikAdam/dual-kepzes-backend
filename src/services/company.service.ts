@@ -30,6 +30,7 @@ export class CompanyService {
           website: true,
           logoUrl: true,
           hasOwnApplication: true,
+          externalApplicationUrl: true,
           isActive: true,
           createdAt: true,
           deletedAt: true,
@@ -91,7 +92,7 @@ export class CompanyService {
                               },
                               deadline: true,
                               isActive: true,
-                              isDual: true,
+                              type: true,
                               createdAt: true,
                               updatedAt: true,
                               tags: {
@@ -145,7 +146,8 @@ export class CompanyService {
                          create: locations ? locations.map(prepareLocationData) : []
                     },
                     status: 'APPROVED',
-                    isActive: true
+                    isActive: true,
+                    externalApplicationUrl: (companyData as any).externalApplicationUrl
                },
                select: this.companySelect
           });
@@ -182,7 +184,8 @@ export class CompanyService {
                               create: locations ? locations.map(prepareLocationData) : []
                          },
                          status: 'PENDING',
-                         isActive: false
+                         isActive: false,
+                         externalApplicationUrl: (companyData as any).externalApplicationUrl
                     },
                     select: this.companySelect
                });

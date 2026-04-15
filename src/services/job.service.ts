@@ -27,7 +27,7 @@ export class JobService {
           companyId: true,
           locationId: true,
           isActive: true,
-          isDual: true,
+          type: true,
           createdAt: true,
           updatedAt: true,
           tags: {
@@ -38,13 +38,13 @@ export class JobService {
           }
      };
 
-     async getAll(params: Required<PaginationParams>, isDual?: boolean) {
+     async getAll(params: Required<PaginationParams>, type?: any) {
           const { skip, take } = getPrismaSkipTake(params);
 
           const query = {
                where: {
                     isActive: true,
-                    ...(isDual !== undefined ? { isDual } : {})
+                    ...(type ? { type } : {})
                },
                select: {
                     ...this.positionSelect,
@@ -132,7 +132,7 @@ export class JobService {
                     title: data.title,
                     description: data.description,
                     deadline: data.deadline,
-                    isDual: data.isDual,
+                    type: data.type,
                     company: { connect: { id: data.companyId } },
                     location: { connect: { id: data.locationId } },
                     major: data.majorId ? { connect: { id: data.majorId } } : undefined,
