@@ -41,10 +41,6 @@ export const getCompanyById = async (req: Request, res: Response, next: NextFunc
                throw new NotFoundError('Cég');
           }
 
-          if (mappedCompany.positions) {
-               mappedCompany.positions = mappedCompany.positions.map(mapPosition).filter((p) => p !== null);
-          }
-
           res.json({
                success: true,
                data: mappedCompany

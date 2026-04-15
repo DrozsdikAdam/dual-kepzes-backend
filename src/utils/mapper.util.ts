@@ -40,9 +40,17 @@ export const mapLocationWithCompany = (location: (Partial<Location> & {
      };
 };
 
-export const mapCompany = (company: (Partial<Company> & { location?: PartialLocation[] }) | null): MappedCompany | null => {
+export const mapCompany = (company: (Partial<Company> & {
+     location?: PartialLocation[],
+     positions?: Array<Partial<Position> & {
+          location?: PartialLocation | null,
+          company?: (Partial<Company> & { location?: PartialLocation[] }) | null,
+          tags?: Array<{ name: string; category: string }>,
+          major?: PartialMajor
+     }>
+}) | null): MappedCompany | null => {
      if (!company) return null;
-     const { location, ...rest } = company;
+     const { location, positions, ...rest } = company;
 
      return {
           id: rest.id!,
@@ -62,7 +70,8 @@ export const mapCompany = (company: (Partial<Company> & { location?: PartialLoca
                zipCode: loc.zipCode!,
                city: loc.city!,
                address: loc.address!
-          })) : []
+          })) : [],
+          positions: positions ? positions.map(mapPosition).filter((p): p is MappedPosition => p !== null) : undefined
      };
 };
 
