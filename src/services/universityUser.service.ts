@@ -81,6 +81,38 @@ export class UniversityUserService {
                }
           });
      }
+
+     async findReferentForPartnership(studentId: string, positionId: string) {
+          // 1. Get student's major and position's company
+          const student = await prisma.studentProfile.findUnique({
+               where: { id: studentId },
+               select: { majorId: true }
+          });
+
+          const position = await prisma.position.findUnique({
+               where: { id: positionId },
+               select: { companyId: true }
+          });
+
+          if (!student?.majorId || !position?.companyId) return null;
+
+          // 2. Find referent linked to BOTH
+          const referent = await prisma.user.findFirst({
+               where: {
+                    role: Role.UNIVERSITY_USER,
+                    isActive: true,
+                    managedMajors: {
+                         some: { id: student.majorId }
+                    },
+                    managedCompanies: {
+                         some: { id: position.companyId }
+                    }
+               },
+               select: { id: true }
+          });
+
+          return referent?.id || null;
+     }
 }
 
 export const universityUserService = new UniversityUserService();

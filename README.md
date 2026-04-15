@@ -216,7 +216,8 @@ erDiagram
         string companyId FK
         string title
         string majorId FK
-        boolean isDual
+        string type
+        string? externalApplicationUrl
         datetime deadline
         boolean isActive
         string locationId FK
@@ -768,7 +769,7 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 
 | Metódus | Végpont | Leírás | Jogosultság |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/` | Aktív pozíciók listázása. (Opcionális: `?isDual=true` vagy `false`) | Publikus |
+| `GET` | `/` | Aktív pozíciók listázása. (Opcionális: `?type=DUAL`, `PROFESSIONAL_PRACTICE`, `REGULAR_WORK`) | Publikus |
 | `GET` | `/dual` | Kizárólag duális pozíciók listázása. | Publikus |
 | `GET` | `/non-dual` | Kizárólag nem duális pozíciók listázása. | Publikus |
 | `POST` | `/` | Új pozíció létrehozása. | CompanyAdmin |

@@ -7,6 +7,7 @@ import { getCurrentSemester } from '../utils/semester.util';
 import { validateApplicationTransition } from '../utils/status-transition.util';
 import { notificationService } from './notification.service';
 import { NOTIFICATION_TYPES } from '../utils/constants';
+import { universityUserService } from './universityUser.service';
 
 export class ApplicationService {
      async apply(studentId: string, positionId: string) {
@@ -180,10 +181,13 @@ export class ApplicationService {
                          throw new BadRequestError('A hallgatónak már van aktív vagy folyamatban lévő duális kapcsolata.');
                     }
 
+                    const suggestedUniEmployeeId = await universityUserService.findReferentForPartnership(application.studentId, application.positionId);
+
                     await tx.dualPartnership.create({
                          data: {
                               studentId: application.studentId,
                               positionId: application.positionId,
+                              uniEmployeeId: suggestedUniEmployeeId,
                               status: PartnershipStatus.PENDING_MENTOR,
                               semester: getCurrentSemester(),
                               startDate: new Date(),

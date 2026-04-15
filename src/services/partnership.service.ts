@@ -1,9 +1,10 @@
 import prisma from '../config/prisma';
 import { NotFoundError, ForbiddenError } from '../errors/AppError';
-import { PartnershipStatus, ApplicationStatus } from '@prisma/client';
+import { PartnershipStatus, ApplicationStatus, Role, Prisma } from '@prisma/client';
 import { getCompanyIdForUser } from '../utils/company.util';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 import { validatePartnershipTransition } from '../utils/status-transition.util';
+import { universityUserService } from './universityUser.service';
 import { notificationService } from './notification.service';
 import { notifySystemAdmins } from '../utils/notification.util';
 import { NOTIFICATION_TYPES } from '../utils/constants';
@@ -283,11 +284,13 @@ export class PartnershipService {
           }
 
           // Tranzakcióban frissítjük a partnerséget és a diák elérhetőségét
+          const finalUniEmployeeId = uniEmployeeId || await universityUserService.findReferentForPartnership(partnership.studentId, partnership.positionId!);
+
           const [updatedPartnership] = await prisma.$transaction([
                prisma.dualPartnership.update({
                     where: { id },
                     data: {
-                         uniEmployeeId: uniEmployeeId,
+                         uniEmployeeId: finalUniEmployeeId,
                          status: PartnershipStatus.ACTIVE
                     },
                     select: this.getPartnershipSelect()
