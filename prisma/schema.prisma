@@ -53,6 +53,12 @@ enum RegistrationStatus {
   REJECTED
 }
 
+enum PositionType {
+  DUAL
+  INTERNSHIP
+  REGULAR_WORK
+}
+
 // ---------------------------------------------------------
 // FELHASZNÁLÓK ÉS PROFILOK
 // ---------------------------------------------------------
@@ -85,6 +91,10 @@ model User {
   companyEmployee CompanyEmployee?
 
   uniPartnerships DualPartnership[]
+
+  // Referensi kapcsolatok (University User esetén)
+  managedMajors    Major[]   @relation("MajorToUniversityUser")
+  managedCompanies Company[] @relation("CompanyToUniversityUser")
 
   notifications Notification[]
   auditLogs     AuditLog[]
@@ -194,6 +204,9 @@ model Major {
 
   // Kapcsolatok - pozíciók amelyek ehhez a szakhoz tartoznak
   positions Position[]
+
+  // Kari referensek, akik ehhez a szakhoz tartoznak
+  managedBy User[] @relation("MajorToUniversityUser")
 }
 
 // ---------------------------------------------------------
@@ -213,7 +226,8 @@ model Company {
   website      String?
   logoUrl      String?
 
-  hasOwnApplication Boolean @default(false)
+  hasOwnApplication      Boolean @default(false)
+  externalApplicationUrl String? // Külső jelentkezési URL (pl. Mercedes)
 
   status    RegistrationStatus @default(PENDING)
   isActive  Boolean            @default(true)
@@ -226,6 +240,9 @@ model Company {
 
   location Location[]
   images   CompanyImage[]
+
+  // Kari referensek, akik ehhez a céghez tartoznak
+  managedBy User[] @relation("CompanyToUniversityUser")
 }
 
 model Position {
@@ -239,7 +256,7 @@ model Position {
   majorId String?
   major   Major?  @relation(fields: [majorId], references: [id])
 
-  isDual Boolean @default(true)
+  type PositionType @default(DUAL)
 
   tags Tag[]
 
