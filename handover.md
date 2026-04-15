@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-03-31 (Képkezelés S3 integráció, Supabase Storage)
+> **Utolsó frissítés**: 2026-04-15 (Egyetemi és céges statisztikák, Controller tisztítás)
 > **Projekt státusz**: Production-ready
 
 ---
@@ -328,7 +328,7 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 - **Szak (Major) kezelés** - CRUD műveletek `/api/majors` végponton:
   - Szakok listázása, létrehozása, frissítése, törlése
   - StudentProfile kapcsolat: `majorId`, `firstChoiceId`, `secondChoiceId` → Major táblára hivatkozik
-- **Bővített statisztikák**: Teljes körű API statisztikák elérhetőek a `/api/stats` alatt (Jelentkezések, Partnerségek, Pozíciók, Trendek). Céges adminok számára is készült dedikált lekérdezés (`/api/stats/company/me`). Továbbá a hallgatói jelentkezéseknél a beérkezett adatok az elfogadott és leadott státuszok statisztikájával `stats` blokk is kiegészültek.
+- **Bővített statisztikák**: Teljes körű API statisztikák elérhetőek a `/api/stats` alatt (Jelentkezések, Partnerségek, Pozíciók, Trendek). Céges adminok számára is készült dedikált lekérdezés (`/api/stats/company/me`), valamint egyetemi felhasználók számára a hozzájuk rendelt diákok eloszlása (`/api/stats/university/student-distribution`). Továbbá a hallgatói jelentkezéseknél a beérkezett adatok az elfogadott és leadott státuszok statisztikájával `stats` blokk is kiegészültek.
 - **Konvenció szerinti félév kezelés**: A duális partnerségeknél a félévek egységes "YYYY/YY/S" formátumban kerülnek rögzítésre.
 - **Rendszergazdai email policy**: A `SYSTEM_ADMIN` felhasználók csak jelszó-visszaállítást és verifikációs emaileket kapnak, más értesítéseknél kimaradnak a levéllistából (adatbiztonsági és kényelmi okokból).
 - **Profil váltás (Középiskola -> Egyetem)**: Dedikált végpont a hallgatók számára az egyetemi adatok (Neptun, Szak) rögzítésére és a státuszváltásra (Rendszergazdai értesítéssel).
@@ -420,4 +420,4 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
 
 ---
 
-> **Megjegyzés**: Ez a dokumentáció a projekt 2026-03-15-i állapotát tükrözi. Kérd az aktualizálását, ha jelentős változások történnek.
+> **Megjegyzés**: Ez a dokumentáció a projekt 2026-04-15-i állapotát tükrözi.

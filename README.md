@@ -565,6 +565,8 @@ sequenceDiagram
 
 > **Miért így csináljuk? Mi történik és miért?** Ezzel a folyamattal biztosítjuk, hogy az esetenként hatalmas méretű és felbontású (akár 10 MB-os) fájlok letisztított és web-barát tömörítésű (`.webp`) képekké legyenek konvertálva még a tárolás előtt. Az S3 (Supabase Storage) használatával a képek skálázhatóan, biztonságosan és a szervertől függetlenül érhetőek el a CDN-en keresztül. A `.webp` formátum drasztikusan lecsökkenti a sávszélesség-igényt a végfelhasználók számára.
 
+> **Utolsó frissítés**: 2026-04-15 (Egyetemi és céges statisztikák, Controller tisztítás)
+
 ## Deployment Architecture
 
 Éles környezet (Railway) architektúrája:
@@ -858,6 +860,9 @@ A cégek saját bemutató képeinek (iroda, csapat) kezelésére. Végpontok a `
 | `GET` | `/partnerships` | Partnerségi statisztikák (státusz és félév szerinti bontás, átlagos időtartam). | SystemAdmin |
 | `GET` | `/positions` | Pozíció statisztikák (7 napon belül lejáró, jelentkezés nélküli pozíciók). | SystemAdmin |
 | `GET` | `/trends` | Időbeli trendek (regisztrációk, jelentkezések, partnerségek az elmúlt 6 hónapban). | SystemAdmin |
+| `GET` | `/university/student-distribution` | Egyetemi felhasználók számára cégek és szakok szerinti hallgatói eloszlás. | UniversityUser |
+
+**Bővített statisztikák**: Teljes körű API statisztikák elérhetőek a `/api/stats` alatt (Jelentkezések, Partnerségek, Pozíciók, Trendek). Céges adminok számára is készült dedikált lekérdezés (`/api/stats/company/me`), valamint egyetemi felhasználók számára a hozzájuk rendelt diákok eloszlása (`/api/stats/university/student-distribution`). Továbbá a hallgatói jelentkezéseknél a beérkezett adatok az elfogadott és leadott státuszok statisztikájával `stats` blokk is kiegészültek.
 
 ### Duális Partnerkapcsolatok (`/api/partnerships`)
 
@@ -969,4 +974,4 @@ A platform üzemeltetői. Minden végpont `SYSTEM_ADMIN` jogosultságot igényel
 | `PATCH` | `/:id/deactivate` | Felhasználó felfüggesztése. | SystemAdmin |
 
 ---
-**Megjegyzés**: Ez a dokumentáció a projekt 2026-03-15-i állapotát tükrözi. API változtatások esetén kérjük a dokumentáció frissítését.
+> **Megjegyzés**: Ez a dokumentáció a projekt 2026-04-15-i állapotát tükrözi.
