@@ -1,6 +1,6 @@
 # Duális Képzés Backend - Átadási Dokumentáció
 
-> **Utolsó frissítés**: 2026-04-15 (Egyetemi és céges statisztikák, Controller tisztítás)
+> **Utolsó frissítés**: 2026-04-15 (Pozíció típusrendszer, Referens Dashboard, Automatikus hozzárendelés)
 > **Projekt státusz**: Production-ready
 
 ---
@@ -131,12 +131,13 @@ npm run prisma:format
 - **CompanyEmployee** - Céges munkavállalók/mentorok
 - **Company** - Cég adatok
 - **Location** - Helyszínek (cégekhez és hallgatói profilokhoz)
-- **Position** - Állásajánlatok/pozíciók
+- **Position** - Állásajánlatok/pozíciók (Rugalmas típusrendszer: DUAL, PROFESSIONAL_PRACTICE, REGULAR_WORK)
 - **Application** - Jelentkezések
-- **DualPartnership** - Duális partneri kapcsolatok
+- **DualPartnership** - Duális partneri kapcsolatok (Automata referens hozzárendeléssel)
 - **Notification** - Értesítések
 - **News** - Hírek/közlemények
 - **AuditLog** - Audit napló
+- **Major** - Szak adatok (Kari referens kapcsolatokkal)
 - **MaterialCompletion** - Tananyag elvégzések és értékelések
 - **GalleryGroup** / **GalleryImage** - Rendszerszintű tematikus galéria albumok és optimalizált képek.
 - **CompanyImage** - Cégek szabadon feltöltött galériaképei.
@@ -381,6 +382,15 @@ A seed szkript (`npx prisma db seed`) a következő felhasználókat hozza létr
   - Központosított `AnonymizeService` a hallgatók, cégek és munkavállalók adatainak törlésére.
   - Az összes kapcsolódó entitás (Jelentkezések, Partnerségek, Értesítések, Helyszínek) automatikus anonimizálása.
   - Placeholder alapú, nulla-függőségű implementáció.
+- **Rugalmas Pozíció Típus Rendszer**:
+  - Az `isDual` boolean kivezetése. Új enum alapú típuskezelés: `DUAL`, `PROFESSIONAL_PRACTICE`, `REGULAR_WORK`.
+  - Támogatja a különböző álláslehetőségek és szakmai gyakorlati helyek elkülönítését.
+- **Külső Jelentkezési Linkek**:
+  - Külső karrieroldallal rendelkező cégek (pl. Mercedes) esetében az `externalApplicationUrl` mező használata redirect-hez.
+- **Referens Autómatizáció (Kari Dashboard)**:
+  - Kari referensek (UNIVERSITY_USER) hozzárendelése szakokhoz és cégekhez.
+  - Új statisztikai dashboard a referensek számára a hozzárendelt területekről.
+  - Automatikus referens-kiválasztás a hallgató elfogadásakor (Major + Company párosítás alapján).
 
 ### 🔄 Fejlesztés Alatt
 - Részletes keresés és szűrés (város, kategória, kulcsszó)
