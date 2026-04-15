@@ -217,5 +217,60 @@ export class StatsService {
                partnershipsPerMonth
           };
      }
+
+     async getUniversityStudentDistribution(uniEmployeeId: string) {
+          const partnerships = await prisma.dualPartnership.findMany({
+               where: {
+                    uniEmployeeId: uniEmployeeId,
+                    deletedAt: null,
+                    status: PartnershipStatus.ACTIVE
+               },
+               include: {
+                    student: {
+                         include: {
+                              major: true
+                         }
+                    },
+                    position: {
+                         include: {
+                              company: true
+                         }
+                    }
+               }
+          });
+
+          const statsMap: Record<string, { companyName: string; majors: Record<string, { majorName: string; count: number }> }> = {};
+
+          partnerships.forEach(p => {
+               const companyId = p.position?.companyId;
+               const companyName = p.position?.company.name || "Ismeretlen cég";
+               const majorId = p.student.majorId || "unknown_major";
+               const majorName = p.student.major?.name || "Ismeretlen szak";
+
+               if (!companyId) return;
+
+               if (!statsMap[companyId]) {
+                    statsMap[companyId] = {
+                         companyName,
+                         majors: {}
+                    };
+               }
+
+               if (!statsMap[companyId].majors[majorId]) {
+                    statsMap[companyId].majors[majorId] = {
+                         majorName,
+                         count: 0
+                    };
+               }
+
+               statsMap[companyId].majors[majorId].count++;
+          });
+
+          // Formázás a kliens számára
+          return Object.values(statsMap).map(companyStat => ({
+               companyName: companyStat.companyName,
+               majors: Object.values(companyStat.majors)
+          }));
+     }
 }
 export const statsService = new StatsService();
