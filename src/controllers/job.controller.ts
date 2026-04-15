@@ -7,18 +7,12 @@ import { getCompanyIdForUser, checkPositionOwnership } from "../utils/company.ut
 import { getPaginationParams } from "../utils/pagination.util";
 import { ForbiddenError } from "../errors/AppError";
 
-/**
- * Get job positions (supports optional filtering by dual/non-dual)
- * @route GET /api/jobs/positions
- * @group Jobs - Operations related to job positions
- * @param {boolean} isDual.query.optional - Filter by dual/non-dual status (true/false)
- * @returns {object} 200 - Paginated list of positions
- */
+
 export const getAllPositions = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const params = getPaginationParams(req.query);
-        const isDual = req.query.isDual !== undefined ? req.query.isDual === 'true' : undefined;
-        const result = await jobService.getAll(params, isDual);
+        const type = req.query.type as string | undefined;
+        const result = await jobService.getAll(params, type);
         res.json({
             success: true,
             data: result.data.map(mapPosition),
@@ -38,7 +32,7 @@ export const getAllPositions = async (req: Request, res: Response, next: NextFun
 export const getDualPositions = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const params = getPaginationParams(req.query);
-        const result = await jobService.getAll(params, true);
+        const result = await jobService.getAll(params, 'DUAL');
         res.json({
             success: true,
             data: result.data.map(mapPosition),
@@ -49,16 +43,11 @@ export const getDualPositions = async (req: Request, res: Response, next: NextFu
     }
 };
 
-/**
- * Get only non-dual job positions
- * @route GET /api/jobs/positions/non-dual
- * @group Jobs - Operations related to job positions
- * @returns {object} 200 - Paginated list of non-dual positions
- */
+
 export const getNonDualPositions = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const params = getPaginationParams(req.query);
-        const result = await jobService.getAll(params, false);
+        const result = await jobService.getAll(params, 'REGULAR_WORK');
         res.json({
             success: true,
             data: result.data.map(mapPosition),
@@ -95,13 +84,6 @@ export const getPositionsByCompanyId = async (req: Request, res: Response, next:
     }
 };
 
-/**
- * Create a new tag
- * @route POST /api/jobs/tags
- * @group Tags - Job position tags
- * @param {object} tag.body.required - Tag name
- * @returns {object} 201 - Tag created
- */
 export const createTag = async (
     req: Request<{}, {}, TagInput>,
     res: Response,
@@ -119,14 +101,6 @@ export const createTag = async (
     }
 };
 
-/**
- * Create a new job position
- * @route POST /api/jobs/positions
- * @group Jobs - Job operations
- * @param {object} position.body.required - Position details
- * @returns {object} 201 - Position created
- * @security bearerAuth
- */
 export const createPosition = async (
     req: Request<{}, {}, PositionInput>,
     res: Response,

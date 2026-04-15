@@ -82,7 +82,7 @@ export const mapPosition = (position: (Partial<Position> & {
           description: rest.description,
           majorId: rest.majorId,
           major: mapMajor(major || null),
-          isDual: rest.isDual ?? true,
+          type: rest.type!,
           deadline: rest.deadline,
           isActive: rest.isActive ?? true,
           createdAt: rest.createdAt,

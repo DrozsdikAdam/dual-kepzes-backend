@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { userService } from "../services/user.service";
+import { universityUserService } from "../services/universityUser.service";
 import { logAction } from "../utils/logger.util";
 import { Role } from "@prisma/client";
 import { getPaginationParams } from "../utils/pagination.util";
 import { ForbiddenError, UnauthorizedError } from "../errors/AppError";
+import { AssignMajorsInput, AssignCompaniesInput, PotentialReferentsQuery } from "../schemas/universityUser.schema";
 
 export const getMeUniversityUser = async (req: Request, res: Response, next: NextFunction) => {
      try {
@@ -136,6 +138,81 @@ export const deleteUniversityUser = async (req: Request, res: Response, next: Ne
           });
 
           res.json({ success: true, message: "A rekord sikeresen törölve." });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const getMyAssignments = async (req: Request, res: Response, next: NextFunction) => {
+     try {
+          const userId = req.user?.userId;
+          if (!userId) throw new UnauthorizedError("Nincs azonosított felhasználó.");
+          
+          const assignments = await universityUserService.getReferentAssignments(userId);
+          res.json({ success: true, data: assignments });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const assignMajorsToReferent = async (
+     req: Request<{ id: string }, {}, AssignMajorsInput>,
+     res: Response,
+     next: NextFunction
+) => {
+     try {
+          const { id } = req.params;
+          const result = await universityUserService.assignMajors(id, req.body.majorIds);
+
+          await logAction(req, {
+               action: "ASSIGN_MAJORS_TO_REFERENT",
+               entity: "User",
+               entityId: id,
+               details: { majorIds: req.body.majorIds }
+          });
+
+          res.json({ success: true, message: "Szakok sikeresen hozzárendelve.", data: result });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const assignCompaniesToReferent = async (
+     req: Request<{ id: string }, {}, AssignCompaniesInput>,
+     res: Response,
+     next: NextFunction
+) => {
+     try {
+          const { id } = req.params;
+          const result = await universityUserService.assignCompanies(id, req.body.companyIds);
+
+          await logAction(req, {
+               action: "ASSIGN_COMPANIES_TO_REFERENT",
+               entity: "User",
+               entityId: id,
+               details: { companyIds: req.body.companyIds }
+          });
+
+          res.json({ success: true, message: "Cégek sikeresen hozzárendelve.", data: result });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const listAllReferents = async (req: Request, res: Response, next: NextFunction) => {
+     try {
+          const referents = await universityUserService.getAllReferents();
+          res.json({ success: true, data: referents });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const getPotentialReferents = async (req: Request, res: Response, next: NextFunction) => {
+     try {
+          const { studentId, positionId } = req.query as any;
+          const referents = await universityUserService.listPotentialReferents(studentId, positionId);
+          res.json({ success: true, data: referents });
      } catch (error) {
           next(error);
      }

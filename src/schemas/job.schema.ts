@@ -31,6 +31,7 @@ export const CompanyCreateSchema = z.object({
         logoUrl: z.string().trim().url("Érvénytelen logó URL").optional(),
         website: z.string().trim().url("Érvénytelen weboldal URL").optional().nullable(),
         hasOwnApplication: z.boolean().default(false),
+        externalApplicationUrl: z.string().trim().url("Érvénytelen külső jelentkezési URL").optional().nullable(),
     }).refine((data) => {
         if (data.hasOwnApplication && !data.website) {
             return false;
@@ -49,7 +50,7 @@ export const PositionCreateSchema = z.object({
         description: z.string().optional(),
         majorId: z.string().uuid("Érvénytelen szak azonosító").optional(),
         locationId: z.string().uuid("Érvénytelen helyszín azonosító"),
-        isDual: z.boolean().default(false),
+        type: z.enum(['DUAL', 'PROFESSIONAL_PRACTICE', 'REGULAR_WORK']).default('DUAL'),
         deadline: z.coerce.date().optional().nullable(),
         tags: z.array(
             z.object({

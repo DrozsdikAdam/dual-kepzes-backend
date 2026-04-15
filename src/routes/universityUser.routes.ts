@@ -7,10 +7,20 @@ import {
      deleteUniversityUser,
      getMeUniversityUser,
      updateMeUniversityUser,
-     deleteMeUniversityUser
+     deleteMeUniversityUser,
+     getMyAssignments,
+     assignMajorsToReferent,
+     assignCompaniesToReferent,
+     listAllReferents,
+     getPotentialReferents
 } from "../controllers/universityUser.controller";
 import { validate } from "../middlewares/validate.middleware";
-import { UniversityUserUpdateSchema } from "../schemas/universityUser.schema";
+import { 
+     UniversityUserUpdateSchema, 
+     AssignMajorsSchema, 
+     AssignCompaniesSchema,
+     PotentialReferentsQuerySchema
+} from "../schemas/universityUser.schema";
 
 const router = Router();
 
@@ -150,5 +160,63 @@ router.patch("/:id", isSystemAdmin, validate(UniversityUserUpdateSchema), update
  *         description: Account deleted successfully
  */
 router.delete("/:id", isSystemAdmin, deleteUniversityUser)
+
+// --- Referensi hozzárendelések ---
+
+/**
+ * @swagger
+ * /api/university-users/me/assignments:
+ *   get:
+ *     summary: Get my assigned majors and companies (Referent)
+ *     tags: [UniversityUsers]
+ */
+router.get("/me/assignments", isUniversityUser, getMyAssignments);
+
+/**
+ * @swagger
+ * /api/university-users/referents:
+ *   get:
+ *     summary: List all active referents
+ *     tags: [UniversityUsers]
+ */
+router.get("/referents", isUniversityStaff, listAllReferents);
+
+/**
+ * @swagger
+ * /api/university-users/potential-referents:
+ *   get:
+ *     summary: List potential referents for a partnership (Staff/Admin)
+ *     tags: [UniversityUsers]
+ *     parameters:
+ *       - in: query
+ *         name: studentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: positionId
+ *         required: true
+ *         schema:
+ *           type: string
+ */
+router.get("/potential-referents", isUniversityStaff, validate(PotentialReferentsQuerySchema), getPotentialReferents);
+
+/**
+ * @swagger
+ * /api/university-users/{id}/majors:
+ *   post:
+ *     summary: Assign majors to a referent (Admin)
+ *     tags: [UniversityUsers]
+ */
+router.post("/:id/majors", isSystemAdmin, validate(AssignMajorsSchema), assignMajorsToReferent);
+
+/**
+ * @swagger
+ * /api/university-users/{id}/companies:
+ *   post:
+ *     summary: Assign companies to a referent (Admin)
+ *     tags: [UniversityUsers]
+ */
+router.post("/:id/companies", isSystemAdmin, validate(AssignCompaniesSchema), assignCompaniesToReferent);
 
 export default router;

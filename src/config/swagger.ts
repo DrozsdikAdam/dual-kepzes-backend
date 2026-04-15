@@ -79,7 +79,7 @@ const options: swaggerJsdoc.Options = {
                               companyId: { type: 'string', format: 'uuid' },
                               title: { type: 'string' },
                               description: { type: 'string' },
-                              isDual: { type: 'boolean', default: false },
+                              type: { type: 'string', enum: ['DUAL', 'PROFESSIONAL_PRACTICE', 'REGULAR_WORK'], default: 'DUAL' },
                               deadline: { type: 'string', format: 'date-time' },
                               location: {
                                    type: 'object',
@@ -108,7 +108,7 @@ const options: swaggerJsdoc.Options = {
                          properties: {
                               title: { type: 'string' },
                               description: { type: 'string' },
-                              isDual: { type: 'boolean' },
+                              type: { type: 'string', enum: ['DUAL', 'PROFESSIONAL_PRACTICE', 'REGULAR_WORK'] },
                               deadline: { type: 'string', format: 'date-time' },
                               location: {
                                    type: 'object',

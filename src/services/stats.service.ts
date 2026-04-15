@@ -324,5 +324,127 @@ export class StatsService {
                }))
           };
      }
+
+     async getReferentOverview(referentId: string) {
+          // 1. Get assignments for this referent
+          const referent = await prisma.user.findUnique({
+               where: { id: referentId },
+               select: {
+                    managedMajors: { select: { id: true, name: true } },
+                    managedCompanies: { select: { id: true, name: true, description: true, website: true, logoUrl: true } }
+               }
+          });
+
+          if (!referent) return null;
+
+          const majorIds = referent.managedMajors.map(m => m.id);
+          const companyIds = referent.managedCompanies.map(c => c.id);
+
+          // 2. Get students (partnerships) at these companies with these majors
+          const partnerships = await prisma.dualPartnership.findMany({
+               where: {
+                    status: {
+                         in: [
+                              PartnershipStatus.ACTIVE,
+                              PartnershipStatus.PENDING_MENTOR,
+                              PartnershipStatus.PENDING_UNIVERSITY
+                         ]
+                    },
+                    deletedAt: null,
+                    position: {
+                         companyId: { in: companyIds }
+                    },
+                    student: {
+                         majorId: { in: majorIds }
+                    }
+               },
+               select: {
+                    student: {
+                         select: {
+                              id: true,
+                              majorId: true,
+                              major: { select: { name: true } },
+                              user: { select: { fullName: true, email: true } }
+                         }
+                    },
+                    position: {
+                         select: {
+                              companyId: true,
+                              company: { select: { name: true } }
+                         }
+                    }
+               }
+          });
+
+          // 3. Aggregate data by company
+          const companyStats: Record<string, any> = {};
+
+          // Initialize with all managed companies even if no students
+          referent.managedCompanies.forEach(c => {
+               companyStats[c.id] = {
+                    companyId: c.id,
+                    companyName: c.name,
+                    description: c.description,
+                    website: c.website,
+                    logoUrl: c.logoUrl,
+                    studentsByMajor: {},
+                    otherReferents: []
+               };
+          });
+
+          partnerships.forEach(p => {
+               const cId = p.position?.companyId!;
+               const mId = p.student.majorId!;
+               const mName = p.student.major?.name || "Ismeretlen szak";
+
+               if (!companyStats[cId].studentsByMajor[mId]) {
+                    companyStats[cId].studentsByMajor[mId] = {
+                         majorName: mName,
+                         count: 0,
+                         students: []
+                    };
+               }
+
+               companyStats[cId].studentsByMajor[mId].count++;
+               companyStats[cId].studentsByMajor[mId].students.push({
+                    name: p.student.user.fullName,
+                    email: p.student.user.email
+               });
+          });
+
+          // 4. Find other referents assigned to these companies
+          const allReferentsAtCompanies = await prisma.user.findMany({
+               where: {
+                    role: 'UNIVERSITY_USER',
+                    managedCompanies: {
+                         some: { id: { in: companyIds } }
+                    },
+                    NOT: { id: referentId }
+               },
+               select: {
+                    id: true,
+                    fullName: true,
+                    email: true,
+                    managedCompanies: { select: { id: true } }
+               }
+          });
+
+          allReferentsAtCompanies.forEach(ref => {
+               ref.managedCompanies.forEach(c => {
+                    if (companyStats[c.id]) {
+                         companyStats[c.id].otherReferents.push({
+                              id: ref.id,
+                              fullName: ref.fullName,
+                              email: ref.email
+                         });
+                    }
+               });
+          });
+
+          return Object.values(companyStats).map((s: any) => ({
+               ...s,
+               studentsByMajor: Object.values(s.studentsByMajor)
+          }));
+     }
 }
 export const statsService = new StatsService();
