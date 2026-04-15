@@ -29,6 +29,14 @@ export const AssignCompaniesSchema = z.object({
      })
 })
 
+export const PotentialReferentsQuerySchema = z.object({
+     query: z.object({
+          studentId: z.string().uuid("Érvénytelen hallgató azonosító"),
+          positionId: z.string().uuid("Érvénytelen pozíció azonosító")
+     })
+});
+
 export type UniversityUserUpdateInput = z.infer<typeof UniversityUserUpdateSchema>["body"];
 export type AssignMajorsInput = z.infer<typeof AssignMajorsSchema>["body"];
 export type AssignCompaniesInput = z.infer<typeof AssignCompaniesSchema>["body"];
+export type PotentialReferentsQuery = z.infer<typeof PotentialReferentsQuerySchema>["query"];
