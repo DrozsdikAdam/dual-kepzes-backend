@@ -150,7 +150,7 @@ A listázó végpontok egységes válaszstruktúrát és lekérdezési paraméte
 | `STUDENT` | Hallgató | Saját profil, jelentkezések, partnerségek megtekintése, **egyetemi profilra váltás**. |
 | `MENTOR` | Céges munkavállaló/Mentor | Cég pozíciói, jelentkezések megtekintése, mentor funkciók. |
 | `COMPANY_ADMIN` | Cégadmin | Teljes cégkezelés, jelentkezések értékelése, pozíciók és munkavállalók kezelése. (Regisztráció után rendszeradminisztrátori jóváhagyásra vár). |
-| `UNIVERSITY_USER` | Egyetemi kapcsolattartó | Partnerségek jóváhagyása, hallgatók felügyelete. |
+| `UNIVERSITY_USER` | Egyetemi kapcsolattartó/Referens | Partnerségek jóváhagyása, hallgatók felügyelete, szakhoz és céghez rendelt dashboard kezelése. |
 | `SYSTEM_ADMIN` | Rendszergazda | Teljes rendszer adminisztráció, minden entitás kezelése. (Email policy: Csak biztonsági emaileket kap). |
 
 ## Adatbázis Séma Áttekintés
@@ -194,6 +194,7 @@ erDiagram
         string taxId UK
         string contactEmail
         string website
+        string? externalApplicationUrl
         boolean hasOwnApplication
         RegistrationStatus status
         boolean isActive
@@ -216,9 +217,9 @@ erDiagram
         string companyId FK
         string title
         string majorId FK
-        string type
+        PositionType type
         string? externalApplicationUrl
-        datetime deadline
+        datetime? deadline
         boolean isActive
         string locationId FK
     }
@@ -295,6 +296,8 @@ erDiagram
     DualPartnership }o--|| User : "uni supervisor"
     DualPartnership }o--|| Position : "linked to"
     StudentProfile ||--o{ MaterialCompletion : "completes"
+    User }o--o{ Major : "managed majors"
+    User }o--o{ Company : "managed companies"
 ```
 
 **Részletes sémát** lásd: `prisma/schema.prisma` vagy Prisma Studio (`npm run prisma:studio`)
@@ -486,20 +489,22 @@ flowchart TD
     CheckActive -->|Yes| End4([Error: 400 Bad Request])
     CheckActive -->|No| CreatePartnership[Auto-create Partnership]
     
-    CreatePartnership --> P1[Partnership: PENDING_MENTOR]
+    CreatePartnership --> AutoAssign[Auto-assign University Referent<br/>based on Major + Company]
+    AutoAssign --> P1[Partnership: PENDING_MENTOR]
     
     P1 --> AssignMentor{Company Assigns Mentor?}
     AssignMentor -->|Yes| P2[Partnership: PENDING_UNIVERSITY]
     AssignMentor -->|No| P1
     
-    P2 --> Notify1[Notify System Admins]
-    Notify1 --> AssignUni{University Assigns Supervisor?}
-    AssignUni -->|Yes| P3[Partnership: ACTIVE]
+    P2 --> NotifyUni[Notify University Referent]
+    NotifyUni --> Review[Referent Reviews Partnership]
+    Review -->|Approved| P3[Partnership: ACTIVE]
     P3 --> SetAvail[Student: isAvailableForWork = false]
     SetAvail --> Monitor[Ongoing Mentorship]
-    AssignUni -->|No| P2
+    Review -->|Rejected/Terminated| End2([Partnership: TERMINATED])
+    
     Monitor --> Complete{Completion or Termination?}
-    Complete -->|Terminated| End2([Partnership: TERMINATED])
+    Complete -->|Terminated| End2
     Complete -->|Completed| End3([Partnership: COMPLETED])
     
     style Start fill:#9e9e9e,stroke:#424242,stroke-width:2px,color:#fff
@@ -566,7 +571,7 @@ sequenceDiagram
 
 > **Miért így csináljuk? Mi történik és miért?** Ezzel a folyamattal biztosítjuk, hogy az esetenként hatalmas méretű és felbontású (akár 10 MB-os) fájlok letisztított és web-barát tömörítésű (`.webp`) képekké legyenek konvertálva még a tárolás előtt. Az S3 (Supabase Storage) használatával a képek skálázhatóan, biztonságosan és a szervertől függetlenül érhetőek el a CDN-en keresztül. A `.webp` formátum drasztikusan lecsökkenti a sávszélesség-igényt a végfelhasználók számára.
 
-> **Utolsó frissítés**: 2026-04-15 (Egyetemi és céges statisztikák, Controller tisztítás)
+> **Utolsó frissítés**: 2026-04-15 (Referens Dashboard, Automatikus hozzárendelés, Pozíció típusrendszer)
 
 ## Deployment Architecture
 
@@ -772,8 +777,8 @@ A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
 | `GET` | `/` | Aktív pozíciók listázása. (Opcionális: `?type=DUAL`, `PROFESSIONAL_PRACTICE`, `REGULAR_WORK`) | Publikus |
 | `GET` | `/dual` | Kizárólag duális pozíciók listázása. | Publikus |
 | `GET` | `/non-dual` | Kizárólag nem duális pozíciók listázása. | Publikus |
-| `POST` | `/` | Új pozíció létrehozása. | CompanyAdmin |
-| `GET` | `/:id` | Pozíció részletei. | Publikus |
+| `POST` | `/` | Új pozíció létrehozása. (Típus: `type`, Külső link: `externalApplicationUrl` opciókkal). | CompanyAdmin |
+| `GET` | `/:id` | Pozíció részletei. (Visszaadja a típust és a külső jelentkezési linket is). | Publikus |
 | `PATCH` | `/:id` | Pozíció frissítése. | CompanyEmployee + Owner |
 | `DELETE` | `/:id` | Pozíció törlése. | CompanyEmployee + Owner |
 | `PATCH` | `/:id/deactivate`| Pozíció inaktiválása. | CompanyEmployee + Owner |
@@ -862,6 +867,7 @@ A cégek saját bemutató képeinek (iroda, csapat) kezelésére. Végpontok a `
 | `GET` | `/positions` | Pozíció statisztikák (7 napon belül lejáró, jelentkezés nélküli pozíciók). | SystemAdmin |
 | `GET` | `/trends` | Időbeli trendek (regisztrációk, jelentkezések, partnerségek az elmúlt 6 hónapban). | SystemAdmin |
 | `GET` | `/university/student-distribution` | Egyetemi felhasználók számára cégek és szakok szerinti hallgatói eloszlás. | UniversityUser |
+| `GET` | `/university/referent-overview` | **[ÚJ]** Kari referens dashboard: a hozzárendelt cégek és diákok összesített statisztikái. | UniversityUser |
 
 **Bővített statisztikák**: Teljes körű API statisztikák elérhetőek a `/api/stats` alatt (Jelentkezések, Partnerségek, Pozíciók, Trendek). Céges adminok számára is készült dedikált lekérdezés (`/api/stats/company/me`), valamint egyetemi felhasználók számára a hozzájuk rendelt diákok eloszlása (`/api/stats/university/student-distribution`). Továbbá a hallgatói jelentkezéseknél a beérkezett adatok az elfogadott és leadott státuszok statisztikájával `stats` blokk is kiegészültek.
 
@@ -948,6 +954,10 @@ Egyetemi kapcsolattartók és adminisztrátorok.
 | `GET` | `/:id` | Egyetemi felhasználó lekérése ID alapján. | UniversityStaff |
 | `PATCH` | `/:id` | Adatok frissítése. | SystemAdmin |
 | `DELETE` | `/:id` | Törlés. | SystemAdmin |
+| `POST` | `/:id/majors` | Szakok hozzárendelése referenshez. | SystemAdmin |
+| `POST` | `/:id/companies` | Cégek hozzárendelése referenshez. | SystemAdmin |
+| `GET` | `/referents` | Aktív referensek listázása. | UniversityStaff |
+| `GET` | `/potential-referents` | **[ÚJ]** Potenciális referensek listázása egy adott szakhoz (cég szerinti jelöléssel). | Staff |
 
 ### Rendszer Adminisztrátorok (`/api/system-admins`)
 
