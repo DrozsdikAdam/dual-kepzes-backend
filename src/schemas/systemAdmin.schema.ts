@@ -10,3 +10,13 @@ export const SystemAdminUpdateSchema = z.object({
           isActive: z.boolean().optional(),
      }).strict()
 })
+
+export const InviteEmailSchema = z.object({
+     body: z.object({
+          email: z.string().email("Érvénytelen email formátum"),
+          subject: z.string().min(1, "A tárgy nem lehet üres"),
+          body: z.string().min(1, "Az üzenet törzse nem lehet üres")
+     })
+});
+
+export type InviteEmailInput = z.infer<typeof InviteEmailSchema>["body"];
