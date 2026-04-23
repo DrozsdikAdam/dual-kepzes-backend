@@ -4,7 +4,8 @@ import { logAction } from "../utils/logger.util";
 import { Role } from "@prisma/client";
 import { getPaginationParams } from "../utils/pagination.util";
 import { UnauthorizedError } from "../errors/AppError";
-
+import { InviteEmailInput } from "../schemas/systemAdmin.schema";
+import { addEmailToQueue } from "../services/email.queue";
 export const getMeSystemAdmin = async (req: Request, res: Response, next: NextFunction) => {
      try {
           const userId = req.user?.userId;
@@ -159,6 +160,42 @@ export const getAllAdminUsers = async (req: Request, res: Response, next: NextFu
                data: paginated.data,
                pagination: paginated.pagination
           });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const inviteCompany = async (req: Request<{}, {}, InviteEmailInput>, res: Response, next: NextFunction) => {
+     try {
+          const { email, subject, body } = req.body;
+
+          await addEmailToQueue({ email, subject, body });
+
+          await logAction(req, {
+               action: "INVITE_COMPANY",
+               entity: "System",
+               details: { invitedEmail: email, invitedBy: req.user?.userId }
+          });
+
+          res.json({ success: true, message: "Céges meghívó sikeresen kiküldve." });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export const inviteStudent = async (req: Request<{}, {}, InviteEmailInput>, res: Response, next: NextFunction) => {
+     try {
+          const { email, subject, body } = req.body;
+
+          await addEmailToQueue({ email, subject, body });
+
+          await logAction(req, {
+               action: "INVITE_STUDENT",
+               entity: "System",
+               details: { invitedEmail: email, invitedBy: req.user?.userId }
+          });
+
+          res.json({ success: true, message: "Hallgatói meghívó sikeresen kiküldve." });
      } catch (error) {
           next(error);
      }
