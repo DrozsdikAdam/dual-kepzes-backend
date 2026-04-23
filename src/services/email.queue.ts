@@ -6,7 +6,7 @@ export const emailQueue = isRedisEnabled
      : null;
 
 export const addEmailToQueue = async (data: {
-     notificationId: string;
+     notificationId?: string;
      email: string;
      subject: string;
      body: string;
