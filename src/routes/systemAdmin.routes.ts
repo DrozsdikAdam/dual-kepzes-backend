@@ -8,9 +8,11 @@ import {
      getMeSystemAdmin,
      updateMeSystemAdmin,
      deleteMeSystemAdmin,
-     getAllAdminUsers
+     getAllAdminUsers,
+     inviteCompany,
+     inviteStudent
 } from "../controllers/systemAdmin.controller"
-import { SystemAdminUpdateSchema } from "../schemas/systemAdmin.schema"
+import { SystemAdminUpdateSchema, InviteEmailSchema } from "../schemas/systemAdmin.schema"
 import { authenticateToken, isSystemAdmin } from "../middlewares/auth.middleware"
 
 const router = Router()
@@ -24,6 +26,62 @@ const router = Router()
 
 router.use(authenticateToken)
 router.use(isSystemAdmin)
+
+/**
+ * @swagger
+ * /api/system-admins/invite-company:
+ *   post:
+ *     summary: Send a registration invitation email to a company
+ *     tags: [SystemAdmins]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, subject, body]
+ *             properties:
+ *               email:
+ *                 type: string
+ *               subject:
+ *                 type: string
+ *               body:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Invitation sent successfully
+ */
+router.post("/invite-company", validate(InviteEmailSchema), inviteCompany)
+
+/**
+ * @swagger
+ * /api/system-admins/invite-student:
+ *   post:
+ *     summary: Send a registration invitation email to a student
+ *     tags: [SystemAdmins]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, subject, body]
+ *             properties:
+ *               email:
+ *                 type: string
+ *               subject:
+ *                 type: string
+ *               body:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Invitation sent successfully
+ */
+router.post("/invite-student", validate(InviteEmailSchema), inviteStudent)
 
 /**
  * @swagger
