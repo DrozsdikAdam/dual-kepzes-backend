@@ -340,7 +340,7 @@ export class StatsService {
           const majorIds = referent.managedMajors.map(m => m.id);
           const companyIds = referent.managedCompanies.map(c => c.id);
 
-          // 2. Get students (partnerships) at these companies with these majors
+          // 2. Get students (partnerships) at these companies with these majors, OR if directly assigned to this referent
           const partnerships = await prisma.dualPartnership.findMany({
                where: {
                     status: {
@@ -351,12 +351,19 @@ export class StatsService {
                          ]
                     },
                     deletedAt: null,
-                    position: {
-                         companyId: { in: companyIds }
-                    },
-                    student: {
-                         majorId: { in: majorIds }
-                    }
+                    OR: [
+                         {
+                              position: {
+                                   companyId: { in: companyIds.length > 0 ? companyIds : ['____empty____'] }
+                              },
+                              student: {
+                                   majorId: { in: majorIds.length > 0 ? majorIds : ['____empty____'] }
+                              }
+                         },
+                         {
+                              uniEmployeeId: referentId
+                         }
+                    ]
                },
                select: {
                     student: {
@@ -370,7 +377,7 @@ export class StatsService {
                     position: {
                          select: {
                               companyId: true,
-                              company: { select: { name: true } }
+                              company: { select: { id: true, name: true, description: true, website: true, logoUrl: true } }
                          }
                     }
                }
@@ -392,10 +399,29 @@ export class StatsService {
                };
           });
 
+          const allRelevantCompanyIds = new Set(companyIds);
+
           partnerships.forEach(p => {
-               const cId = p.position?.companyId!;
-               const mId = p.student.majorId!;
+               const cId = p.position?.companyId;
+               if (!cId) return;
+
+               const mId = p.student.majorId || "unknown_major";
                const mName = p.student.major?.name || "Ismeretlen szak";
+
+               if (!companyStats[cId]) {
+                    const comp = p.position!.company;
+                    companyStats[cId] = {
+                         companyId: comp.id,
+                         companyName: comp.name,
+                         description: comp.description,
+                         website: comp.website,
+                         logoUrl: comp.logoUrl,
+                         studentsByMajor: {},
+                         otherReferents: []
+                    };
+               }
+
+               allRelevantCompanyIds.add(cId);
 
                if (!companyStats[cId].studentsByMajor[mId]) {
                     companyStats[cId].studentsByMajor[mId] = {
@@ -413,24 +439,29 @@ export class StatsService {
           });
 
           // 4. Find other referents assigned to these companies
-          const allReferentsAtCompanies = await prisma.user.findMany({
-               where: {
-                    role: 'UNIVERSITY_USER',
-                    managedCompanies: {
-                         some: { id: { in: companyIds } }
+          const relevantCompanyIdsArray = Array.from(allRelevantCompanyIds);
+
+          let allReferentsAtCompanies: any[] = [];
+          if (relevantCompanyIdsArray.length > 0) {
+               allReferentsAtCompanies = await prisma.user.findMany({
+                    where: {
+                         role: 'UNIVERSITY_USER',
+                         managedCompanies: {
+                              some: { id: { in: relevantCompanyIdsArray } }
+                         },
+                         NOT: { id: referentId }
                     },
-                    NOT: { id: referentId }
-               },
-               select: {
-                    id: true,
-                    fullName: true,
-                    email: true,
-                    managedCompanies: { select: { id: true } }
-               }
-          });
+                    select: {
+                         id: true,
+                         fullName: true,
+                         email: true,
+                         managedCompanies: { select: { id: true } }
+                    }
+               });
+          }
 
           allReferentsAtCompanies.forEach(ref => {
-               ref.managedCompanies.forEach(c => {
+               ref.managedCompanies.forEach((c: { id: string }) => {
                     if (companyStats[c.id]) {
                          companyStats[c.id].otherReferents.push({
                               id: ref.id,

@@ -7,7 +7,8 @@ import {
      getPositionStats,
      getTrendStats,
      getUniversityStudentDistribution,
-     getMyCompanyStats
+     getMyCompanyStats,
+     getReferentOverview
 } from "../controllers/stats.controller";
 
 
@@ -255,5 +256,18 @@ router.get("/trends", authenticateToken, isSystemAdmin, getTrendStats);
  */
 router.get("/university/student-distribution", authenticateToken, isUniversityUser, getUniversityStudentDistribution);
 
+/**
+ * @swagger
+ * /api/stats/university/referent-overview:
+ *   get:
+ *     summary: Get referent overview (University User)
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of managed companies with student distributions
+ */
+router.get("/university/referent-overview", authenticateToken, isUniversityUser, getReferentOverview);
 
 export default router;

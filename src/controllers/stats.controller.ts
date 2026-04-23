@@ -78,3 +78,15 @@ export const getMyCompanyStats = async (req: Request, res: Response, next: NextF
         next(error);
     }
 };
+
+export const getReferentOverview = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) throw new UnauthorizedError("Nincs azonosított felhasználó.");
+
+        const stats = await statsService.getReferentOverview(userId);
+        res.json({ success: true, data: stats });
+    } catch (error) {
+        next(error);
+    }
+};
