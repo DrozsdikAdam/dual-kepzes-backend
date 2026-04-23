@@ -327,7 +327,7 @@ A teljes API dokumentáció a Swagger UI-on érhető el: `/api-docs`
 | Egyetemi user-ek | `/api/university-users` | `universityUser.routes.ts` | Referens hozzárendelés, potenciális referensek |
 | Cégadminok | `/api/company-admins` | `companyAdmin.routes.ts` | Céges admin kezelés |
 | Munkavállalók | `/api/employees` | `employee.routes.ts` | Mentor lista, mentorált hallgatók |
-| Rendszeradminok | `/api/system-admins` | `systemAdmin.routes.ts` | Rendszergazda kezelés |
+| Rendszeradminok | `/api/system-admins` | `systemAdmin.routes.ts` | Rendszergazda kezelés, Cég/Diák meghívók küldése |
 | Felhasználók | `/api/users` | `user.routes.ts` | Aktiválás/deaktiválás (admin) |
 | Szakok | `/api/majors` | `major.routes.ts` | Szak CRUD |
 | Helyszínek | `/api/locations` | `location.routes.ts` | Céghelyszínek listázása |
@@ -409,8 +409,8 @@ npx prisma migrate deploy
 - Képgaléria rendszer (S3, optimalizálás, rendszer + céges galéria)
 - Statisztikai dashboard-ok (rendszer, cég, egyetem, referens szintű)
 - GDPR-kompatibilis anonimizáló rendszer
-- Audit naplózás
 - Biztonsági middleware-ek (ownership, idempotency, rate limiting)
+- **Rendszeradmin Meghívók**: Automatikus regisztrációs linkek küldése e-mailben (cégek és diákok számára)
 
 ### 🔄 Fejlesztés Alatt / Tervezett
 - Részletes keresés és szűrés bővítése (város, kategória, kulcsszó)

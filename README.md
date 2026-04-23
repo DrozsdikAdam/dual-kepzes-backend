@@ -973,6 +973,8 @@ A platform üzemeltetői. Minden végpont `SYSTEM_ADMIN` jogosultságot igényel
 | `GET` | `/:id` | Rendszeradmin lekérése ID alapján. | SystemAdmin |
 | `PATCH` | `/:id` | Adatok frissítése. | SystemAdmin |
 | `DELETE` | `/:id` | Admin törlése. | SystemAdmin |
+| `POST` | `/invite-company` | Céges regisztrációs meghívó küldése emailben. | SystemAdmin |
+| `POST` | `/invite-student` | Hallgatói regisztrációs meghívó küldése emailben. | SystemAdmin |
 
 ### Felhasználók (`/api/users`)
 
