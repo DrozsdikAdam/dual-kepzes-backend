@@ -38,10 +38,8 @@ const router = Router();
  * @swagger
  * /api/companies/with-admin:
  *   post:
- *     summary: Create a new company and its admin user in one request (Admin)
+ *     summary: Create a new company and its initial admin user
  *     tags: [Companies]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -110,8 +108,6 @@ router.get("/pending", isSystemAdmin, getPendingCompanies);
  *   get:
  *     summary: List companies that have their own application platform
  *     tags: [Companies]
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of companies with own application platform
@@ -124,8 +120,6 @@ router.get("/own-application", getOwnApplicationCompanies);
  *   get:
  *     summary: List all active companies
  *     tags: [Companies]
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of active companies
@@ -165,8 +159,6 @@ router.post(
  *   get:
  *     summary: Get company details by ID
  *     tags: [Companies]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id

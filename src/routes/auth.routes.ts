@@ -1,7 +1,25 @@
-import { Router } from "express"
-import { register, login, requestPasswordReset, resetPassword, verifyEmail, resendVerification, registerCompanyAdmin, registerSystemAdmin } from "../controllers/auth.controller"
-import { validate } from "../middlewares/validate.middleware"
-import { RegisterSchema, LoginSchema, RequestPasswordResetSchema, ResetPasswordSchema, VerifyEmailSchema, ResendVerificationSchema, CompanyAdminRegisterSchema, SystemAdminRegisterSchema } from "../schemas/auth.schema"
+import { Router } from "express";
+import {
+    register,
+    login,
+    requestPasswordReset,
+    resetPassword,
+    verifyEmail,
+    resendVerification,
+    registerCompanyAdmin,
+    registerSystemAdmin
+} from "../controllers/auth.controller";
+import { validate } from "../middlewares/validate.middleware";
+import {
+    RegisterSchema,
+    LoginSchema,
+    RequestPasswordResetSchema,
+    ResetPasswordSchema,
+    VerifyEmailSchema,
+    ResendVerificationSchema,
+    CompanyAdminRegisterSchema,
+    SystemAdminRegisterSchema
+} from "../schemas/auth.schema";
 
 const router = Router();
 
@@ -46,7 +64,7 @@ const router = Router();
  *       201:
  *         description: User registered successfully
  *       400:
- *         description: Bad request
+ *         description: Invalid payload
  */
 router.post("/register", validate(RegisterSchema), register);
 
@@ -55,7 +73,7 @@ router.post("/register", validate(RegisterSchema), register);
  * /api/auth/register/company-admin:
  *   post:
  *     summary: Register a new company administrator
- *     description: Creates a new user with COMPANY_ADMIN role and links them to an existing company.
+ *     description: Creates a user with COMPANY_ADMIN role and links it to an existing company.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -74,29 +92,23 @@ router.post("/register", validate(RegisterSchema), register);
  *               email:
  *                 type: string
  *                 format: email
- *                 example: admin@company.com
  *               password:
  *                 type: string
  *                 minLength: 12
- *                 example: SecurePassword123!
  *               fullName:
  *                 type: string
- *                 example: Kiss János
  *               phoneNumber:
  *                 type: string
- *                 example: "+36301234567"
  *               companyId:
  *                 type: string
  *                 format: uuid
- *                 description: The ID of the company the admin will manage
  *               jobTitle:
  *                 type: string
- *                 example: HR Manager
  *     responses:
  *       201:
  *         description: Company admin registered successfully
  *       400:
- *         description: Bad request (email already exists, invalid data)
+ *         description: Invalid payload or duplicate email
  */
 router.post("/register/company-admin", validate(CompanyAdminRegisterSchema), registerCompanyAdmin);
 
@@ -105,7 +117,7 @@ router.post("/register/company-admin", validate(CompanyAdminRegisterSchema), reg
  * /api/auth/register/system-admin:
  *   post:
  *     summary: Register a new system administrator
- *     description: Creates a new user with SYSTEM_ADMIN role.
+ *     description: Creates a user with SYSTEM_ADMIN role.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -122,22 +134,18 @@ router.post("/register/company-admin", validate(CompanyAdminRegisterSchema), reg
  *               email:
  *                 type: string
  *                 format: email
- *                 example: admin@university.hu
  *               password:
  *                 type: string
  *                 minLength: 12
- *                 example: SecurePassword123!
  *               fullName:
  *                 type: string
- *                 example: Nagy Péter
  *               phoneNumber:
  *                 type: string
- *                 example: "+36209876543"
  *     responses:
  *       201:
  *         description: System admin registered successfully
  *       400:
- *         description: Bad request (email already exists, invalid data)
+ *         description: Invalid payload or duplicate email
  */
 router.post("/register/system-admin", validate(SystemAdminRegisterSchema), registerSystemAdmin);
 
@@ -164,19 +172,12 @@ router.post("/register/system-admin", validate(SystemAdminRegisterSchema), regis
  *     responses:
  *       200:
  *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 token:
- *                   type: string
- *                 user:
- *                   type: object
- *       401:
+ *       400:
  *         description: Invalid credentials
+ *       401:
+ *         description: Login blocked by business rule
+ *       403:
+ *         description: Inactive account
  */
 router.post("/login", validate(LoginSchema), login);
 
@@ -185,7 +186,7 @@ router.post("/login", validate(LoginSchema), login);
  * /api/auth/request-password-reset:
  *   post:
  *     summary: Request a password reset
- *     description: Sends a password reset email to the user if the email exists in the system. For security reasons, the endpoint always returns success even if the email doesn't exist.
+ *     description: Always returns success-style behavior even if the email does not exist.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -199,22 +200,9 @@ router.post("/login", validate(LoginSchema), login);
  *               email:
  *                 type: string
  *                 format: email
- *                 example: user@example.com
- *                 description: Email address of the user requesting password reset
  *     responses:
  *       200:
- *         description: Password reset request processed successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Ha a megadott email cím regisztrálva van, elküldtük a jelszó visszaállító linket.
+ *         description: Password reset request processed
  *       400:
  *         description: Invalid email format
  */
@@ -225,7 +213,7 @@ router.post("/request-password-reset", validate(RequestPasswordResetSchema), req
  * /api/auth/reset-password:
  *   post:
  *     summary: Reset password using token
- *     description: Resets the user's password using the token received via email. The token is valid for 1 hour.
+ *     description: Resets the user's password using the token received via email.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -240,48 +228,17 @@ router.post("/request-password-reset", validate(RequestPasswordResetSchema), req
  *               token:
  *                 type: string
  *                 minLength: 32
- *                 example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
- *                 description: Password reset token received via email
  *               newPassword:
  *                 type: string
  *                 minLength: 12
  *                 maxLength: 64
- *                 pattern: ^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,64}$
- *                 example: NewSecurePassword123!
- *                 description: New password (12-64 characters, must contain uppercase, lowercase, number, and special character)
  *     responses:
  *       200:
  *         description: Password reset successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Jelszó sikeresen megváltoztatva.
  *       400:
  *         description: Invalid or expired token, or invalid password format
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 error:
- *                   type: object
- *                   properties:
- *                     code:
- *                       type: string
- *                       example: INVALID_INPUT
- *                     message:
- *                       type: string
- *                       example: Érvénytelen vagy lejárt token.
+ *       401:
+ *         description: User account is inactive
  */
 router.post("/reset-password", validate(ResetPasswordSchema), resetPassword);
 
@@ -304,22 +261,9 @@ router.post("/reset-password", validate(ResetPasswordSchema), resetPassword);
  *               token:
  *                 type: string
  *                 minLength: 32
- *                 example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
- *                 description: Verification token received via email
  *     responses:
  *       200:
  *         description: Email verified successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Email cím sikeresen megerősítve.
  *       400:
  *         description: Invalid or expired token
  */
@@ -330,7 +274,7 @@ router.post("/verify-email", validate(VerifyEmailSchema), verifyEmail);
  * /api/auth/resend-verification:
  *   post:
  *     summary: Resend verification email
- *     description: Resends the email verification link to the user.
+ *     description: Resends the verification flow for a user email address.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -344,22 +288,11 @@ router.post("/verify-email", validate(VerifyEmailSchema), verifyEmail);
  *               email:
  *                 type: string
  *                 format: email
- *                 example: user@example.com
- *                 description: Email address of the user
  *     responses:
  *       200:
- *         description: Verification email resent successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: A megerősítő levelet újra elküldtük.
+ *         description: Verification request processed
+ *       400:
+ *         description: Email is already verified or payload is invalid
  */
 router.post("/resend-verification", validate(ResendVerificationSchema), resendVerification);
 

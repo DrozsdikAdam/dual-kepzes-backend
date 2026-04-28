@@ -43,7 +43,7 @@ router.get("/", authenticateToken, isUniversityStaff, getAllStudents);
  * @swagger
  * /api/students/available:
  *   get:
- *     summary: List all students available for work (Public information only)
+ *     summary: List all students available for work (staff only, limited profile data)
  *     tags: [Students]
  *     security:
  *       - bearerAuth: []
@@ -171,6 +171,7 @@ router.patch("/me/toggle-availability", authenticateToken, isStudent, toggleAvai
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Student profile details
@@ -191,12 +192,38 @@ router.get("/:id", authenticateToken, isStaff, getStudentById)
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Student profile deleted successfully
  */
 router.delete("/:id", authenticateToken, isSystemAdmin, deleteStudentById)
 
+/**
+ * @swagger
+ * /api/students/{id}:
+ *   patch:
+ *     summary: Update a student profile by ID (System Admin)
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateStudent'
+ *     responses:
+ *       200:
+ *         description: Student profile updated successfully
+ */
 router.patch("/:id", authenticateToken, isSystemAdmin, validate(StudentUpdateSchema), updateStudentById);
 
 /**

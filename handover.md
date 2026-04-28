@@ -1,486 +1,413 @@
-# Duális Képzés Backend - Átadási Dokumentáció
+# Duális Képzés Backend Handover
 
-> **Utolsó frissítés**: 2026-04-15 (Pozíció típusrendszer, Referens Dashboard, Automatikus hozzárendelés, Referens Switcher)
-> **Projekt státusz**: Production-ready
+> Utolsó frissítés: 2026-04-28
+> Állapot: aktívan fejlesztett, funkcionálisan széles backend
 
----
+## 1. Cél és kontextus
 
-## 1. Projekt Áttekintés
+Ez a repository a duális képzési rendszer backend API-ja. A rendszer fő szereplői:
 
-### Cél
-A Duális Képzés rendszer backend szolgáltatása. Az alkalmazás célja a hallgatók, cégek, egyetemi szereplők és a duális képzés adminisztrációjának támogatása egy robusztus, biztonságos és skálázható REST API-n keresztül.
+- hallgatók
+- céges adminok és mentorok
+- egyetemi referensek
+- rendszeradminisztrátorok
 
-### Technológiai Stack
+A backend feladata:
 
-| Komponens | Technológia | Verzió |
-|:----------|:------------|:-------|
-| Runtime | Node.js | v18+ |
-| Nyelv | TypeScript | ^5.9 |
-| Keretrendszer | Express | ^5.2 |
-| Adatbázis | PostgreSQL | — |
-| ORM | Prisma | ^5.10 |
-| Validáció | Zod | ^4.1 |
-| Autentikáció | JWT + Bcrypt | — |
-| Háttérfolyamatok | BullMQ (Redis) | ^5.66 |
-| Email | Nodemailer | ^7.0 |
-| Képoptimalizálás | Sharp | ^0.34 |
-| S3 tárolás | @aws-sdk/client-s3 | ^3.1020 |
-| Tesztelés | Jest + Supertest | — |
-| Dokumentáció | Swagger/OpenAPI | — |
+- felhasználói és szerepkör-specifikus működés kiszolgálása
+- cégek, pozíciók, jelentkezések és partnerségek kezelése
+- értesítések, hírek, tananyagok és statisztikák biztosítása
+- adminisztratív és auditálható működés támogatása
 
-### Repository
-- **GitHub**: `https://github.com/DrozsdikAdam/dual-kepzes-backend`
-- **Production URL**: `https://dual-kepzes-backend-production-7c45.up.railway.app`
-- **Swagger UI**: `/api-docs`
+## 2. Rövid rendszerkép
 
----
+Technológiai alapok:
 
-## 2. Telepítés és Indítás
+- **[Node.js](https://nodejs.org/)**: eseményvezérelt szerveroldali futtatókörnyezet az API kiszolgálásához
+- **[TypeScript](https://www.typescriptlang.org/)**: statikus típusosság a kontrollerektől a service rétegig
+- **[Express](https://expressjs.com/)**: könnyű, jól kontrollálható HTTP keretrendszer, itt Express 5 alapokon
+- **[Prisma](https://www.prisma.io/)**: típusos adat-hozzáférési réteg és sémakezelés PostgreSQL fölött
+- **[PostgreSQL](https://www.postgresql.org/)**: relációs adatbázis a domain entitások és kapcsolatok tárolására
+- **[Zod](https://zod.dev/)**: request validáció és input normalizálás
+- **[JWT](https://jwt.io/)**: token alapú autentikáció és role-based hozzáférés
+- **[BullMQ](https://docs.bullmq.io/)**: háttérfolyamatok és queue alapú feldolgozás
+- **[Redis](https://redis.io/)**: queue backend és később többpéldányos koordináció lehetséges alapja
+- **[Nodemailer](https://nodemailer.com/)**: SMTP alapú emailküldési integráció
+- **[Swagger / OpenAPI](https://swagger.io/)**: interaktív API dokumentáció és szerződéskövetés
+
+Fő rétegek:
+
+- `routes`: endpoint wiring és middleware lánc
+- `controllers`: HTTP szintű kezelés
+- `services`: üzleti logika
+- `schemas`: input validáció
+- `middlewares`: auth, validation, ownership, rate limiting, error handling
+- `config`: Prisma, Swagger, Redis, mailer, CORS
+- `utils`: mapperek, auth helper-ek, pagination, egyéb közös logika
+
+## 3. Fontos belépési pontok
+
+- [src/server.ts](D:/coding/dual-kepzes-backend/src/server.ts:1): szerverindítás
+- [src/app.ts](D:/coding/dual-kepzes-backend/src/app.ts:1): middleware-ek, route-ok, error handler
+- [prisma/schema.prisma](D:/coding/dual-kepzes-backend/prisma/schema.prisma:1): adatmodell
+- [src/config/prisma.ts](D:/coding/dual-kepzes-backend/src/config/prisma.ts:1): Prisma kliens és soft delete viselkedés
+- [src/config/swagger.ts](D:/coding/dual-kepzes-backend/src/config/swagger.ts:1): OpenAPI alapkomponensek
+- [README.md](D:/coding/dual-kepzes-backend/README.md:1): technikai és folyamatdokumentáció
+
+## 4. Futtatás és fejlesztői workflow
+
+Alap parancsok:
 
 ```bash
-# 1. Klónozás
-git clone https://github.com/DrozsdikAdam/dual-kepzes-backend.git
-cd dual-kepzes-backend
-
-# 2. Függőségek
 npm install
-
-# 3. .env fájl létrehozása (lásd a 3. fejezet)
-
-# 4. Adatbázis szinkronizáció
-npm run prisma:push
-
-# 5. Indítás
 npm run dev
+npm run build
+npm test
+npm run lint
+npm run prisma:push
+npm run prisma:studio
+npx prisma db seed
 ```
 
-### Elérhető Szkriptek
+Megjegyzés:
 
-| Parancs | Leírás |
-|:--------|:-------|
-| `npm run dev` | Fejlesztői szerver (nodemon + tsx) |
-| `npm start` | Production indítás (`dist/`) |
-| `npm run build` | TypeScript → JavaScript fordítás |
-| `npm run prisma:push` | DB séma szinkronizáció |
-| `npm run prisma:studio` | Adatbázis GUI |
-| `npm run test` | Jest tesztek futtatása |
-| `npm run lint` | ESLint kódminőség-ellenőrzés |
-| `npm run format` | Prettier formázás |
-| `npx tsx scripts/verify_features.ts` | Üzleti logika verifikáció |
-| `npx tsx scripts/cleanup_test_data.ts` | Tesztadatok takarítása |
+- ebben a környezetben az `npm` lokális futtatása hibába futott egy hiányzó `npm-cli.js` miatt, ezért automatizált ellenőrzést most nem tudtam végigfuttatni
+- a repo dokumentációja és route kommentjei ennek ellenére kézzel szinkronizálva lettek a jelenlegi kóddal
 
----
+## 5. Környezeti változók és konfigurációs döntések
 
-## 3. Környezeti Változók
+Jelenlegi fejlesztői adatbázis-konvenció:
 
-A `.env` fájl szükséges változói:
+- a Prisma kapcsolat jelenleg `DIRECT_URL` alapján van konfigurálva
+- ez tudatos, a most használt adatbázis-hozzáféréshez igazított működés
+
+Tervezett production irány:
+
+- éles környezetben a cél a `DATABASE_URL` alapú kapcsolat
+- ezt majd a deploy környezettel és Prisma konfigurációval együtt kell véglegesíteni
+
+Jellemző `.env` mezők:
 
 ```env
-# Szerver
 PORT=3000
-NODE_ENV="development"
+NODE_ENV=development
 
-# Adatbázis
-DATABASE_URL="postgresql://user:password@localhost:5432/dual_db?schema=public"
-DIRECT_URL="postgresql://user:password@localhost:5432/dual_db?schema=public"
+JWT_SECRET=replace-with-a-strong-secret
+FRONTEND_URL=http://localhost:3000
 
-# Biztonság
-JWT_SECRET="szuper_titkos_kulcs_min_32_karakter"
+DIRECT_URL=postgresql://user:password@localhost:5432/dual_db?schema=public
 
-# Frontend URL (jelszó visszaállító linkhez)
-FRONTEND_URL="http://localhost:3000"
-
-# Email (Mailtrap)
-MAILTRAP_USER="your_user"
-MAILTRAP_PASS="your_pass"
-
-# Redis (Opcionális, BullMQ-hoz)
-REDIS_HOST="localhost"
+REDIS_ENABLED=false
+REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
-REDIS_ENABLED="false"
 
-# Supabase S3 (Képkezelés)
-SUPABASE_S3_REGION="eu-central-1"
-SUPABASE_S3_ENDPOINT="https://..."
-SUPABASE_S3_ACCESS_KEY_ID="your_access_key"
-SUPABASE_S3_SECRET_ACCESS_KEY="your_secret_key"
-SUPABASE_S3_BUCKET_NAME="ImageBucket"
-SUPABASE_PUBLIC_URL="https://..."
+EMAILS_ENABLED=false
+SMTP_HOST=sandbox.smtp.mailtrap.io
+SMTP_PORT=2525
+SMTP_USER=your_user
+SMTP_PASS=your_pass
+
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 ```
 
----
-
-## 4. Projekt Struktúra
-
-```
-dual-kepzes-backend/
-├── prisma/
-│   ├── schema.prisma          # Adatbázis modellek és enum-ok
-│   └── seed.ts                # Kezdeti adatfeltöltő szkript
-├── scripts/
-│   ├── verify_features.ts     # Teljes üzleti logika verifikáció
-│   ├── cleanup_test_data.ts   # Tesztadatok biztonságos takarítása
-│   ├── seed-students.ts       # Hallgatói tesztadatok
-│   ├── seed-uni-users.ts      # Egyetemi felhasználó tesztadatok
-│   └── test-image-*.ts        # Képfeltöltés tesztelő szkriptek
-├── src/
-│   ├── config/                # Konfiguráció (DB, Redis, Email, CORS, Swagger)
-│   ├── controllers/           # Request/Response kezelés (19 controller)
-│   ├── errors/                # Egyedi hibaosztályok (AppError, NotFoundError, stb.)
-│   ├── middlewares/           # Auth, Validáció, RateLimit, Ownership, Idempotency
-│   ├── routes/                # API végpont definíciók (19 route fájl)
-│   ├── schemas/               # Zod validációs sémák (13 séma)
-│   ├── services/              # Üzleti logika réteg (20 service)
-│   ├── types/                 # TypeScript típusdefiníciók és mapper-ek
-│   ├── utils/                 # Segédfüggvények (Logger, Token, Pagination)
-│   ├── app.ts                 # Express alkalmazás inicializálás
-│   └── server.ts              # HTTP szerver indítás
-├── .env                       # Környezeti változók (gitignore-ban!)
-├── package.json
-├── tsconfig.json
-├── README.md                  # Részletes API dokumentáció és diagramok
-└── handover.md                # Ez a fájl
-```
-
----
-
-## 5. Adatbázis
-
-### Enum-ok
-
-| Enum | Értékek | Leírás |
-|:-----|:--------|:-------|
-| `Role` | `STUDENT`, `COMPANY_ADMIN`, `MENTOR`, `UNIVERSITY_USER`, `SYSTEM_ADMIN` | Felhasználói szerepkörök |
-| `PositionType` | `DUAL`, `PROFESSIONAL_PRACTICE`, `REGULAR_WORK` | Pozíció típusok |
-| `ApplicationStatus` | `SUBMITTED`, `ACCEPTED`, `PENDING`, `REJECTED`, `NO_RESPONSE`, `RETRACTED` | Jelentkezési státuszok |
-| `PartnershipStatus` | `PENDING_MENTOR`, `PENDING_UNIVERSITY`, `ACTIVE`, `FINISHED`, `TERMINATED` | Partneri kapcsolat státuszok |
-| `RegistrationStatus` | `PENDING`, `APPROVED`, `REJECTED` | Cégregisztrációs státuszok |
-| `LogStatus` | `DRAFT`, `PENDING`, `APPROVED`, `REJECTED` | Napló státuszok |
-
-### Fő Entitások és Kapcsolataik
-
-| Entitás | Leírás | Fontos mezők |
-|:--------|:-------|:-------------|
-| **User** | Felhasználói fiókok (minden szerepkör) | `role`, `isActive`, `managedMajors`, `managedCompanies` |
-| **StudentProfile** | Hallgatói profil adatok | `majorId`, `isAvailableForWork`, `neptunCode` |
-| **Company** | Cég adatok | `status`, `hasOwnApplication`, `externalApplicationUrl` |
-| **CompanyEmployee** | Céges munkavállalók/mentorok | `companyId`, `jobTitle` |
-| **Position** | Állásajánlatok/pozíciók | `type` (PositionType enum), `externalApplicationUrl`, `deadline` (nullable) |
-| **Application** | Jelentkezések | `status`, `studentId`, `positionId` |
-| **DualPartnership** | Duális partneri kapcsolatok | `uniEmployeeId` (automatikusan kitöltve), `mentorId`, `status` |
-| **Major** | Képzési szakok | `managedBy` (referensek) |
-| **Location** | Helyszínek (cégekhez és hallgatókhoz) | `companyId`, `studentProfileId` |
-| **Notification** | Értesítések | `type`, `isRead`, `isArchived` |
-| **AuditLog** | Biztonsági napló | `action`, `entity`, `details` (JSON) |
-| **News** | Hírek/közlemények | `targetGroup`, `isImportant`, `isArchived` |
-| **MaterialCompletion** | Tananyag elvégzések | `rating`, `isCompleted` |
-| **GalleryGroup / GalleryImage** | Rendszerszintű galéria albumok | S3-on tárolt, optimalizált `.webp` képek |
-| **CompanyImage** | Céges galéria képek | S3-on tárolt, céghez kötött |
-| **Tag** | Pozíció címkék | `name`, `category` |
-
-### Fontos Kapcsolatok (Több-több)
-
-- **User ↔ Major** (`MajorToUniversityUser`): Referensek és a kezelt szakjaik.
-- **User ↔ Company** (`CompanyToUniversityUser`): Referensek és a kezelt cégjeik.
-- **Position ↔ Tag**: Pozíciók és címkéik.
-
-### Soft Delete
-
-A rendszer soft delete-et használ a következő entitásokon:
-`User`, `StudentProfile`, `CompanyEmployee`, `Company`, `Position`, `Tag`, `Application`, `DualPartnership`, `News`, `Notification`.
-
-A Prisma client automatikusan szűri a `deletedAt` mezőt a `findMany`, `findFirst` és `findUnique` hívásokban (lásd: `src/config/prisma.ts`).
-
----
-
-## 6. Szerepkörök és Jogosultságok
-
-| Szerepkör | Leírás | Főbb jogosultságok |
-|:----------|:-------|:-------------------|
-| `STUDENT` | Hallgató | Saját profil, jelentkezések, partnerségek, egyetemi profilra váltás |
-| `MENTOR` | Céges munkavállaló/Mentor | Cég pozíciói, mentorált hallgatók |
-| `COMPANY_ADMIN` | Cégadminisztrátor | Teljes cégkezelés, jelentkezések értékelése, pozíciók és munkavállalók |
-| `UNIVERSITY_USER` | Kari referens | Partnerségek jóváhagyása, hallgatók felügyelete, szakhoz és céghez rendelt dashboard |
-| `SYSTEM_ADMIN` | Rendszergazda | Teljes adminisztráció, cégek jóváhagyása, anonimizálás |
-
-### Middleware-ek
-
-| Middleware | Fájl | Funkció |
-|:-----------|:-----|:--------|
-| `authenticateToken` | `auth.middleware.ts` | JWT token validáció és user context beállítása |
-| `requireRole` / `isStudent`, stb. | `auth.middleware.ts` | Szerepkör-alapú jogosultságellenőrzés |
-| `validate` | `validate.middleware.ts` | Zod séma validáció (body, query, params) |
-| `ownership` | `ownership.middleware.ts` | Erőforrás-tulajdonjog ellenőrzés |
-| `idempotency` | `idempotency.middleware.ts` | Dupla küldés elleni védelem |
-| `rateLimit` | `rateLimit.middleware.ts` | Rate limiting (auth végpontokon) |
-| `sanitization` | `sanitization.middleware.ts` | Input szanálás |
-| `upload` | `upload.middleware.ts` | Multer fájlfeltöltés (memória) |
+Kritikus megjegyzések:
 
----
+- a `JWT_SECRET` most már kötelező, nincs fallback secret
+- az email küldés jelenleg tudatosan kikapcsolható, mert a végleges SMTP még nincs készen
+- az idempotency middleware memória alapú, ami egy példányos futtatásnál rendben van, több példányos deploynál viszont nem elég
 
-## 7. Üzleti Logika - Kulcsfunkciók
+## 6. Adatmodell és domain összefoglaló
 
-### 7.1 Jelentkezés → Partnerség Automatizáció
+Legfontosabb entitások:
 
-A legfontosabb üzleti folyamat:
+- `User`
+- `StudentProfile`
+- `Company`
+- `CompanyEmployee`
+- `Major`
+- `Location`
+- `Position`
+- `Application`
+- `DualPartnership`
+- `Notification`
+- `News`
+- `MaterialCompletion`
+- `GalleryGroup`
+- `GalleryImage`
+- `CompanyImage`
 
-1. **Diák jelentkezik** egy pozícióra (`POST /api/applications`)
-2. **Cégadmin elfogadja** a jelentkezést (`PATCH /api/applications/company/:id/evaluate`)
-3. **Automatikusan létrejön** a `DualPartnership` (`PENDING_MENTOR` státuszal)
-4. **Automatikus referens hozzárendelés**: A rendszer megkeresi a diák szakjához ÉS a cég-hez is rendelt referenst
-5. **Cég hozzárendeli a mentort** (`PATCH /api/partnerships/:id/assign-mentor`) → `PENDING_UNIVERSITY`
-6. **Egyetemi referens aktiválja** (`PATCH /api/partnerships/:id/assign-university-user`) → `ACTIVE`
-
-**Implementáció**:
-- `ApplicationService.evaluate()` → Automatikusan hívja a `universityUserService.findReferentForPartnership()`
-- `PartnershipService.assignUniversityUser()` → Fallback: ha nincs uni user megadva, újra próbál keresni
-
-### 7.2 Pozíció Típusrendszer
-
-Az `isDual: boolean` mező **kivezetésre került**. Helyette:
-
-```typescript
-enum PositionType {
-  DUAL                    // Duális képzési pozíció
-  PROFESSIONAL_PRACTICE   // Szakmai gyakorlat
-  REGULAR_WORK            // Rendes munkalehetőség
-}
-```
-
-- A `Position` modell `type` mezője ezt az enum-ot használja
-- Szűrés: `GET /api/jobs/positions?type=DUAL`
-- Legacy kompatibilitás: `GET /api/jobs/positions/dual` és `/non-dual` továbbra is elérhető
-
-### 7.3 Külső Jelentkezési Linkek
-
-Bizonyos cégek (pl. Mercedes, BMW) saját karrieroldalukat használják jelentkeztetésre:
-- `Company.externalApplicationUrl` — Cég szintű külső link
-- `Position.externalApplicationUrl` — Pozíció szintű külső link (felülírhatja a cégét)
-- Ha a cég `hasOwnApplication: true`, a frontend nem mutatja a belső jelentkezés gombot
-
-### 7.4 Kari Referens Menedzsment
-
-Az egyetemi referensek (UNIVERSITY_USER) hozzárendelhetők szakokhoz és cégekhez:
-
-| Végpont | Funkció |
-|:--------|:--------|
-| `POST /api/university-users/:id/majors` | Szakok hozzárendelése egy referenshez |
-| `POST /api/university-users/:id/companies` | Cégek hozzárendelése egy referenshez |
-| `GET /api/university-users/me/assignments` | Saját hozzárendelések lekérése |
-| `GET /api/university-users/referents` | Összes aktív referens listázása |
-| `GET /api/university-users/potential-referents` | Potenciális referensek listázása hallgató/pozíció alapján |
-| `GET /api/stats/university/referent-overview` | Referens dashboard (cégek, diákok, statisztikák) |
-
-**Automatikus hozzárendelés logikája** (`findReferentForPartnership`):
-1. Megkeresi a diák `majorId`-ját és a pozíció `companyId`-ját
-2. Keres egy aktív referenst, aki MIND a szakhoz, MIND a céghez hozzá van rendelve
-3. Ha talál: automatikusan beállítja `DualPartnership.uniEmployeeId`-ba
-
-**Referens Switcher** (`listPotentialReferents`):
-- Visszaadja az összes referenst, aki a diák szakjához van rendelve
-- `isCompanyMatch: true` jelöléssel megkülönbözteti a céghez is rendelt referenseket
-- Lehetővé teszi az admin számára a referens manuális cseréjét
-
-### 7.5 Anonimizáló Rendszer (GDPR)
-
-Központosított `AnonymizeService` a személyes adatok végleges törlésére:
-
-| Metódus | Érintett entitások |
-|:--------|:-------------------|
-| `anonymizeStudentProfile()` | User, StudentProfile, Location, Application, DualPartnership, Notification |
-| `anonymizeCompany()` | Company, Location, Position, CompanyEmployee, User, DualPartnership, Notification |
-| `anonymizePosition()` | Position |
-
-Placeholder-alapú implementáció, nulla külső függőség.
-
-### 7.6 Képfeltöltés és Galéria (S3)
-
-- **Képoptimalizálás**: Sharp (C++ libvips) → max 1920px, `.webp` formátum
-- **Tárolás**: Supabase S3 bucket
-- **Rendszerszintű galéria**: `GalleryGroup` / `GalleryImage` (SystemAdmin kezeli)
-- **Cég galéria**: `CompanyImage` (CompanyAdmin kezeli)
-- Mindkét galériatípus publikusan elérhető
-
-### 7.7 Email és Háttérfolyamatok
-
-- **Nodemailer** SMTP alapú email küldés (Mailtrap fejlesztéshez)
-- **BullMQ** Redis-alapú háttérsor (`email.queue.ts`, `email.worker.ts`)
-- Fájlcsatolmányos jelentkezés: GDPR-kompatibilis pass-through (fájl soha nem kerül lemezre)
-
----
-
-## 8. API Végpont Összefoglaló
-
-A teljes API dokumentáció a Swagger UI-on érhető el: `/api-docs`
-
-### Végpont Csoportok
-
-| Csoport | Prefix | Route fájl | Leírás |
-|:--------|:-------|:-----------|:-------|
-| Autentikáció | `/api/auth` | `auth.routes.ts` | Regisztráció, login, email verifikáció, jelszó reset |
-| Hallgatók | `/api/students` | `student.routes.ts` | Profil, elérhetőség, university transition |
-| Cégek | `/api/companies` | `company.routes.ts` | CRUD, státuszkezelés (approve/reject), reakiváció |
-| Céges képek | `/api/companies/:id/images` | `companyImage.routes.ts` | Cég galéria kezelés |
-| Pozíciók | `/api/jobs` | `job.routes.ts` | CRUD, típusszűrés, deaktiválás |
-| Jelentkezések | `/api/applications` | `application.routes.ts` | Leadás, fájlcsatolás, értékelés |
-| Partnerségek | `/api/partnerships` | `dual.routes.ts` | Mentor/referens hozzárendelés, státusz átmenetek |
-| Egyetemi user-ek | `/api/university-users` | `universityUser.routes.ts` | Referens hozzárendelés, potenciális referensek |
-| Cégadminok | `/api/company-admins` | `companyAdmin.routes.ts` | Céges admin kezelés |
-| Munkavállalók | `/api/employees` | `employee.routes.ts` | Mentor lista, mentorált hallgatók |
-| Rendszeradminok | `/api/system-admins` | `systemAdmin.routes.ts` | Rendszergazda kezelés, Cég/Diák meghívók küldése |
-| Felhasználók | `/api/users` | `user.routes.ts` | Aktiválás/deaktiválás (admin) |
-| Szakok | `/api/majors` | `major.routes.ts` | Szak CRUD |
-| Helyszínek | `/api/locations` | `location.routes.ts` | Céghelyszínek listázása |
-| Statisztika | `/api/stats` | `stats.routes.ts` | Dashboard adatok (rendszer, cég, egyetem, referens) |
-| Hírek | `/api/news` | `news.routes.ts` | Hír CRUD, archiválás |
-| Értesítések | `/api/notifications` | `notification.routes.ts` | CRUD, olvasottnak jelölés, archiválás |
-| Tananyagok | `/api/materials` | `material.routes.ts` | Elvégzés rögzítés, statisztikák |
-| Galéria | `/api/galleries` | `gallery.routes.ts` | Rendszer galéria albumok |
-
-### Statisztikai Végpontok (részletes)
-
-| Végpont | Leírás | Jogosultság |
-|:--------|:-------|:------------|
-| `GET /api/stats` | Rendszerszintű áttekintés | SystemAdmin |
-| `GET /api/stats/company/me` | Saját cég statisztikái | CompanyAdmin |
-| `GET /api/stats/applications` | Jelentkezési statisztikák | SystemAdmin |
-| `GET /api/stats/partnerships` | Partneri statisztikák | SystemAdmin |
-| `GET /api/stats/positions` | Pozíció statisztikák | SystemAdmin |
-| `GET /api/stats/trends` | 6 hónapos trendek | SystemAdmin |
-| `GET /api/stats/university/student-distribution` | Hallgatói eloszlás | UniversityUser |
-| `GET /api/stats/university/referent-overview` | **Referens dashboard** | UniversityUser |
-
----
-
-## 9. Biztonsági Funkciók
-
-1. **JWT Token Auth**: Minden védett végpont `Authorization: Bearer <token>` fejlécet igényel
-2. **RBAC**: Szerepkör-alapú middleware szűrés minden végponton
-3. **Zod Validáció**: Szigorú bemeneti validáció, felesleges mezők automatikus eltávolítása
-4. **Ownership Middleware**: Felhasználók csak saját erőforrásaikat módosíthatják
-5. **Idempotency**: Kritikus műveletek dupla küldés elleni védelme
-6. **Rate Limiting**: Auth végpontok throttle-ja
-7. **Magic Bytes**: Feltöltött fájlok valódi tartalmának ellenőrzése
-8. **Soft Delete**: Adatok soha nem törlődnek véglegesen (csak `deletedAt` jelölés)
-9. **Audit Logging**: Minden kritikus esemény `AuditLog`-ba kerül
-10. **GDPR Anonimizálás**: Központosított PII scrubbing
+Fontos enumok:
 
----
+- `Role`
+- `ApplicationStatus`
+- `PartnershipStatus`
+- `RegistrationStatus`
+- `PositionType`
 
-## 10. Deployment
+Kulcs domain-kapcsolatok:
 
-### Production (Railway)
+- `User` -> `StudentProfile` vagy `CompanyEmployee`
+- `StudentProfile` -> `Application`, `DualPartnership`, `MaterialCompletion`
+- `Company` -> `CompanyEmployee`, `Position`, `Location`, `CompanyImage`
+- `Position` -> `Application`, `DualPartnership`, `Tag`, `Location`
+- `User` <-> `Major`, `Company` referensi hozzárendeléseken keresztül
 
-- **Platform**: Railway
-- **Build**: `npm run build` → `dist/` → `npm start`
-- **Adatbázis**: Railway PostgreSQL
-- **Redis**: Railway Redis (opcionális)
-- **Environment**: Railway Environment Variables
+## 7. Soft delete stratégia
 
-### Migráció
+Soft delete érintett modellek:
 
-```bash
-# Fejlesztéshez
-npm run prisma:push
+- `User`
+- `StudentProfile`
+- `CompanyEmployee`
+- `Company`
+- `Position`
+- `Tag`
+- `Application`
+- `DualPartnership`
+- `News`
+- `Notification`
 
-# Production-höz (generál egy migrációs fájlt)
-npx prisma migrate dev --name "migration_name"
-npx prisma migrate deploy
-```
+Aktuális működés:
 
----
+- `findMany` és `findFirst` automatikusan szűri a `deletedAt = null` rekordokat
+- `findUnique` most már nem kerül át kézzel `findFirst`-re
+- `findUnique` előbb normál módon lekérdez, és utólag nullázza a soft-deletelt rekordot
 
-## 11. Aktuális Fejlesztési Állapot
+Miért fontos:
 
-### ✅ Befejezett Funkciók
-- Teljes autentikációs rendszer (JWT, email verifikáció, jelszó reset)
-- Felhasználókezelés (5 szerepkör, profil CRUD)
-- Cégek kezelése (regisztráció, jóváhagyás, munkavállalók)
-- Pozíciók és állásajánlatok (típusrendszer, szűrés, helyszínek, tag-ek)
-- Jelentkezési rendszer (fájlcsatolás, értékelés, automatikus partnerség)
-- Duális partnerségi rendszer (státusz átmenetek, mentor/referens hozzárendelés)
-- **Rugalmas Pozíció Típus Rendszer**: `isDual` → `type` enum (DUAL, PROFESSIONAL_PRACTICE, REGULAR_WORK)
-- **Külső Jelentkezési Linkek**: `externalApplicationUrl` Company/Position szinten
-- **Kari Referens Menedzsment**: Szak/cég hozzárendelés, automatikus párosítás, referens választó (switcher)
-- **Referens Dashboard**: `GET /api/stats/university/referent-overview`
-- Hírkezelés (célzott közönség, archiválás)
-- Értesítési rendszer (olvasottnak jelölés, archiválás)
-- Tananyag nyilvántartás és értékelés
-- Képgaléria rendszer (S3, optimalizálás, rendszer + céges galéria)
-- Statisztikai dashboard-ok (rendszer, cég, egyetem, referens szintű)
-- GDPR-kompatibilis anonimizáló rendszer
-- Biztonsági middleware-ek (ownership, idempotency, rate limiting)
-- **Rendszeradmin Meghívók**: Automatikus regisztrációs linkek küldése e-mailben (cégek és diákok számára)
+- ez közelebb van a natív Prisma-szemantikához
+- kisebb a tranzakciós és implicit viselkedési kockázat
 
-### 🔄 Fejlesztés Alatt / Tervezett
-- Részletes keresés és szűrés bővítése (város, kategória, kulcsszó)
-- Push értesítések (WebSocket / FCM)
-- Exportálási funkciók (PDF, CSV)
-- Automatizált integrációs tesztek bővítése
+## 8. Auth és jogosultsági modell
 
----
+Szerepkörök:
 
-## 12. Ismert Gotcha-k és Technikai Megjegyzések
+- `STUDENT`
+- `MENTOR`
+- `COMPANY_ADMIN`
+- `UNIVERSITY_USER`
+- `SYSTEM_ADMIN`
 
-1. **Prisma Soft Delete Extension**: A `src/config/prisma.ts` fájl egy custom Prisma extension-t tartalmaz, ami automatikusan szűri a `deletedAt` mezőt. Ha explicit módon szeretnél törölt rekordokat is lekérdezni, a nyers Prisma client-et kell használni (`basePrisma`).
+Fő auth middleware-ek:
 
-2. **Composite Unique Key kezelés**: A soft delete extension `findUnique` override-ja flatten-eli a composite key-eket (pl. `studentId_positionId`) a `findFirst` kompatibilitás miatt.
+- [src/middlewares/auth.middleware.ts](D:/coding/dual-kepzes-backend/src/middlewares/auth.middleware.ts:1)
+- [src/middlewares/ownership.middleware.ts](D:/coding/dual-kepzes-backend/src/middlewares/ownership.middleware.ts:1)
 
-3. **PositionType migráció**: A korábbi `isDual: boolean` mező kivezetésre került. Ha régi adatok vannak az adatbázisban, azokat manuálisan kell migrálni a `type` enum értékekre.
+Fő döntések:
 
-4. **Referens automatikus hozzárendelés**: Ha nincs megfelelő referens (major + company párosítás), a `uniEmployeeId` `null` marad – a rendszeradmin manuálisan rendeli hozzá.
+- JWT alapú auth
+- role alapú route-védelem
+- ownership ellenőrzés bizonyos company, notification, partnership és application műveleteknél
+- auth hibák most már a központi error handleren mennek át
 
-5. **Fájlfeltöltés**: A CV és motivációs levél fájlok **soha nem kerülnek lemezre** – memóriában maradnak, emailben továbbítódnak, majd a GC törli őket (GDPR).
+Fontos auth üzleti szabályok:
 
-6. **Express v5**: A projekt Express 5-öt használ, nem v4-et. Ügyelj az async error handling különbségekre.
+- inaktív user nem léphet be
+- törölt user nem léphet be
+- céges user login blokkolható a cég `PENDING` vagy `REJECTED` státusza miatt
 
----
+## 9. Validáció és hibakezelés
 
-## 13. Tesztelés
+Fő fájlok:
 
-### Verifikációs Szkript
+- [src/middlewares/validate.middleware.ts](D:/coding/dual-kepzes-backend/src/middlewares/validate.middleware.ts:1)
+- [src/middlewares/error.middleware.ts](D:/coding/dual-kepzes-backend/src/middlewares/error.middleware.ts:1)
+- [src/errors/AppError.ts](D:/coding/dual-kepzes-backend/src/errors/AppError.ts:1)
 
-A `scripts/verify_features.ts` szkript a teljes üzleti logikát végigpróbálja:
-1. Tesztadatok létrehozása (szak, diák, cég, helyszín, admin, referens)
-2. Pozíció létrehozása (típusrendszer tesztje)
-3. Jelentkezés leadása és elfogadása
-4. Automatikus referens hozzárendelés ellenőrzése
-5. Referens dashboard ellenőrzése
-6. Potenciális referensek (switcher) ellenőrzése
+Friss állapot:
 
-### Takarítás
+- a validációs middleware a validált `body`, `query` és `params` adatokat is visszaírja a requestbe
+- a Zod hibák `ValidationError` formában kerülnek a központi handlerbe
+- auth middleware közvetlen JSON helyett szintén a központi handlerre támaszkodik
 
-A `scripts/cleanup_test_data.ts` szkript a tesztadatokat FK-kényszereket figyelembe véve, helyes sorrendben törli:
-1. DualPartnership → Application → Position → Location → CompanyEmployee
-2. StudentProfile → Company → Major → User
+Miért fontos:
 
-### Futtatás
+- egységesebb API hibaformátum
+- egyszerűbb frontend oldali kezelés
 
-```bash
-# Teszt futtatása (létrehozza az adatokat, ellenőriz, utána takarít)
-npx tsx scripts/verify_features.ts; npx tsx scripts/cleanup_test_data.ts
-```
+## 10. Fontos üzleti folyamatok
 
----
+### 10.1 Jelentkezés
 
-## 14. Frontend Integrációs Útmutató
+Belépési pontok:
 
-### Pozíció Típus (isDual → type)
-- **Régi**: `isDual: boolean` → **Új**: `type: "DUAL" | "PROFESSIONAL_PRACTICE" | "REGULAR_WORK"`
-- Szűrés: `GET /api/jobs/positions?type=DUAL`
-- Megjelenítés: Legördülő menü / választógombok a checkbox helyett
+- `POST /api/applications`
+- `POST /api/applications/submit-with-files`
 
-### Külső Jelentkezés
-- Ha `Company.hasOwnApplication === true` és van `externalApplicationUrl`: a "Jelentkezés" gomb navigáljon a külső URL-re
-- Ha `Position.externalApplicationUrl` is létezik: az felülírja a cégszintű linket
+Fő szabályok:
 
-### Határidő
-- A `deadline` mező lehet `null` → "Folyamatos jelentkezés" felirat
+- csak hallgatói profillal lehet jelentkezni
+- egy hallgató egy pozícióra egyszer jelentkezhet
+- inaktív vagy nem létező pozícióra nem lehet jelentkezni
 
-### Referens Dashboard
-- `GET /api/stats/university/referent-overview` → Dedikált felület a referenseknek
-- A referens választó legördülőben a `isCompanyMatch: true` jelöléssel rendelkezők az "ajánlott" kategóriába kerüljenek
+### 10.2 Jelentkezés értékelése
 
----
+Kulcs logika:
 
-> **Megjegyzés**: Ez a dokumentáció a projekt 2026-04-15-i állapotát tükrözi. A teljes API specifikáció a Swagger UI-on (`/api-docs`) érhető el.
+- céges oldalról `ACCEPTED`, `REJECTED`, `NO_RESPONSE`
+- státuszváltás a `status-transition` util alapján validált
+
+Belépési pont:
+
+- `PATCH /api/applications/company/:id/evaluate`
+
+### 10.3 Jelentkezésből partnerség
+
+Ha egy jelentkezés `ACCEPTED` lesz:
+
+- létrejön egy `DualPartnership`
+- a kezdeti státusz `PENDING_MENTOR`
+- ha van megfelelő referens, a rendszer megpróbálja automatikusan hozzárendelni
+
+### 10.4 Referensi logika
+
+Fontos service:
+
+- [src/services/universityUser.service.ts](D:/coding/dual-kepzes-backend/src/services/universityUser.service.ts:1)
+
+Aktuális működés:
+
+- a rendszer a hallgató szakja és a pozíció cége alapján keres referenst
+- a referens manuálisan is cserélhető
+- van dedikált referens-overview stat endpoint
+
+### 10.5 Fájlos jelentkezés
+
+Kulcs route:
+
+- `POST /api/applications/submit-with-files`
+
+Megjegyzések:
+
+- a fájlok memória bufferben maradnak
+- nincs lokális lemezpersistálás
+- a dokumentumok háttérben mennek ki emailben a cég felé
+- az application létrehozása és az email kiküldés nem egy tranzakciós egység
+
+Ez utóbbi fontos ismert kompromisszum:
+
+- ha az email elbukik, a jelentkezés akkor is létrejöhet
+
+## 11. Email, queue és háttérfolyamatok
+
+Fő fájlok:
+
+- [src/config/mailer.ts](D:/coding/dual-kepzes-backend/src/config/mailer.ts:1)
+- [src/config/redis.ts](D:/coding/dual-kepzes-backend/src/config/redis.ts:1)
+- [src/services/email.queue.ts](D:/coding/dual-kepzes-backend/src/services/email.queue.ts:1)
+- [src/services/email.worker.ts](D:/coding/dual-kepzes-backend/src/services/email.worker.ts:1)
+
+Jelenlegi állapot:
+
+- email küldés infrastruktúra-függően mockolható
+- Redis hiányában a queue nem aktív
+- ez jelenleg tudatos, nem rejtett hiba
+
+Átadási megjegyzés:
+
+- amikor megérkezik a végleges SMTP, érdemes külön smoke testet írni az email és queue flow-ra
+
+## 12. Galéria és képfeltöltés
+
+Fő elemek:
+
+- `GalleryGroup`
+- `GalleryImage`
+- `CompanyImage`
+
+Megoldás:
+
+- S3 / Supabase alapú tárolás
+- képoptimalizálás Sharp-pal
+- rendszer- és cégszintű galériák külön kezelve
+
+## 13. Statisztikák
+
+Fő stat endpointok:
+
+- `GET /api/stats`
+- `GET /api/stats/company/me`
+- `GET /api/stats/applications`
+- `GET /api/stats/partnerships`
+- `GET /api/stats/positions`
+- `GET /api/stats/trends`
+- `GET /api/stats/university/student-distribution`
+- `GET /api/stats/university/referent-overview`
+
+Megjegyzés:
+
+- a stat service több helyen több lekérdezést aggregál
+- teljesítményhangolásnál ezt érdemes elsőként profilozni
+
+## 14. Dokumentáció állapota
+
+Frissítve lett:
+
+- [README.md](D:/coding/dual-kepzes-backend/README.md:1)
+- Swagger route kommentek több route fájlban
+- [src/config/swagger.ts](D:/coding/dual-kepzes-backend/src/config/swagger.ts:1)
+
+Jelenlegi dokumentációs erősségek:
+
+- a README tartalmaz architektúra- és folyamatdiagramokat
+- az ER diagram a jelenlegi schema alapján lett frissítve
+- a Swagger több kulcs endpointnál szinkronizálva lett a sémákkal
+
+Maradék kockázat:
+
+- a repo több fájljában korábban sérült karakterkódolás volt
+- emiatt később is érdemes figyelni rá, hogy UTF-8-ban maradjanak a dokumentációs fájlok
+
+## 15. Ismert technikai kockázatok és kompromisszumok
+
+1. Az idempotency middleware memória alapú.
+   Több példányos deploynál központi store kell.
+
+2. A fájlos jelentkezés nem garantálja ugyanabban a műveleti egységben az application + email sikerét.
+   Üzletileg elfogadott lehet, de fontos tudni róla.
+
+3. A Prisma datasource jelenleg `DIRECT_URL`-re épít.
+   Production környezetben ezt át kell vezetni a végleges stratégiára.
+
+4. A soft delete viselkedés központilag ki van terjesztve.
+   Nyers, teljes rekordhozzáféréshez külön figyelem kell.
+
+5. A teszt- és lintkör most ebben a környezetben nem futott le `npm` probléma miatt.
+   Érdemes ezt külön elsőként helyrehozni.
+
+## 16. Javasolt első lépések az átvevő fejlesztőnek
+
+1. Ellenőrizze a helyi `npm` és futtatási környezetet.
+2. Indítsa el a projektet fejlesztői módban.
+3. Nézze át a Swagger UI-t és a fő auth/application/company flow-kat.
+4. Validálja a tényleges adatbázis-konfigurációs stratégiát fejlesztői és éles környezetben.
+5. Egyeztesse az email infrastruktúra és Redis tervet deployment oldalról.
+
+## 17. Javasolt következő technikai fókuszok
+
+- end-to-end tesztkör stabilizálása
+- email és queue flow élesítése
+- soft delete stratégia további egyszerűsítése, ha szükséges
+- többpéldányos deployment esetére idempotency újragondolása
+- dokumentáció és Swagger folyamatos szinkronban tartása
+
+## 18. Hasznos fájlok az átadáshoz
+
+- [README.md](D:/coding/dual-kepzes-backend/README.md:1)
+- [handover.md](D:/coding/dual-kepzes-backend/handover.md:1)
+- [package.json](D:/coding/dual-kepzes-backend/package.json:1)
+- [prisma/schema.prisma](D:/coding/dual-kepzes-backend/prisma/schema.prisma:1)
+- [src/app.ts](D:/coding/dual-kepzes-backend/src/app.ts:1)
+- [src/config/prisma.ts](D:/coding/dual-kepzes-backend/src/config/prisma.ts:1)
+- [src/routes](D:/coding/dual-kepzes-backend/src/routes)
+- [src/services](D:/coding/dual-kepzes-backend/src/services)
+- [user_guides](D:/coding/dual-kepzes-backend/user_guides)
+
+## 19. Rövid átadási összefoglaló
+
+Az átadás szempontjából a legfontosabb tudnivalók:
+
+- a jelenlegi fejlesztői DB stratégia `DIRECT_URL`
+- az email infrastruktúra még nem végleges
+- az idempotency jelenleg memória alapú
+- a soft delete viselkedés központilag kezelt

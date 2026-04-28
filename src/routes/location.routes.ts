@@ -17,7 +17,7 @@ router.use(authenticateToken);
  * @swagger
  * /api/locations:
  *   get:
- *     summary: List all company locations with address, company info, and position count
+ *     summary: List all company locations with company info and position count
  *     tags: [Locations]
  *     security:
  *       - bearerAuth: []

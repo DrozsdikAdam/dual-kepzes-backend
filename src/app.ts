@@ -31,6 +31,7 @@ import locationRoutes from "./routes/location.routes";
 import materialRoutes from "./routes/material.routes";
 import galleryRoutes from "./routes/gallery.routes";
 import companyImageRoutes from "./routes/companyImage.routes";
+import searchRoutes from "./routes/search.routes";
 
 const app: Application = express();
 app.set("trust proxy", 1);
@@ -83,6 +84,9 @@ app.use("/api/materials", materialRoutes);
 
 //gallery endpoints
 app.use("/api/galleries", galleryRoutes);
+
+//search endpoints
+app.use("/api/search", searchRoutes);
 
 // Test Route
 app.get("/", (req: Request, res: Response) => {

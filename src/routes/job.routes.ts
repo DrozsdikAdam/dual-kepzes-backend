@@ -84,6 +84,7 @@ router.get("/positions/non-dual",
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Position details
@@ -104,6 +105,7 @@ router.get("/positions/:id",
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: List of positions for the company
@@ -116,7 +118,7 @@ router.get("/positions/company/:companyId",
  * @swagger
  * /api/jobs/positions:
  *   post:
- *     summary: Create a new job position
+ *     summary: Create a new job position (Company Admin)
  *     tags: [Jobs]
  *     security:
  *       - bearerAuth: []
@@ -143,7 +145,7 @@ router.post(
  * @swagger
  * /api/jobs/positions/{id}:
  *   patch:
- *     summary: Update an existing position
+ *     summary: Update an existing position (Company Employee + Owner)
  *     tags: [Jobs]
  *     security:
  *       - bearerAuth: []
@@ -153,6 +155,7 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     requestBody:
  *       required: true
  *       content:
@@ -176,7 +179,7 @@ router.patch(
  * @swagger
  * /api/jobs/positions/{id}:
  *   delete:
- *     summary: Delete a position permanently
+ *     summary: Delete a position (Company Employee + Owner)
  *     tags: [Jobs]
  *     security:
  *       - bearerAuth: []
@@ -186,6 +189,7 @@ router.patch(
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Position deleted successfully
@@ -201,7 +205,7 @@ router.delete("/positions/:id",
  * @swagger
  * /api/jobs/positions/{id}/deactivate:
  *   patch:
- *     summary: Deactivate a position (logical delete)
+ *     summary: Deactivate a position (Company Employee + Owner)
  *     tags: [Jobs]
  *     security:
  *       - bearerAuth: []
@@ -211,6 +215,7 @@ router.delete("/positions/:id",
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Position deactivated successfully

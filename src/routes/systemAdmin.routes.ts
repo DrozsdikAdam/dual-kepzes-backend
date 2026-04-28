@@ -110,7 +110,14 @@ router.get("/me", getMeSystemAdmin)
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateUserBody'
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *               phoneNumber:
+ *                 type: string
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Profile updated successfully
@@ -198,7 +205,14 @@ router.get("/:id", getSystemAdminById)
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateUserBody'
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *               phoneNumber:
+ *                 type: string
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Profile updated successfully
