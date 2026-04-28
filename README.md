@@ -14,17 +14,18 @@ A projekt fő céljai:
 
 Főbb technológiák:
 
-- Node.js
-- TypeScript
-- Express
-- Prisma
-- PostgreSQL
-- Zod
-- JWT
-- BullMQ
-- Redis
-- Jest
-- Swagger / OpenAPI
+- **Node.js**: eseményvezérelt szerveroldali futtatókörnyezet az API kiszolgálásához
+- **[Node.js](https://nodejs.org/)**: eseményvezérelt szerveroldali futtatókörnyezet az API kiszolgálásához
+- **[TypeScript](https://www.typescriptlang.org/)**: statikus típusosság a kontrollerektől a service rétegig
+- **[Express](https://expressjs.com/)**: könnyű, jól kontrollálható HTTP keretrendszer
+- **[Prisma](https://www.prisma.io/)**: típusos adat-hozzáférési réteg és sémakezelés PostgreSQL fölött
+- **[PostgreSQL](https://www.postgresql.org/)**: relációs adatbázis a domain entitások és kapcsolatok tárolására
+- **[Zod](https://zod.dev/)**: request validáció és input normalizálás
+- **[JWT](https://jwt.io/)**: token alapú autentikáció és role-based hozzáférés
+- **[BullMQ](https://docs.bullmq.io/)**: háttérfolyamatok és queue alapú feldolgozás
+- **[Redis](https://redis.io/)**: queue backend és később többpéldányos koordináció lehetséges alapja
+- **[Jest](https://jestjs.io/)**: unit és részben integrációs tesztelés
+- **[Swagger / OpenAPI](https://swagger.io/)**: interaktív API dokumentáció és szerződéskövetés
 
 ## Architektúra
 
@@ -670,21 +671,26 @@ erDiagram
 
 ```text
 src/
-  app.ts
-  server.ts
-  config/
-  controllers/
-  middlewares/
-  routes/
-  schemas/
-  services/
-  types/
-  utils/
+├── app.ts                # Express alkalmazás összeállítása
+├── server.ts             # belépési pont, szerverindítás
+├── config/               # Prisma, Redis, mailer, CORS, Swagger, upload
+├── controllers/          # HTTP request/response kezelés
+├── errors/               # egyedi alkalmazáshibák
+├── middlewares/          # auth, validáció, rate limit, ownership, error handler
+├── routes/               # endpoint definíciók és route wiring
+├── schemas/              # Zod sémák
+├── services/             # üzleti logika és tranzakciós műveletek
+├── types/                # közös TypeScript típusok
+├── utils/                # közös segédfüggvények és mapperek
+└── constants.ts          # közös hibakódok és konstansok
+
 prisma/
-  schema.prisma
-  migrations/
-  seed.ts
-user_guides/
+├── schema.prisma         # adatmodell
+├── migrations/           # adatbázis migrációk
+└── seed.ts               # seed script
+
+user_guides/              # szerepkör-specifikus használati anyagok
+handover.md               # projektátadási megjegyzések
 ```
 
 ## Fejlesztési irányelvek
