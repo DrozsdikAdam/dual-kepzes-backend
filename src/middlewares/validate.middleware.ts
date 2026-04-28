@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { ZodObject, ZodError } from "zod"
+import { ZodObject, ZodError } from "zod";
+import { ValidationError } from "../errors/AppError";
 
 export const validate = (schema: ZodObject<any, any>) => {
     return async (req: Request, res: Response, next: NextFunction) => {
@@ -7,7 +8,7 @@ export const validate = (schema: ZodObject<any, any>) => {
             const parsed = await schema.parseAsync({
                 body: req.body,
                 query: req.query,
-                params: req.params
+                params: req.params,
             });
 
             req.body = parsed.body;
@@ -17,19 +18,21 @@ export const validate = (schema: ZodObject<any, any>) => {
             if (parsed.params) {
                 req.params = parsed.params as Request["params"];
             }
+
             return next();
         } catch (error) {
             if (error instanceof ZodError) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "Validációs hiba",
-                    errors: error.issues.map((e) => ({
-                        field: e.path.join(".").replace("body.", ""),
-                        message: e.message,
-                    })),
-                });
+                return next(
+                    new ValidationError("Validacios hiba.", {
+                        issues: error.issues.map((issue) => ({
+                            field: issue.path.join(".").replace("body.", ""),
+                            message: issue.message,
+                        })),
+                    })
+                );
             }
-            next(error);
+
+            return next(error);
         }
-    }
-}
+    };
+};
