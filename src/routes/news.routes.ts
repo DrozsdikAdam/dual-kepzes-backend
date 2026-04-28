@@ -90,6 +90,7 @@ router.get("/admin/archived", isSystemAdmin, getArchivedNews);
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: News details
@@ -110,6 +111,7 @@ router.get("/admin/:id", isSystemAdmin, getAdminNewsById);
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     requestBody:
  *       required: true
  *       content:
@@ -136,6 +138,7 @@ router.patch("/admin/:id", isSystemAdmin, validate(UpdateNewsSchema), updateNews
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: News archived successfully
@@ -156,6 +159,7 @@ router.patch("/admin/:id/archive", isSystemAdmin, archiveNews);
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: News unarchived successfully
@@ -176,6 +180,7 @@ router.patch("/admin/:id/unarchive", isSystemAdmin, unarchiveNews);
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: News deleted successfully
@@ -212,6 +217,7 @@ router.get("/", getAllNews);
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: News details

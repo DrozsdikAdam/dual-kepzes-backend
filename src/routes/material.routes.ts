@@ -1,7 +1,7 @@
 import { Router } from 'express';
+import { Role } from '@prisma/client';
 import { materialController } from '../controllers/material.controller';
 import { authenticateToken, requireRole } from '../middlewares/auth.middleware';
-import { Role } from '@prisma/client';
 import { validate } from '../middlewares/validate.middleware';
 import { CompleteMaterialSchema } from '../schemas/material.schema';
 
@@ -11,14 +11,14 @@ const router = Router();
  * @swagger
  * tags:
  *   name: Learning Materials
- *   description: Tananyagok (Learning Materials) és azok elvégzésének dokumentációja
+ *   description: Learning material completion and statistics
  */
 
 /**
  * @swagger
  * /api/materials/complete:
  *   post:
- *     summary: Tananyag elvégzésének és értékelésének rögzítése
+ *     summary: Record completion of a learning material
  *     tags: [Learning Materials]
  *     security:
  *       - bearerAuth: []
@@ -33,35 +33,41 @@ const router = Router();
  *             properties:
  *               materialId:
  *                 type: string
- *                 example: "anyag-elso"
- *                 description: A tananyag azonosítója
+ *                 example: material-intro
+ *                 description: Identifier of the learning material
  *               rating:
  *                 type: integer
  *                 example: 5
- *                 description: Opcionális értékelés 1-5 között
+ *                 description: Optional rating given by the student
  *     responses:
  *       201:
- *         description: Sikeresen mentve.
+ *         description: Learning material completion recorded successfully
  *       400:
- *         description: Hiányzó vagy hibás adat (pl. érvénytelen értékelés).
+ *         description: Invalid payload
  *       403:
- *         description: Hozzáférés megtagadva (csak diákok rögzíthetnek).
+ *         description: Only students can record completion
  *       409:
- *         description: A diák már rögzítette egyszer ezt a tananyagot.
+ *         description: Material completion already exists for this student
  */
-router.post('/complete', authenticateToken, requireRole([Role.STUDENT]), validate(CompleteMaterialSchema), materialController.completeMaterial);
+router.post(
+    '/complete',
+    authenticateToken,
+    requireRole([Role.STUDENT]),
+    validate(CompleteMaterialSchema),
+    materialController.completeMaterial
+);
 
 /**
  * @swagger
  * /api/materials/progress:
  *   get:
- *     summary: Diák saját előrehaladásának listázása
+ *     summary: List the current student's completed learning materials
  *     tags: [Learning Materials]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Sikeres válasz, a letöltött tananyagok elvégzéseivel.
+ *         description: List of completed materials for the current student
  *         content:
  *           application/json:
  *             schema:
@@ -71,7 +77,7 @@ router.post('/complete', authenticateToken, requireRole([Role.STUDENT]), validat
  *                 properties:
  *                   materialId:
  *                     type: string
- *                     example: "anyag-kettes"
+ *                     example: material-advanced
  *                   rating:
  *                     type: integer
  *                     example: 4
@@ -80,21 +86,26 @@ router.post('/complete', authenticateToken, requireRole([Role.STUDENT]), validat
  *                     format: date-time
  *                     example: "2024-03-21T10:00:00.000Z"
  *       403:
- *         description: Hozzáférés megtagadva.
+ *         description: Access denied
  */
-router.get('/progress', authenticateToken, requireRole([Role.STUDENT]), materialController.getMyProgress);
+router.get(
+    '/progress',
+    authenticateToken,
+    requireRole([Role.STUDENT]),
+    materialController.getMyProgress
+);
 
 /**
  * @swagger
  * /api/materials/statistics:
  *   get:
- *     summary: Tananyag statisztikák lekérdezése az összes diákra
+ *     summary: Get learning material statistics for staff roles
  *     tags: [Learning Materials]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Sikeres válasz statisztikákkal.
+ *         description: Aggregated learning material statistics
  *         content:
  *           application/json:
  *             schema:
@@ -104,7 +115,7 @@ router.get('/progress', authenticateToken, requireRole([Role.STUDENT]), material
  *                 properties:
  *                   materialId:
  *                     type: string
- *                     example: "anyag-kettes"
+ *                     example: material-advanced
  *                   completionsCount:
  *                     type: integer
  *                     example: 42
@@ -112,8 +123,13 @@ router.get('/progress', authenticateToken, requireRole([Role.STUDENT]), material
  *                     type: number
  *                     example: 4.5
  *       403:
- *         description: Hozzáférés megtagadva (csak adminok és mentorok számára).
+ *         description: Access denied
  */
-router.get('/statistics', authenticateToken, requireRole([Role.SYSTEM_ADMIN, Role.MENTOR, Role.COMPANY_ADMIN]), materialController.getStatistics);
+router.get(
+    '/statistics',
+    authenticateToken,
+    requireRole([Role.SYSTEM_ADMIN, Role.MENTOR, Role.COMPANY_ADMIN]),
+    materialController.getStatistics
+);
 
 export default router;
