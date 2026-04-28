@@ -10,54 +10,47 @@ const softDeleteModels = [
     "News", "Notification"
 ];
 
+function shouldApplySoftDeleteFilter(model: string) {
+    return softDeleteModels.includes(model);
+}
+
+function ensureSoftDeleteFilter(args: { where?: Record<string, unknown> }) {
+    args.where = args.where || {};
+
+    if ((args.where as Record<string, unknown>).deletedAt === undefined) {
+        (args.where as Record<string, unknown>).deletedAt = null;
+    }
+}
+
 const prisma = basePrisma.$extends({
     query: {
         $allModels: {
             async findMany({ model, args, query }) {
-                if (softDeleteModels.includes(model)) {
-                    args.where = args.where || {};
-                    if (!(args.where as any).deletedAt) {
-                        (args.where as any).deletedAt = null;
-                    }
+                if (shouldApplySoftDeleteFilter(model)) {
+                    ensureSoftDeleteFilter(args as { where?: Record<string, unknown> });
                 }
                 return query(args);
             },
             async findFirst({ model, args, query }) {
-                if (softDeleteModels.includes(model)) {
-                    args.where = args.where || {};
-                    if (!(args.where as any).deletedAt) {
-                        (args.where as any).deletedAt = null;
-                    }
+                if (shouldApplySoftDeleteFilter(model)) {
+                    ensureSoftDeleteFilter(args as { where?: Record<string, unknown> });
                 }
                 return query(args);
             },
             async findUnique({ model, args, query }) {
-                if (softDeleteModels.includes(model)) {
-                    const modelName = model.charAt(0).toLowerCase() + model.slice(1);
-                    const where = { ...args.where } as any;
-
-                    // Handle composite unique keys (e.g. studentId_positionId)
-                    // We need to flatten them because findFirst doesn't support the composite key name in where
-                    for (const key in where) {
-                        if (key.includes('_') && typeof where[key] === 'object' && where[key] !== null) {
-                            const subKeys = where[key];
-                            for (const subKey in subKeys) {
-                                where[subKey] = subKeys[subKey];
-                            }
-                            delete where[key];
-                        }
-                    }
-
-                    if (!where.deletedAt) {
-                        where.deletedAt = null;
-                    }
-
-                    return (basePrisma as any)[modelName].findFirst({
-                        ...args,
-                        where
-                    });
+                if (!shouldApplySoftDeleteFilter(model)) {
+                    return query(args);
                 }
-                return query(args);
+
+                const result = await query(args);
+
+                if (result && typeof result === "object" && "deletedAt" in result) {
+                    return (result as { deletedAt: Date | null }).deletedAt === null
+                        ? result
+                        : null;
+                }
+
+                return result;
             }
         }
     }
