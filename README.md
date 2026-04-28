@@ -1,443 +1,350 @@
-# Duális Képzés Backend API
+# Duális Képzés Backend
 
-Ez a repository a Duális Képzés rendszer backend szolgáltatását tartalmazza. Az alkalmazás célja a hallgatók, cégek, egyetemi szereplők és a duális képzés adminisztrációjának támogatása egy robusztus, biztonságos és skálázható REST API-n keresztül.
+Backend API a duális képzési rendszerhez. A szolgáltatás hallgatók, céges szerepkörök, egyetemi felhasználók és rendszeradminisztrátorok folyamatait támogatja egy role-based, REST alapú backenddel.
 
-## Technológia Stack
+## Áttekintés
 
-A projekt modern, iparági sztenderd technológiákra épül:
+A projekt fő céljai:
 
--   **Runtime**: [Node.js](https://nodejs.org/) (v18+) - Skálázható, eseményvezérelt futtatókörnyezet a szerveroldali logika végrehajtásához.
--   **Nyelv**: [TypeScript](https://www.typescriptlang.org/) (v5.0+) - Szigorú típusbiztonság a teljes vertikumban (Service-tők a Controller-ekig), minimalizálva a runtime hibákat.
--   **Keretrendszer**: [Express](https://expressjs.com/) - Minimalista webes keretrendszer a REST API végpontok és a HTTP kérések hatékony kezelésére.
--   **Adatbázis**: [PostgreSQL](https://www.postgresql.org/) - Megbízható, nyílt forráskódú relációs adatbázis-kezelő a strukturált adatok tárolására.
--   **ORM**: [Prisma](https://www.prisma.io/) - Modern adatbázis-hozzáférési réteg, amely egyszerűsíti az adatmodellezést és típusbiztos lekérdezéseket biztosít.
--   **Validáció**: [Zod](https://zod.dev/) - TypeScript-first séma validáció, amely garantálja a bejövő adatok integritását és automatikus típus-inferenciát biztosít a backend rétegek számára.
--   **Autentikáció**: JSON Web Token (JWT) + Bcrypt - Biztonságos token alapú azonosítás és jelszóhashelés a felhasználói fiókok védelmére.
--   **Háttérfolyamatok**: [BullMQ](https://docs.bullmq.io/) (Redis alapú queue) - Nagy teljesítményű üzenetsor-kezelő az aszinkron feladatok és háttérműveletek megbízható végrehajtásához.
--   **Email**: Nodemailer (SMTP) - Moduláris email küldő szolgáltatás a rendszerüzenetek és értesítések kézbesítésére.
--   **Tesztelés**: [Jest](https://jestjs.io/) & [Supertest](https://github.com/ladjs/supertest) - Unit és integrációs tesztek a megbízhatóság érdekében.
--   **Dokumentáció**: [Swagger/OpenAPI](https://swagger.io/) - Interaktív API dokumentáció és végpont tesztelési felület.
+- hallgatói és adminisztratív workflow-k kiszolgálása
+- cégek, pozíciók, jelentkezések és partnerségek kezelése
+- szerepkör alapú hozzáférés-vezérlés
+- validált, dokumentált API biztosítása frontend és admin kliensek számára
+- biztonságos, bővíthető backend architektúra fenntartása
 
-## Előfeltételek
+Főbb technológiák:
 
-A fejlesztői környezet futtatásához szükséges szoftverek:
+- Node.js
+- TypeScript
+- Express
+- Prisma
+- PostgreSQL
+- Zod
+- JWT
+- BullMQ
+- Redis
+- Jest
+- Swagger / OpenAPI
 
-*   **Node.js**: Legalább v18.x verzió.
-*   **npm**: Csomagkezelő (általában a Node.js része).
-*   **PostgreSQL**: Helyi adatbázis szerver vagy Docker konténer.
-*   **Redis**: Opcionális, de ajánlott a háttérfolyamatokhoz (BullMQ).
+## Architektúra
 
-## Telepítés és Indítás
+A kód klasszikus rétegezést követ:
 
-1.  **Repository klónozása**
-    ```bash
-    git clone https://github.com/DrozsdikAdam/dual-kepzes-backend.git
-    cd dual-kepzes-backend
-    ```
+- `routes`: endpoint definíciók és middleware lánc
+- `controllers`: HTTP szintű request-response kezelés
+- `services`: üzleti logika
+- `schemas`: Zod validációs sémák
+- `middlewares`: auth, validáció, hibakezelés, rate limiting, idempotency
+- `config`: infrastruktúra és integrációs konfiguráció
+- `utils`: közös segédfüggvények
+- `prisma`: adatmodell, migrációk, seed
 
-2.  **Függőségek telepítése**
-    ```bash
-    npm install
-    ```
+Ez a felosztás addig működik jól, amíg a kontrollerek vékonyak maradnak, az üzleti szabályok a service rétegben vannak, és a middleware-ek nem kezdenek domain logikát hordozni.
 
-3.  **Környezeti változók beállítása**
-    Másold a példa konfigurációt (vagy hozd létre manuálisan) egy `.env` fájlba a gyökérkönyvtárban:
-    
-    ```env
-    # Szerver
-    PORT=3000
-    NODE_ENV="development"
-
-    # Adatbázis
-    DATABASE_URL="postgresql://user:password@localhost:5432/dual_db?schema=public"
-    # Ha szükséges (pl. Supabase): DIRECT_URL="..."
-
-    # Biztonság
-    JWT_SECRET="szuper_titkos_kulcs_min_32_karakter"
-
-    # Frontend URL (jelszó visszaállító linkhez)
-    FRONTEND_URL="http://localhost:3000"
-
-    # Email (Mailtrap példa)
-    MAILTRAP_USER="your_user"
-    MAILTRAP_PASS="your_pass"
-
-    # Redis (Opcionális, BullMQ-hoz)
-    REDIS_HOST="localhost"
-    REDIS_PORT=6379
-    REDIS_ENABLED="false"
-
-    # Supabase S3 (Képkezelés)
-    SUPABASE_S3_REGION="eu-central-1"
-    SUPABASE_S3_ENDPOINT="https://txpkjkutdzholuwatpot.supabase.co/storage/v1/s3"
-    SUPABASE_S3_ACCESS_KEY_ID="your_access_key"
-    SUPABASE_S3_SECRET_ACCESS_KEY="your_secret_key"
-    SUPABASE_S3_BUCKET_NAME="ImageBucket"
-    SUPABASE_PUBLIC_URL="https://txpkjkutdzholuwatpot.supabase.co/storage/v1/object/public"
-    ```
-
-
-4.  **Adatbázis szinkronizáció**
-    Hozd létre a táblákat a Prisma séma alapján:
-    ```bash
-    npm run prisma:push
-    ```
-
-5.  **Szerver indítása (Fejlesztői mód)**
-    ```bash
-    npm run dev
-    ```
-    A szerver elindul a `http://localhost:3000` címen.
-
-## Elérhető Szkriptek
-
-A `package.json`-ben definiált főbb parancsok:
-
-| Parancs | Leírás |
-| :--- | :--- |
-| `npm run dev` | Fejlesztői szerver indítása watch módban (`nodemon` + `tsx`). |
-| `npm start` | A lefordított (`dist`) kód futtatása éles környezetben. |
-| `npm run build` | TypeScript kód fordítása JavaScriptre a `dist` mappába. |
-| `npm run prisma:push` | Adatbázis séma szinkronizálása a `schema.prisma` alapján (fejlesztéshez). |
-| `npm run prisma:format` | Prisma fájlok formázása. |
-| `npm run prisma:studio` | Adatbázis GUI megnyitása a böngészőben. |
-| `npm run test` | Unit és integrációs tesztek futtatása. |
-| `npm run lint` | Kódminőség ellenőrzése (ESLint v9). |
-| `npm run format` | Kód automatikus formázása (Prettier). |
-| `npx tsx scripts/test-image-upload.ts` | **[ÚJ]** Képfeltöltés tesztelése localhoston (admin profil). |
-| `npx tsx scripts/test-image-delete.ts <ID>` | **[ÚJ]** Kép törlésének tesztelése ID alapján. |
-| `npx prisma db seed` | Adatbázis feltöltése tesztadatokkal (`prisma/seed.ts`). |
-
-## Projekt Struktúra
-
-```
-src/
-├── config/         # App konfigurációk (DB, Redis, Email)
-├── controllers/    # Üzleti logika (Request/Response kezelés)
-├── middlewares/    # Express middleware-ek (Auth, Validáció, RateLimit)
-├── routes/         # API végpontok definíciói
-├── schemas/        # Zod validációs definíciók
-├── services/       # Komplex üzleti logika (opcionális réteg - Auth, Anonymize, stb.)
-├── utils/          # Segédfüggvények (Logger, Token, Mapper)
-└── app.ts          # Express App inicializálás
-prisma/
-├── schema.prisma   # Adatbázis modellek
-└── seed.ts         # Kezdeti adatfeltöltő szkript
-```
-
-Minden végpont a `/api` prefix alatt érhető el. A legtöbb végponthoz érvényes `Authorization: Bearer <token>` fejléc szükséges.
-
-## API Dokumentáció
-
-Az összes API végpont **teljes dokumentációja interaktív Swagger felületen** keresztül érhető el:
-
-**Helyi fejlesztés**: `http://localhost:3000/api-docs`  
-**Production**: `https://dual-kepzes-backend-production-7c45.up.railway.app/api-docs`
-
-A Swagger UI lehetőséget ad:
-- Végpontok részletes leírásának megtekintésére
-- Sémák és válaszok vizuális megjelenítésére  
-- Interaktív tesztelésre (Try it out!)
-- Autentikációs token használatára
-
-### Lapozás (Pagination)
-A listázó végpontok egységes válaszstruktúrát és lekérdezési paramétereket használnak. Részleteket az [API_PAGINATION.md](API_PAGINATION.md) fájlban találsz.
-
-## Szerepkörök és Jogosultságok
-
-| Szerepkör | Leírás | Főbb jogosultságok |
-|:----------|:-------|:-------------------|
-| `STUDENT` | Hallgató | Saját profil, jelentkezések, partnerségek megtekintése, **egyetemi profilra váltás**. |
-| `MENTOR` | Céges munkavállaló/Mentor | Cég pozíciói, jelentkezések megtekintése, mentor funkciók. |
-| `COMPANY_ADMIN` | Cégadmin | Teljes cégkezelés, jelentkezések értékelése, pozíciók és munkavállalók kezelése. (Regisztráció után rendszeradminisztrátori jóváhagyásra vár). |
-| `UNIVERSITY_USER` | Egyetemi kapcsolattartó/Referens | Partnerségek jóváhagyása, hallgatók felügyelete, szakhoz és céghez rendelt dashboard kezelése. |
-| `SYSTEM_ADMIN` | Rendszergazda | Teljes rendszer adminisztráció, minden entitás kezelése. (Email policy: Csak biztonsági emaileket kap). |
-
-## Adatbázis Séma Áttekintés
-
-A rendszer fő entitásai és kapcsolataik:
+### Architektúra diagram
 
 ```mermaid
-erDiagram
-    User {
-        string id PK
-        string email UK
-        string password
-        string fullName
-        string phoneNumber
-        Role role
-        boolean isEmailVerified
-        boolean isEmailEnabled
-        boolean isActive
-    }
-    StudentProfile {
-        string id PK
-        string userId FK
-        string mothersName
-        datetime birthDate
-        string highSchool
-        int graduationYear
-        string neptunCode
-        string majorId FK
-        boolean hasLanguageCert
-        boolean isInHighSchool
-        boolean isAvailableForWork
-    }
-    Major {
-        string id PK
-        string name
-        string language
-    }
-    Company {
-        string id PK
-        string name
-        string taxId UK
-        string contactEmail
-        string website
-        string externalApplicationUrl "optional"
-        boolean hasOwnApplication
-        RegistrationStatus status
-        boolean isActive
-    }
-    CompanyEmployee {
-        string id PK
-        string userId FK
-        string companyId FK
-        string jobTitle
-    }
-    Location {
-        string id PK
-        string city
-        string address
-        string companyId FK
-        string studentProfileId FK
-    }
-    Position {
-        string id PK
-        string companyId FK
-        string title
-        string majorId FK
-        PositionType type
-        string externalApplicationUrl "optional"
-        datetime deadline "optional"
-        boolean isActive
-        string locationId FK
-    }
-    Tag {
-        string id PK
-        string name UK
-        string category
-    }
-    Application {
-        string id PK
-        string studentId FK
-        string positionId FK
-        ApplicationStatus status
-        datetime submittedAt
-    }
-    DualPartnership {
-        string id PK
-        string studentId FK
-        string mentorId FK
-        string uniEmployeeId FK
-        string positionId FK
-        string semester
-        PartnershipStatus status
-        datetime startDate
-        datetime endDate
-    }
-    Notification {
-        string id PK
-        string userId FK
-        string title
-        string type
-        boolean isRead
-    }
-    AuditLog {
-        string id PK
-        string userId FK
-        string action
-        string entity
-        string entityId
-    }
-    News {
-        string id PK
-        string title
-        string targetGroup
-        boolean isImportant
-        boolean isArchived
-    }
-    MaterialCompletion {
-        string id PK
-        string studentProfileId FK
-        string materialId
-        int rating
-        boolean isCompleted
-        datetime completedAt
-    }
-
-    User ||--o| StudentProfile : "has profile"
-    User ||--o| CompanyEmployee : "works as"
-    User ||--o{ Notification : "receives"
-    User ||--o{ AuditLog : "triggers"
-    StudentProfile }o--o| Major : "studies"
-    StudentProfile ||--o{ Location : "lives at"
-    StudentProfile ||--o{ Application : "submits"
-    Company ||--o{ CompanyEmployee : "employs"
-    Company ||--o{ Position : "offers"
-    Company ||--o{ Location : "has branches"
-    Position }o--o| Major : "requires"
-    Position }o--o{ Tag : "tagged with"
-    Position ||--o{ Application : "receives"
-    Location ||--o{ Position : "hosts"
-    Application ||--o| DualPartnership : "promoted to"
-    DualPartnership }o--|| StudentProfile : "participates"
-    DualPartnership }o--|| CompanyEmployee : "mentored by"
-    DualPartnership }o--|| User : "uni supervisor"
-    DualPartnership }o--|| Position : "linked to"
-    StudentProfile ||--o{ MaterialCompletion : "completes"
-    User }o--o{ Major : "managed majors"
-    User }o--o{ Company : "managed companies"
-```
-
-**Részletes sémát** lásd: `prisma/schema.prisma` vagy Prisma Studio (`npm run prisma:studio`)
-
-## Rendszer Architektúra
-
-A backend alkalmazás rétegelt architektúrát követ:
-
-```mermaid
-graph TB
+flowchart TB
     subgraph "Client Layer"
-        FE[Frontend Application]
-        Swagger[Swagger UI]
+        FE["Frontend Application"]
+        Swagger["Swagger UI"]
     end
-    
+
     subgraph "API Layer"
-        Router[Express Router]
-        Auth[Auth Middleware]
-        RoleCheck[Role Middleware]
-        Validation[Validation Middleware]
-        RateLimit[Rate Limiting]
+        Router["Express Router"]
+        Auth["Auth Middleware"]
+        Validation["Validation Middleware"]
+        Sanitization["Sanitization Middleware"]
+        RateLimit["Rate Limiting"]
+        ErrorHandler["Error Handler"]
     end
-    
-    subgraph "Business Logic Layer"
-        Controllers[Controllers]
-        Services[Services]
+
+    subgraph "Business Layer"
+        Controllers["Controllers"]
+        Services["Services"]
     end
-    
+
     subgraph "Data Layer"
-        Prisma[Prisma ORM]
-        DB[(PostgreSQL)]
+        Prisma["Prisma Client + Extensions"]
+        DB["PostgreSQL"]
     end
-    
+
     subgraph "External Services"
-        Redis[(Redis - BullMQ)]
-        SMTP[Email Service]
+        Redis["Redis / BullMQ"]
+        SMTP["SMTP Provider"]
+        Storage["S3 / Supabase Storage"]
     end
-    
-    FE -->|HTTP/REST| Router
-    Swagger -->|HTTP/REST| Router
+
+    FE --> Router
+    Swagger --> Router
     Router --> Auth
-    Auth --> RoleCheck
-    RoleCheck --> Validation
-    Validation --> RateLimit
+    Auth --> Validation
+    Validation --> Sanitization
+    Sanitization --> RateLimit
     RateLimit --> Controllers
     Controllers --> Services
     Services --> Prisma
     Prisma --> DB
-    Services -.->|Background Jobs| Redis
-    Services -.->|Notifications| SMTP
+    Services --> Redis
+    Redis --> SMTP
+    Services --> Storage
+    Controllers --> ErrorHandler
+    Auth --> ErrorHandler
+    Validation --> ErrorHandler
+    Services --> ErrorHandler
 ```
 
-## Request Processing Flow
-
-Egy tipikus API kérés feldolgozásának menete:
+### Request feldolgozási folyamat
 
 ```mermaid
 sequenceDiagram
     participant Client
     participant Express
-    participant AuthMW as Auth Middleware
-    participant ValidateMW as Validation MW
+    participant Middleware
     participant Controller
     participant Service
     participant Prisma
     participant DB as PostgreSQL
 
-    Client->>Express: HTTP Request + JWT Token
-    Express->>AuthMW: Validate Token
-    
-    alt Token Invalid
-        AuthMW-->>Client: 401 Unauthorized
-    else Token Valid
-        AuthMW->>ValidateMW: Proceed with User Context
-        ValidateMW->>ValidateMW: Validate Input (Zod)
-        
-        alt Validation Failed
-            ValidateMW-->>Client: 400 Bad Request
-        else Validation Passed
-            ValidateMW->>Controller: Execute Handler
-            Controller->>Service: Business Logic
-            Service->>Prisma: Database Query
-            Prisma->>DB: SQL Query
-            DB-->>Prisma: Result Set
-            Prisma-->>Service: Typed Data
-            Service-->>Controller: Processed Data
-            Controller-->>Client: 200 OK + JSON Response
-        end
+    Client->>Express: HTTP request
+    Express->>Middleware: CORS + security + parsing
+    Middleware->>Middleware: auth + validation + rate limit
+
+    alt middleware error
+        Middleware-->>Client: structured error response
+    else request allowed
+        Middleware->>Controller: validated request
+        Controller->>Service: business operation
+        Service->>Prisma: query / transaction
+        Prisma->>DB: SQL
+        DB-->>Prisma: result
+        Prisma-->>Service: typed result
+        Service-->>Controller: domain response
+        Controller-->>Client: JSON response
     end
 ```
 
-## Autentikációs Flow
+## Funkcionális területek
 
-JWT token alapú autentikáció működése:
+A jelenlegi backend az alábbi fő domain területeket kezeli:
+
+- autentikáció és jelszókezelés
+- hallgatói profilok
+- cégek és céges adminisztráció
+- pozíciók és jelentkezések
+- duális partnerségek
+- értesítések
+- hírek
+- tananyag teljesítések
+- statisztikák
+- képfeltöltés és galéria funkciók
+
+## Követelmények
+
+- Node.js 18+
+- npm
+- PostgreSQL
+- opcionálisan Redis, ha a queue alapú háttérfolyamatok is kellenek
+
+## Gyors indítás
+
+1. Függőségek telepítése
+
+```bash
+npm install
+```
+
+2. Környezeti változók beállítása egy `.env` fájlban
+
+3. Adatbázis séma szinkronizálása
+
+```bash
+npm run prisma:push
+```
+
+4. Fejlesztői szerver indítása
+
+```bash
+npm run dev
+```
+
+Alapértelmezett URL:
+
+```text
+http://localhost:3000
+```
+
+Swagger:
+
+```text
+http://localhost:3000/api-docs
+```
+
+## Környezeti változók
+
+Az alkalmazás a jelenlegi fejlesztői környezetben a Prisma kapcsolatot `DIRECT_URL` alapján használja. Ez tudatos döntés a mostani adatbázis-kapcsolódási mód miatt.
+
+Éles környezetben a cél az, hogy a kapcsolat `DATABASE_URL` alapú legyen. Ezt a deploy környezettel és a Prisma konfigurációval együtt kell majd véglegesíteni.
+
+Minimálisan hasznos `.env` példa:
+
+```env
+PORT=3000
+NODE_ENV=development
+
+JWT_SECRET=replace-with-a-strong-secret
+FRONTEND_URL=http://localhost:3000
+
+DIRECT_URL=postgresql://user:password@localhost:5432/dual_db?schema=public
+
+REDIS_ENABLED=false
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+
+SMTP_HOST=sandbox.smtp.mailtrap.io
+SMTP_PORT=2525
+SMTP_USER=your_user
+SMTP_PASS=your_pass
+EMAILS_ENABLED=false
+
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+
+SUPABASE_S3_REGION=eu-central-1
+SUPABASE_S3_ENDPOINT=https://your-project.supabase.co/storage/v1/s3
+SUPABASE_S3_ACCESS_KEY_ID=your_access_key
+SUPABASE_S3_SECRET_ACCESS_KEY=your_secret_key
+SUPABASE_S3_BUCKET_NAME=ImageBucket
+SUPABASE_PUBLIC_URL=https://your-project.supabase.co/storage/v1/object/public
+```
+
+## Fontos működési megjegyzések
+
+- Az email küldés jelenleg tudatosan kikapcsolható vagy mockolható, amíg a végleges SMTP infrastruktúra nincs készen.
+- Az idempotency middleware jelenleg memória alapú. Ez egy példányos futásnál megfelelő, több példányos deploymentnál viszont Redis vagy más központi store ajánlott.
+- A szerver időzónája `Europe/Budapest`.
+- Több entitásnál soft delete működik, ezért a lekérdezési viselkedést a Prisma kiterjesztés is befolyásolja.
+
+## Fő folyamatok
+
+### Auth folyamat
+
+Az auth jelenlegi működésének fontosabb pontjai:
+
+- JWT alapú beléptetés
+- role alapú jogosultságkezelés
+- jelszó reset tokenes flow
+- email verifikációs endpointok léteznek, de a küldési oldal jelenleg infrastruktúra-függő
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant API as Backend API
+    participant DB as PostgreSQL
+    participant JWT as JWT
+
+    U->>API: POST /api/auth/login
+    API->>DB: user lookup by email
+    DB-->>API: user + company context
+    API->>API: password check + active check
+
+    alt invalid credentials or inactive user
+        API-->>U: 400 / 401 / 403
+    else valid login
+        API->>JWT: sign token
+        JWT-->>API: bearer token
+        API-->>U: 200 + token + user summary
+    end
+```
+
+### Regisztráció és bejelentkezés részletes folyamat
 
 ```mermaid
 sequenceDiagram
     participant User
     participant API
     participant DB
-    participant JWT as JWT Service
+    participant JWT
 
     User->>API: POST /api/auth/register
-    API->>DB: Check if email exists
-    
-    alt Email exists
-        DB-->>API: Email already registered
-        API-->>User: 409 Conflict
-    else New user
-        API->>DB: Hash password (bcrypt)
-        API->>DB: Create new user & company (status: PENDING)
-        DB-->>API: Created (Inactive)
-        API->>API: Notify System Admins
-        API-->>User: 201 Created (Approval required)
+    API->>DB: email uniqueness check
+    alt email already exists
+        API-->>User: 400
+    else valid registration
+        API->>DB: create user and role-specific profile
+        DB-->>API: created user
+        API-->>User: 201
     end
 
-    User->>API: POST /api/auth/login (email, password)
-    API->>DB: Find user by email & check company status
-    
-    alt Company PENDING/REJECTED
-        API-->>User: 401 Unauthorized (Waiting for approval)
-    else Company APPROVED
-        API->>DB: Verify password & active status
-        DB-->>API: Valid
-        API->>JWT: Generate token (userId, role)
-        JWT-->>API: JWT Token
-        API-->>User: 200 OK + Token
+    User->>API: POST /api/auth/login
+    API->>DB: find user by email
+    alt invalid credentials
+        API-->>User: 400
+    else inactive or deleted user
+        API-->>User: 401 / 403
+    else company status blocks login
+        API-->>User: 401
+    else login allowed
+        API->>JWT: generate token
+        JWT-->>API: signed token
+        API-->>User: 200 + token
     end
-
-    User->>API: GET /api/students/me + Bearer Token
-    API->>JWT: Verify & Decode Token
-    JWT-->>API: User ID & Role
-    API->>DB: Fetch user data
-    DB-->>API: User data
-    API-->>User: 200 OK + User Profile
 ```
 
-## Partnership Status Flow
+### Jelentkezési folyamat
 
-A duális partnerség életciklusa (státusz átmenetek):
+A jelentkezési logika jelenleg két fő belépési pontot kezel:
+
+- sima jelentkezés
+- jelentkezés csatolmányokkal
+
+Az elfogadott jelentkezés partnerséget is létrehozhat.
+
+```mermaid
+flowchart TD
+    Start["Student applies"] --> Exists{"Position active and exists?"}
+    Exists -- "No" --> NotFound["Reject request"]
+    Exists -- "Yes" --> Duplicate{"Already applied?"}
+    Duplicate -- "Yes" --> DuplicateStop["Reject request"]
+    Duplicate -- "No" --> CreateApp["Create application with SUBMITTED status"]
+    CreateApp --> NotifyAdmins["Notify company admins"]
+    NotifyAdmins --> WaitEval["Company evaluates application"]
+
+    WaitEval --> EvalStatus{"Status"}
+    EvalStatus -->|"REJECTED"| Rejected["Application closed"]
+    EvalStatus -->|"NO_RESPONSE"| NoResponse["No response recorded"]
+    EvalStatus -->|"ACCEPTED"| PartnershipCheck{"Existing active or pending partnership?"}
+    PartnershipCheck -->|"Yes"| PartnershipConflict["Reject acceptance"]
+    PartnershipCheck -->|"No"| CreatePartnership["Create DualPartnership with PENDING_MENTOR"]
+```
+
+### Jelentkezésből partnerség folyamat
+
+```mermaid
+flowchart TD
+    Start["Student browses positions"] --> Apply["Submit application"]
+    Apply --> Review["Company reviews application"]
+    Review --> Decision{"Decision"}
+
+    Decision -->|"REJECTED"| Rejected["Application closed"]
+    Decision -->|"NO_RESPONSE"| NoResponse["No response recorded"]
+    Decision -->|"ACCEPTED"| CheckPartnership{"Existing active or pending partnership?"}
+
+    CheckPartnership -->|"Yes"| Conflict["Acceptance rejected"]
+    CheckPartnership -->|"No"| CreatePartnership["Create partnership"]
+    CreatePartnership --> SuggestReferent["Suggest university referent"]
+    SuggestReferent --> PendingMentor["Status: PENDING_MENTOR"]
+    PendingMentor --> AssignMentor{"Mentor assigned?"}
+    AssignMentor -->|"Yes"| PendingUniversity["Status: PENDING_UNIVERSITY"]
+    AssignMentor -->|"No"| PendingMentor
+    PendingUniversity --> UniversityDecision{"University decision"}
+    UniversityDecision -->|"Approve"| Active["Status: ACTIVE"]
+    UniversityDecision -->|"Terminate"| Terminated["Status: TERMINATED"]
+    Active --> FinishOrTerminate{"Outcome"}
+    FinishOrTerminate -->|"Finish"| Finished["Status: FINISHED"]
+    FinishOrTerminate -->|"Terminate"| Terminated
+```
+
+### Partnerségi státusz folyamat
 
 ```mermaid
 stateDiagram-v2
@@ -452,9 +359,9 @@ stateDiagram-v2
     TERMINATED --> [*]
 ```
 
-## Application Status Flow
+### Jelentkezési státusz átmenetek
 
-A jelentkezés folyamata és lehetséges állapotai:
+Ez a diagram a jelenlegi `status-transition` util logikáját követi.
 
 ```mermaid
 stateDiagram-v2
@@ -470,521 +377,372 @@ stateDiagram-v2
     RETRACTED --> [*]
 ```
 
-## Application to Partnership Process
+### GDPR-kompatibilis fájlfeltöltési folyamat
 
-A jelentkezéstől a partnerségig vezető üzleti folyamat:
-
-```mermaid
-flowchart TD
-    Start([Student Browses Jobs]) --> Apply[Submit Application]
-    Apply --> Status{Application Status}
-    
-    Status -->|PENDING| Wait[Wait for Company Review]
-    Wait --> Status
-    
-    Status -->|REJECTED| End1([Application Closed])
-    
-    Status -->|ACCEPTED| CheckActive{Student has active<br/>partnership?}
-    
-    CheckActive -->|Yes| End4([Error: 400 Bad Request])
-    CheckActive -->|No| CreatePartnership[Auto-create Partnership]
-    
-    CreatePartnership --> AutoAssign[Auto-assign University Referent<br/>based on Major + Company]
-    AutoAssign --> P1[Partnership: PENDING_MENTOR]
-    
-    P1 --> AssignMentor{Company Assigns Mentor?}
-    AssignMentor -->|Yes| P2[Partnership: PENDING_UNIVERSITY]
-    AssignMentor -->|No| P1
-    
-    P2 --> NotifyUni[Notify University Referent]
-    NotifyUni --> Review[Referent Reviews Partnership]
-    Review -->|Approved| P3[Partnership: ACTIVE]
-    P3 --> SetAvail[Student: isAvailableForWork = false]
-    SetAvail --> Monitor[Ongoing Mentorship]
-    Review -->|Rejected/Terminated| End2([Partnership: TERMINATED])
-    
-    Monitor --> Complete{Completion or Termination?}
-    Complete -->|Terminated| End2
-    Complete -->|Completed| End3([Partnership: COMPLETED])
-    
-    style Start fill:#9e9e9e,stroke:#424242,stroke-width:2px,color:#fff
-    style Apply fill:#03a9f4,stroke:#01579b,stroke-width:2px,color:#fff
-    style Status fill:#ffc107,stroke:#f57f17,stroke-width:2px,color:#000
-    style Wait fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#000
-    style End1 fill:#f44336,stroke:#b71c1c,stroke-width:3px,color:#fff
-    style End2 fill:#f44336,stroke:#b71c1c,stroke-width:3px,color:#fff
-    style End3 fill:#00897b,stroke:#004d40,stroke-width:3px,color:#fff
-
-```
-
-## GDPR-Kompatibilis Fájlfeltöltési Folyamat
-
-A CV és motivációs levél feltöltése pass-through módon működik - a fájlok nem kerülnek tárolásra a szerveren:
+Ez a folyamat a jelenlegi `submit-with-files` endpoint viselkedését írja le.
 
 ```mermaid
 sequenceDiagram
-    participant D as Diák (Browser)
-    participant S as Backend Server
-    participant M as Memory Buffer
-    participant E as Email Service
-    participant HR as Céges Admin(ok)
+    participant Student
+    participant API
+    participant Memory as Memory Buffer
+    participant DB as PostgreSQL
+    participant Mail as Mailer
+    participant HR as Company Admins
 
-    D->>S: POST /api/applications/submit-with-files
-    Note over D,S: multipart/form-data<br/>cv + motivationLetter + positionId
-    S->>M: Fájlok memóriába (multer)
-    S->>S: Cég adminok lekérése az adatbázisból
-    M->>E: Buffer-ből email attachment
-    E->>HR: Email küldés csatolmányokkal
-    Note over E,HR: Minden céges admin<br/>megkapja az emailt
-    E-->>S: Email elküldve
-    S->>S: Jelentkezés mentése (fájlok nélkül)
-    S->>M: Garbage Collection törli a buffert
-    S-->>D: 201 Created - Sikeres jelentkezés
+    Student->>API: POST /api/applications/submit-with-files
+    API->>Memory: multer memory storage
+    API->>API: MIME + content validation
+    API->>DB: load student and position
+    API->>DB: create application
+    API-->>Student: 201 created
+    API->>Mail: send email in background with attachments
+    Mail->>HR: CV and optional motivation letter
+    Note over Memory: files are not persisted to local disk
 ```
 
-> **GDPR megfelelőség**: A fájlok csak a memóriában (RAM) tárolódnak a feldolgozás idejére. Az email küldés után a JavaScript garbage collection automatikusan törli a buffer-eket. Semmilyen fájl nem kerül lemezre vagy adatbázisba.
+## Elérhető parancsok
 
-## Optimalizált Képfeltöltési és Galéria Folyamat (S3 / Supabase)
+```bash
+npm run dev
+npm run build
+npm start
+npm test
+npm run test:watch
+npm run test:coverage
+npm run lint
+npm run format
+npm run prisma:format
+npm run prisma:push
+npm run prisma:studio
+npx prisma db seed
+```
 
-A rendszer két független képgalériát biztosít: Rendszerszintű "Albumokat" a fő adminisztrátornak, és dedikált Céges galériákat a partnereknek. Mivel ezek a képek minden felhasználó (publikum) számára letölthetővé válnak a frontendről, a feltöltés egy szigorú és teljesítmény-optimalizált (memória -> libvips C++ -> S3 Storage) folyamaton megy keresztül a `sharp` és `@aws-sdk/client-s3` könyvtárak alkalmazásával.
+## Adatbázis
+
+A Prisma schema a `prisma/schema.prisma` fájlban található.
+
+Fontosabb elemek:
+
+- `User`
+- `StudentProfile`
+- `Company`
+- `CompanyEmployee`
+- `Position`
+- `Application`
+- `DualPartnership`
+- `Notification`
+- `News`
+- `MaterialCompletion`
+- `GalleryGroup`
+- `GalleryImage`
+- `CompanyImage`
+
+Migrációk a `prisma/migrations` mappában vannak.
+
+### ER diagram
+
+Az alábbi ábra a jelenlegi Prisma modell legfontosabb kapcsolatait mutatja, a gyakorlati domain-folyamatokra fókuszálva.
 
 ```mermaid
-sequenceDiagram
-    participant C as Kliens (Böngésző)
-    participant MW as Multer Middleware
-    participant U as Kép optimalizáló (Sharp)
-    participant S3 as S3 Bucket (Supabase)
-    participant S as Controller & Service
-    participant DB as PostgreSQL (Prisma)
+erDiagram
+    User {
+        string id PK
+        string email UK
+        string password
+        string fullName
+        string phoneNumber
+        Role role
+        boolean isEmailEnabled
+        boolean isEmailVerified
+        boolean isActive
+        datetime createdAt
+        datetime updatedAt
+        datetime deletedAt
+    }
 
-    C->>MW: POST (multipart/form-data) kép
-    MW->>MW: Kiterjesztés és méret (max 10MB) ellenőrzése
-    MW->>U: Fájl átadása memóriapufferként
-    U->>U: C++ (libvips) átméretezés (max 1920px width)
-    U->>U: Tömörítés és .webp formátumba konvertálás
-    U->>S3: Optimalizált fájl feltöltése S3-ra
-    S3-->>S: random_uuid.webp elérhetőség
-    S->>DB: Kép adatainak és S3 URL rögzítése
-    DB-->>S: Rekord létrehozva
-    S->>C: 201 Created (Kép URL)
+    StudentProfile {
+        string id PK
+        string userId UK,FK
+        string mothersName
+        datetime birthDate
+        string highSchool
+        string highSchoolLocation
+        int graduationYear
+        string neptunCode
+        string majorId FK
+        string firstChoiceId FK
+        string secondChoiceId FK
+        string studyMode
+        boolean hasLanguageCert
+        boolean isInHighSchool
+        boolean isAvailableForWork
+        datetime deletedAt
+    }
+
+    Company {
+        string id PK
+        string name
+        string taxId UK
+        string contactName
+        string contactEmail
+        string website
+        string logoUrl
+        boolean hasOwnApplication
+        string externalApplicationUrl
+        RegistrationStatus status
+        boolean isActive
+        datetime createdAt
+        datetime updatedAt
+        datetime deletedAt
+    }
+
+    CompanyEmployee {
+        string id PK
+        string userId UK,FK
+        string companyId FK
+        string jobTitle
+        datetime deletedAt
+    }
+
+    Major {
+        string id PK
+        string name
+        string language
+    }
+
+    Location {
+        string id PK
+        string country
+        string zipCode
+        string city
+        string address
+        string companyId FK
+        string studentProfileId FK
+    }
+
+    Position {
+        string id PK
+        string companyId FK
+        string majorId FK
+        string locationId FK
+        string title
+        string description
+        PositionType type
+        datetime deadline
+        boolean isActive
+        datetime createdAt
+        datetime updatedAt
+        datetime deletedAt
+    }
+
+    Tag {
+        string id PK
+        string name UK
+        string category
+        datetime deletedAt
+    }
+
+    Application {
+        string id PK
+        string studentId FK
+        string positionId FK
+        ApplicationStatus status
+        string companyNote
+        datetime submittedAt
+        datetime updatedAt
+        datetime deletedAt
+    }
+
+    DualPartnership {
+        string id PK
+        string studentId FK
+        string mentorId FK
+        string uniEmployeeId FK
+        string positionId FK
+        string semester
+        string contractNumber
+        PartnershipStatus status
+        datetime startDate
+        datetime endDate
+        datetime createdAt
+        datetime updatedAt
+        datetime deletedAt
+    }
+
+    Notification {
+        string id PK
+        string userId FK
+        string title
+        string message
+        string type
+        boolean isRead
+        string status
+        boolean isArchived
+        datetime createdAt
+        datetime deletedAt
+    }
+
+    News {
+        string id PK
+        string title
+        string content
+        boolean isImportant
+        string targetGroup
+        boolean isArchived
+        datetime createdAt
+        datetime deletedAt
+    }
+
+    MaterialCompletion {
+        string id PK
+        string materialId
+        string studentProfileId FK
+        boolean isCompleted
+        int rating
+        datetime completedAt
+    }
+
+    GalleryGroup {
+        string id PK
+        string title
+        string description
+    }
+
+    GalleryImage {
+        string id PK
+        string galleryGroupId FK
+        string url
+        string publicId
+        string caption
+        int order
+    }
+
+    CompanyImage {
+        string id PK
+        string companyId FK
+        string url
+        string publicId
+        string caption
+        int order
+    }
+
+    User ||--o| StudentProfile : has
+    User ||--o| CompanyEmployee : has
+    User ||--o{ Notification : receives
+    User ||--o{ DualPartnership : supervises
+    User }o--o{ Major : manages
+    User }o--o{ Company : manages
+
+    StudentProfile }o--o| Major : current_major
+    StudentProfile }o--o| Major : first_choice
+    StudentProfile }o--o| Major : second_choice
+    StudentProfile ||--o{ Location : has
+    StudentProfile ||--o{ Application : submits
+    StudentProfile ||--o{ DualPartnership : participates
+    StudentProfile ||--o{ MaterialCompletion : completes
+
+    Company ||--o{ CompanyEmployee : employs
+    Company ||--o{ Position : offers
+    Company ||--o{ Location : has
+    Company ||--o{ CompanyImage : owns
+
+    Position }o--o| Major : targets
+    Position }o--o| Location : located_at
+    Position }o--o{ Tag : tagged_with
+    Position ||--o{ Application : receives
+    Position ||--o{ DualPartnership : linked_to
+
+    CompanyEmployee ||--o{ DualPartnership : mentors
+
+    GalleryGroup ||--o{ GalleryImage : contains
 ```
 
-> **Miért így csináljuk? Mi történik és miért?** Ezzel a folyamattal biztosítjuk, hogy az esetenként hatalmas méretű és felbontású (akár 10 MB-os) fájlok letisztított és web-barát tömörítésű (`.webp`) képekké legyenek konvertálva még a tárolás előtt. Az S3 (Supabase Storage) használatával a képek skálázhatóan, biztonságosan és a szervertől függetlenül érhetőek el a CDN-en keresztül. A `.webp` formátum drasztikusan lecsökkenti a sávszélesség-igényt a végfelhasználók számára.
+## API konvenciók
 
-> **Utolsó frissítés**: 2026-04-15 (Referens Dashboard, Automatikus hozzárendelés, Pozíció típusrendszer)
+- Minden API a `/api` prefix alatt érhető el.
+- A védett végpontok `Authorization: Bearer <token>` headert várnak.
+- A request validációt Zod végzi.
+- A hibakezelés központosított middleware-en fut át.
+- A legtöbb domain művelet service rétegen keresztül történik.
 
-## Deployment Architecture
+## Projekt struktúra
 
-Éles környezet (Railway) architektúrája:
-
-```mermaid
-graph LR
-    subgraph "Railway Platform"
-        subgraph "Backend Service"
-            API[Node.js/Express API]
-            Worker[BullMQ Worker]
-        end
-        
-        subgraph "Databases"
-            PostgreSQL[(PostgreSQL)]
-            Redis[(Redis)]
-        end
-        
-        ENV[Environment Variables]
-    end
-    
-    subgraph "External Services"
-        SMTP[SMTP Email Provider]
-        DNS[Custom Domain/DNS]
-    end
-    
-    Internet((Internet)) --> DNS
-    DNS --> API
-    API --> PostgreSQL
-    API --> Redis
-    Worker --> Redis
-    Worker --> SMTP
-    Worker --> PostgreSQL
-    ENV -.-> API
-    ENV -.-> Worker
-    
-    style API fill:#0066cc,color:#fff
-    style Worker fill:#0066cc,color:#fff
-    style PostgreSQL fill:#336791,color:#fff
-    style Redis fill:#dc382d,color:#fff
+```text
+src/
+  app.ts
+  server.ts
+  config/
+  controllers/
+  middlewares/
+  routes/
+  schemas/
+  services/
+  types/
+  utils/
+prisma/
+  schema.prisma
+  migrations/
+  seed.ts
+user_guides/
 ```
 
-## Hibakezelés
+## Fejlesztési irányelvek
 
-### Hibakódok
+- A route réteg maradjon vékony.
+- Az üzleti szabályok service-be kerüljenek.
+- A validáció a schema rétegben legyen, ne ad hoc a controllerben.
+- Új endpointhoz tartozzon Swagger dokumentáció.
+- Shared logika esetén előbb meglévő utility vagy service mintához érdemes igazodni.
+- Soft delete-os entitásoknál külön figyelni kell a lekérdezési szemantikára.
 
-| HTTP Státusz | Hibakód | Leírás |
-|:-------------|:--------|:-------|
-| `400` | `INVALID_INPUT` | Hibás bemeneti adatok (validációs hiba) |
-| `400` | `BAD_REQUEST` | Érvénytelen kérés (pl. hibás JSON formátum) |
-| `401` | `UNAUTHORIZED` | Hiányzó vagy érvénytelen token |
-| `403` | `FORBIDDEN` | Nincs jogosultság a művelethez (pl. CORS hiba) |
-| `404` | `NOT_FOUND` | A keresett erőforrás nem található |
-| `409` | `CONFLICT` | Ütköző művelet (pl. duplikált email) |
-| `500` | `INTERNAL_ERROR` | Belső szerverhiba |
+## Tesztelés
 
-### Hibák formátuma
-```json
-{
-  "success": false,
-  "message": "Hiba rövid leírása",
-  "error": {
-    "code": "INVALID_INPUT",
-    "message": "Részletes hibaüzenet",
-    "details": { /* Opcionális részletek */ }
-  }
-}
-```
+A projektben unit és részben integrációs tesztek vannak `Jest` alapon.
 
-## Biztonsági Funkciók
+Fő tesztterületek:
 
-A rendszer robusztus, több rétegű biztonsági architektúrát alkalmaz:
+- auth
+- application
+- notification
+- partnership
+- student
+- user
+- material
+- location
 
-### 1. Role-Based Access Control (RBAC)
-Minden API végpont szerepkör-alapú hozzáférés-vezérléssel van ellátva. A `requireRole` middleware és az előre definiált helper-ek (`isStudent`, `isCompanyAdmin`, `isCompanyEmployee`, `isMentor`, `isUniversityUser`, `isUniversityStaff`, `isSystemAdmin`, `isStaff`) biztosítják, hogy csak a megfelelő jogosultsággal rendelkező felhasználók férhessenek hozzá az adott végpontokhoz.
+Ajánlott workflow:
 
-### 2. Szerveroldali Validáció (Zod)
-Minden bejövő kérés szigorú séma-alapú validáción esik át. A kliens által küldött felesleges vagy tiltott mezők automatikusan eltávolításra kerülnek.
-
-### 3. Magic Bytes Fájlvalidáció
-A fájlfeltöltéseknél nem bízunk a kliens által küldött MIME típusban. A rendszer elemezni tudja a fájlok tényleges tartalmát (magic bytes), megelőzve ezzel a rosszindulatú fájlok feltöltését.
-
-### 4. Ownership Middleware
-Általános jogosultságkezelő réteg, amely biztosítja, hogy a felhasználók csak a saját erőforrásaikat (jelentkezések, profilok, értesítések stb.) módosíthassák vagy törölhessék.
-
-### 5. Idempotency Kulcsok
-A kritikus műveletek (pl. jelentkezés leadása, pozíció létrehozása) védve vannak a véletlen dupla beküldés ellen. A kliens egy egyedi kulcsot küldhet, amellyel a szerver azonosítani tudja az ismételt kéréseket.
-
-### 6. Audit és Biztonsági Naplózás
-Minden kritikus esemény és jogosultsági hiba (401, 403) automatikusan naplózásra kerül az adatbázisba, lehetővé téve a biztonsági auditokat és a rendellenes viselkedés észlelését.
-
-### 7. Anonimizáló Szolgáltatás (GDPR)
-A rendszer rendelkezik egy központosított `AnonymizeService`-szel, amely lehetővé teszi a hallgatók, cégek és munkavállalók adatainak végleges anonimizálását. A funkció törli a PII adatokat, miközben az adatbázis integritását (pl. egyedi email kényszer) placeholder értékekkel tartja fenn.
-
-## Quick Start - API Használat
-
-### 1. Regisztráció és bejelentkezés
 ```bash
-# Regisztráció (Hallgató, Mentor, Egyetemi felhasználó)
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "hallgato@pelda.hu",
-    "password": "Jelszo123!",
-    "fullName": "Teszt Hallgató",
-    "role": "STUDENT"
-  }'
-
-# Regisztráció (Cégadmin)
-curl -X POST http://localhost:3000/api/auth/register/company-admin \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "admin@ceg.hu",
-    "password": "Jelszo123!",
-    "fullName": "Cégvezető Elek",
-    "companyId": "uuid-a-ceghez",
-    "jobTitle": "Ügyvezető"
-  }'
-
-# Email megerősítés (A kapott tokennel)
-curl -X POST http://localhost:3000/api/auth/verify-email \
-  -H "Content-Type: application/json" \
-  -d '{
-    "token": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2"
-  }'
-
-# Bejelentkezés
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "hallgato@pelda.hu",
-    "password": "Jelszo123!"
-  }'
+npm test
+npm run lint
 ```
 
-### 2. Védett végpont hívása
-```bash
-# Saját profil lekérése (helyettesítsd be a kapott tokent)
-curl http://localhost:3000/api/students/me \
-  -H "Authorization: Bearer <your_token_here>"
-```
+Nagyobb módosítás előtt érdemes célzottan a kapcsolódó service teszteket futtatni, utána teljes tesztkört kérni.
 
-> **Tipp**: A teljes API végpontokat és sémákat a [Swagger UI](#-api-dokumentáció)-n keresztül is kipróbálhatod!
+## Dokumentáció
 
----
+- interaktív API dokumentáció: `/api-docs`
+- szerepkör-specifikus használati útmutatók: `user_guides/`
+- projektátadási megjegyzések: `handover.md`
 
-## API Végpontok Referencia
+## Deployment megjegyzések
 
-### Autentikáció (`/api/auth`)
+Éles telepítésnél különösen fontos:
 
-| Metódus | Végpont | Leírás |
-| :--- | :--- | :--- |
-| `POST` | `/register` | Új felhasználó regisztrációja (`STUDENT`, `MENTOR`, `UNIVERSITY_USER`). |
-| `POST` | `/register/company-admin` | Dedikált regisztráció cégadminisztrátoroknak. |
-| `POST` | `/register/system-admin` | Dedikált regisztráció rendszeradminisztrátoroknak. |
-| `POST` | `/login` | Bejelentkezés és JWT token igénylése. |
-| `POST` | `/verify-email` | Email cím megerősítése tokennel. |
-| `POST` | `/resend-verification` | Megerősítő email újraküldése. |
-| `POST` | `/request-password-reset` | Jelszó visszaállítás kérése email címmel. |
-| `POST` | `/reset-password` | Új jelszó beállítása tokennel. |
+- stabil `JWT_SECRET`
+- végleges adatbázis URL stratégia
+- Redis döntés háttérfolyamatokhoz
+- SMTP infrastruktúra bekötése
+- CORS origin lista explicit kezelése
+- logolás és monitorozás egységesítése
 
+## Karbantartási fókuszok
 
-### Hallgatók (`/api/students`)
+A projekt következő technikai fókuszai tipikusan ezek:
 
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Összes hallgató listázása. | UniversityStaff |
-| `GET` | `/available` | Munkakeresésre jelentkezett hallgatók listázása (Publikus adatokkal). | Staff |
-| `GET` | `/me` | Saját hallgatói profil lekérése. | Student |
-| `PATCH` | `/me` | Saját profil frissítése. | Student |
-| `PATCH` | `/me/university-transition` | Átváltás középiskolai profilról egyetemire (Neptun kód, Szak). | Student |
-| `PATCH` | `/me/toggle-availability` | Munkakeresési elérhetőség ki-/bekapcsolása (`isAvailableForWork` toggle). | Student |
-| `POST` | `/:id/interest` | Érdeklődés kifejezése egy hallgató iránt (Értesítést küld). | Staff |
-| `DELETE` | `/me` | Saját profil törlése. | Student |
-| `GET` | `/:id` | Hallgató lekérése ID alapján. | Staff |
-| `PATCH` | `/:id` | Hallgató módosítása (Admin). | SystemAdmin |
-| `DELETE` | `/:id` | Hallgató törlése (Soft delete). | SystemAdmin |
-
-### Cégek (`/api/companies`)
-
-A cégek kezelése, beleértve a státuszkezelést és a munkavállalókat.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Aktív cégek listázása. | Auth |
-| `POST` | `/` | Új cég létrehozása. | SystemAdmin |
-| `POST` | `/with-admin` | Új cég és hozzá tartozó cégadmin létrehozása egy lépésben. | Publikus |
-| `GET` | `/inactive` | Inaktív (jóváhagyott, de deaktivált) cégek listázása. | SystemAdmin |
-| `GET` | `/pending` | Jóváhagyásra váró cégek listázása. | SystemAdmin |
-| `GET` | `/own-application` | Saját jelentkezési felülettel rendelkező cégek listázása. | Auth |
-| `GET` | `/:id` | Cég részletei. | Auth |
-| `PATCH` | `/:id` | Cég adatainak frissítése. | CompanyAdmin / SystemAdmin |
-| `DELETE` | `/:id` | Cég törlése (Soft delete). | SystemAdmin |
-| `PATCH` | `/:id/reactivate` | Cég újraaktiválása. | SystemAdmin |
-| `PATCH` | `/:id/deactivate` | Cég inaktiválása. | SystemAdmin |
-| `PATCH` | `/:id/approve` | Cég regisztrációjának jóváhagyása. | SystemAdmin |
-| `PATCH` | `/:id/reject` | Cég regisztrációjának elutasítása. | SystemAdmin |
-
-### Állások / Pozíciók (`/api/jobs/positions`)
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Aktív pozíciók listázása. (Opcionális: `?type=DUAL`, `PROFESSIONAL_PRACTICE`, `REGULAR_WORK`) | Publikus |
-| `GET` | `/dual` | Kizárólag duális pozíciók listázása. | Publikus |
-| `GET` | `/non-dual` | Kizárólag nem duális pozíciók listázása. | Publikus |
-| `POST` | `/` | Új pozíció létrehozása. (Típus: `type`, Külső link: `externalApplicationUrl` opciókkal). | CompanyAdmin |
-| `GET` | `/:id` | Pozíció részletei. (Visszaadja a típust és a külső jelentkezési linket is). | Publikus |
-| `PATCH` | `/:id` | Pozíció frissítése. | CompanyEmployee + Owner |
-| `DELETE` | `/:id` | Pozíció törlése. | CompanyEmployee + Owner |
-| `PATCH` | `/:id/deactivate`| Pozíció inaktiválása. | CompanyEmployee + Owner |
-| `GET` | `/company/:companyId` | Egy adott cég pozíciói. | Publikus |
-
-### Jelentkezések (`/api/applications`)
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/` | Jelentkezés leadása. | Student |
-| `GET` | `/` | Saját jelentkezések megtekintése (leadott és elfogadott statisztikákkal együtt). | Student |
-| `PATCH` | `/:id/retract` | Jelentkezés visszavonása. | Student |
-| `GET` | `/company` | Céghez érkezett jelentkezések. | Company |
-| `PATCH` | `/company/:id/evaluate` | Jelentkezés értékelése. (`ACCEPTED` esetén automatikusan létrejön a partnerség). | Company |
-| `PATCH` | `/company/:id` | Értékelés módosítása. | Company |
-| `GET` | `/admin` | Összes jelentkezés (Admin nézet). | Admin |
-| `GET` | `/admin/:id` | Jelentkezés részletei. | Admin |
-| `PATCH` | `/admin/:id` | Jelentkezés módosítása. | Admin |
-| `POST` | `/submit-with-files` | **[ÚJ]** Jelentkezés CV és motivációs levél fájlok feltöltésével. GDPR-kompatibilis: a fájlok nem kerülnek tárolásra, csak emailben továbbítódnak a céges adminoknak. | Student |
-
-### Tananyagok (`/api/materials`)
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/complete` | Tananyag elvégzésének és értékelésének rögzítése. | Student |
-| `GET` | `/progress` | Saját előrehaladás (elvégzett anyagok) lekérése. | Student |
-| `GET` | `/statistics` | Összesített statisztika a tananyagokról. | Admin/Mentor |
-
-### Hírek (`/api/news`)
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Hírek listázása (hallgatóknak/felhasználóknak). Szerepkör alapú szűréssel. | Auth |
-| `GET` | `/:id` | Hír részletei. | Auth |
-| `POST` | `/admin` | Hír létrehozása. Megcélozható vele mindenki (`ALL`) vagy konkrét szerepkörök. | SystemAdmin |
-| `GET` | `/admin` | Hírek kezelése (Admin lista). | SystemAdmin |
-| `GET` | `/admin/archived` | Archivált hírek. | SystemAdmin |
-| `PATCH` | `/admin/:id` | Hír szerkesztése. | SystemAdmin |
-| `PATCH` | `/admin/:id/archive` | Hír archiválása. | SystemAdmin |
-| `PATCH` | `/admin/:id/unarchive` | Hír visszaállítása. | SystemAdmin |
-| `DELETE` | `/admin/:id` | Hír végleges törlése vagy soft delete. | SystemAdmin |
-
-### Rendszerszintű Galéria (`/api/galleries`)
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Nyilvános képcsoportok (albumok) és bennük lévő képeik lekérése. | Publikus |
-| `POST` | `/` | Új üres képcsoport létrehozása (pl. "Rendezvény 2026"). | SystemAdmin |
-| `POST` | `/:groupId/images` | Kép feltöltése és optimalizálása (`sharp`) egy létező csoportba. | SystemAdmin |
-| `DELETE` | `/:groupId` | Egész képcsoport és a benne lévő képek törlése a szerverről. | SystemAdmin |
-| `DELETE` | `/images/:imageId` | Egyedi kép törlése egy csoportból (fizikailag is törlődik). | SystemAdmin |
-
-### Céges Képek (`/api/companies/:companyId/images`)
-
-A cégek saját bemutató képeinek (iroda, csapat) kezelésére. Végpontok a `Company` routerbe vannak beágyazva felülről.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Egy konkrét cég összes regisztrált képének lekérése. | Publikus |
-| `POST` | `/` | Új kép feltöltése és automatikus formátum optimalizálása. | CompanyAdmin |
-| `DELETE` | `/:imageId` | Kép törlése a cég galériájából. | CompanyAdmin |
-
-### Értesítések (`/api/notifications`)
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Olvasatlan/Aktív értesítések. | Auth |
-| `GET` | `/archived` | Archivált értesítések. | Auth |
-| `GET` | `/:id` | Értesítés részletei. | Auth |
-| `GET` | `/unread-count` | Olvasatlan értesítések száma. | Auth |
-| `POST` | `/` | Új értesítés létrehozása. | SystemAdmin |
-| `PUT` | `/read-all` | Minden megjelölése olvasottként. | Auth |
-| `PUT` | `/:id/read` | Egy elem olvasottnak jelölése. | Auth |
-| `PUT` | `/:id/archive` | Értesítés archiválása. | Auth |
-| `PUT` | `/:id/unarchive` | Értesítés visszaállítása. | Auth |
-| `DELETE` | `/:id` | Értesítés törlése. | Auth |
-
-### Statisztika (`/api/stats`)
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Rendszerszintű statisztikák (felhasználók, cégek, pozíciók, partnerségek). | SystemAdmin |
-| `GET` | `/company/me` | Céges adminisztrátornak statisztikák a saját cégéről (pozíciók, jelentkezések, alkalmazottak stb.). | CompanyAdmin |
-| `GET` | `/applications` | Jelentkezési statisztikák (státusz szerinti bontás, konverziós arány, átlag/pozíció, elmúlt 30 nap). | SystemAdmin |
-| `GET` | `/partnerships` | Partnerségi statisztikák (státusz és félév szerinti bontás, átlagos időtartam). | SystemAdmin |
-| `GET` | `/positions` | Pozíció statisztikák (7 napon belül lejáró, jelentkezés nélküli pozíciók). | SystemAdmin |
-| `GET` | `/trends` | Időbeli trendek (regisztrációk, jelentkezések, partnerségek az elmúlt 6 hónapban). | SystemAdmin |
-| `GET` | `/university/student-distribution` | Egyetemi felhasználók számára cégek és szakok szerinti hallgatói eloszlás. | UniversityUser |
-| `GET` | `/university/referent-overview` | **[ÚJ]** Kari referens dashboard: a hozzárendelt cégek és diákok összesített statisztikái. | UniversityUser |
-
-**Bővített statisztikák**: Teljes körű API statisztikák elérhetőek a `/api/stats` alatt (Jelentkezések, Partnerségek, Pozíciók, Trendek). Céges adminok számára is készült dedikált lekérdezés (`/api/stats/company/me`), valamint egyetemi felhasználók számára a hozzájuk rendelt diákok eloszlása (`/api/stats/university/student-distribution`). Továbbá a hallgatói jelentkezéseknél a beérkezett adatok az elfogadott és leadott státuszok statisztikájával `stats` blokk is kiegészültek.
-
-### Duális Partnerkapcsolatok (`/api/partnerships`)
-
-A hallgatók és cégek közötti duális képzési szerződések kezelése.
-A partnerség automatikusan létrejön `PENDING_MENTOR` státusszal, amikor a cég elfogad egy jelentkezést (`ACCEPTED`).
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/student` | Hallgató saját partnerségeinek listázása. | Student |
-| `GET` | `/company` | Céghez tartozó partnerségek listázása. | CompanyEmployee |
-| `GET` | `/university` | Összes partnerség listázása (Egyetem). | UniversityStaff |
-| `GET` | `/:id` | Partnerkapcsolat részletei. | Auth |
-| `PATCH` | `/:id` | Partnerkapcsolat adatainak frissítése. | UniversityStaff + Owner |
-| `PATCH` | `/:id/assign-mentor` | Mentor hozzárendelése. | CompanyAdmin |
-| `PATCH` | `/:id/complete` | Partnerkapcsolat befejezetté tétele (FINISHED). | UniversityStaff + Owner |
-| `PATCH` | `/:id/assign-university-user` | Egyetemi felelős hozzárendelése. | UniversityStaff |
-| `PATCH` | `/:id/terminate` | Partnerkapcsolat megszakítása (Terminated státusz). | UniversityStaff + Owner |
-| `DELETE` | `/:id` | Partnerkapcsolat törlése (Soft delete). | SystemAdmin + Owner |
-
-### Szakok (`/api/majors`)
-
-A képzési szakok (Major) kezelése. A hallgatói profil szakválasztáshoz kapcsolódik.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Összes szak listázása. | Publikus |
-| `GET` | `/:id` | Szak részletei ID alapján. | Publikus |
-| `POST` | `/` | Új szak létrehozása. | SystemAdmin |
-| `PATCH` | `/:id` | Szak frissítése. | SystemAdmin |
-| `DELETE` | `/:id` | Szak törlése. | SystemAdmin |
-
-### Helyszínek (`/api/locations`)
-
-Az összes céghez tartozó helyszín listázása, a hozzájuk rendelt pozíciók számával.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Összes céghelyszín listázása (cím, cég, pozíciók száma). | Auth |
-
-### Cég Adminisztrátorok (`/api/company-admins`)
-
-A cégek adminisztrátorainak kezelése.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Összes cégadmin listázása. | SystemAdmin |
-| `GET` | `/me` | Saját profil lekérése. | CompanyAdmin |
-| `PATCH` | `/me` | Saját profil frissítése. | CompanyAdmin |
-| `DELETE` | `/me` | Saját profil törlése. | CompanyAdmin |
-| `GET` | `/:id` | Cégadmin lekérése ID alapján. | SystemAdmin |
-| `PATCH` | `/:id` | Adatok frissítése. | SystemAdmin |
-| `DELETE` | `/:id` | Cégadmin törlése. | SystemAdmin |
-| `PATCH` | `/restore/:id` | Törölt cégadmin visszaállítása. | SystemAdmin |
-
-### Munkavállalók (`/api/employees`)
-
-Céges munkavállalók (pl. mentorok) kezelése.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Céghez tartozó munkavállalók listázása. | CompanyEmployee |
-| `GET` | `/mentors` | Csak a mentorok listázása. | CompanyEmployee |
-| `GET` | `/me` | Saját profil lekérése. | CompanyEmployee |
-| `PATCH` | `/me` | Saját profil frissítése. | CompanyEmployee |
-| `DELETE` | `/me` | Saját profil törlése. | CompanyEmployee |
-| `GET` | `/me/students` | Mentorált hallgatók listázása. | Mentor |
-| `GET` | `/me/students/:id` | Mentorált hallgató/partnerség részletei. | Mentor |
-| `GET` | `/:id` | Munkavállaló lekérése ID alapján. | CompanyEmployee |
-| `PATCH` | `/:id` | Munkavállaló frissítése. | CompanyAdmin |
-| `DELETE` | `/:id` | Munkavállaló törlése. | CompanyAdmin |
-
-### Egyetemi Felhasználók (`/api/university-users`)
-
-Egyetemi kapcsolattartók és adminisztrátorok.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Összes egyetemi felhasználó listázása. | UniversityStaff |
-| `GET` | `/me` | Saját profil lekérése. | UniversityUser |
-| `PATCH` | `/me` | Saját profil frissítése. | UniversityUser |
-| `DELETE` | `/me` | Saját profil törlése. | UniversityUser |
-| `GET` | `/:id` | Egyetemi felhasználó lekérése ID alapján. | UniversityStaff |
-| `PATCH` | `/:id` | Adatok frissítése. | SystemAdmin |
-| `DELETE` | `/:id` | Törlés. | SystemAdmin |
-| `POST` | `/:id/majors` | Szakok hozzárendelése referenshez. | SystemAdmin |
-| `POST` | `/:id/companies` | Cégek hozzárendelése referenshez. | SystemAdmin |
-| `GET` | `/referents` | Aktív referensek listázása. | UniversityStaff |
-| `GET` | `/potential-referents` | **[ÚJ]** Potenciális referensek listázása egy adott szakhoz (cég szerinti jelöléssel). | Staff |
-
-### Rendszer Adminisztrátorok (`/api/system-admins`)
-
-A platform üzemeltetői. Minden végpont `SYSTEM_ADMIN` jogosultságot igényel.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/` | Összes rendszeradmin listázása. | SystemAdmin |
-| `GET` | `/admin-users` | Minden admin (Rendszer, Cég, Egyetem) listázása. | SystemAdmin |
-| `GET` | `/me` | Saját admin profil lekérése. | SystemAdmin |
-| `PATCH` | `/me` | Saját admin profil frissítése. | SystemAdmin |
-| `DELETE` | `/me` | Saját admin profil törlése. | SystemAdmin |
-| `GET` | `/:id` | Rendszeradmin lekérése ID alapján. | SystemAdmin |
-| `PATCH` | `/:id` | Adatok frissítése. | SystemAdmin |
-| `DELETE` | `/:id` | Admin törlése. | SystemAdmin |
-| `POST` | `/invite-company` | Céges regisztrációs meghívó küldése emailben. | SystemAdmin |
-| `POST` | `/invite-student` | Hallgatói regisztrációs meghívó küldése emailben. | SystemAdmin |
-
-### Felhasználók (`/api/users`)
-
-Általános felhasználókezelés (pl. inaktív fiókok). Minden végpont `SYSTEM_ADMIN` jogosultságot igényel.
-
-| Metódus | Végpont | Leírás | Jogosultság |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/inactive` | Inaktív felhasználók listázása. | SystemAdmin |
-| `PATCH` | `/:id/reactivate` | Felhasználó visszaállítása. | SystemAdmin |
-| `PATCH` | `/:id/deactivate` | Felhasználó felfüggesztése. | SystemAdmin |
-
----
-> **Megjegyzés**: Ez a dokumentáció a projekt 2026-04-15-i állapotát tükrözi.
+- Swagger és valós route viselkedés folyamatos szinkronban tartása
+- soft delete stratégia egyszerűsítése
+- response shape-ek következetessége
+- dokumentáció naprakészen tartása
+- deployment környezetek közötti konfigurációs eltérések explicit kezelése
