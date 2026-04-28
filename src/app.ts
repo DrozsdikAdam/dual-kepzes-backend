@@ -40,8 +40,8 @@ app.use(securityMiddleware);
 app.use(express.json());
 app.use(sanitizationMiddleware);
 // Auth Rate Limiter
-app.use("/api/auth", authRoutes);
-// app.use("/api", apiRateLimiter);
+app.use("/api/auth", authRateLimiter, authRoutes);
+app.use("/api", apiRateLimiter);
 
 // API Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
