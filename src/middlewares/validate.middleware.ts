@@ -11,6 +11,12 @@ export const validate = (schema: ZodObject<any, any>) => {
             });
 
             req.body = parsed.body;
+            if (parsed.query) {
+                req.query = parsed.query as Request["query"];
+            }
+            if (parsed.params) {
+                req.params = parsed.params as Request["params"];
+            }
             return next();
         } catch (error) {
             if (error instanceof ZodError) {
