@@ -169,6 +169,8 @@ router.delete("/:id", isSystemAdmin, deleteUniversityUser)
  *   get:
  *     summary: Get my assigned majors and companies (Referent)
  *     tags: [UniversityUsers]
+ *     security:
+ *       - bearerAuth: []
  */
 router.get("/me/assignments", isUniversityUser, getMyAssignments);
 
@@ -178,6 +180,8 @@ router.get("/me/assignments", isUniversityUser, getMyAssignments);
  *   get:
  *     summary: List all active referents
  *     tags: [UniversityUsers]
+ *     security:
+ *       - bearerAuth: []
  */
 router.get("/referents", isUniversityStaff, listAllReferents);
 
@@ -187,17 +191,21 @@ router.get("/referents", isUniversityStaff, listAllReferents);
  *   get:
  *     summary: List potential referents for a partnership (Staff/Admin)
  *     tags: [UniversityUsers]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: studentId
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *       - in: query
  *         name: positionId
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  */
 router.get("/potential-referents", isUniversityStaff, validate(PotentialReferentsQuerySchema), getPotentialReferents);
 
@@ -207,6 +215,28 @@ router.get("/potential-referents", isUniversityStaff, validate(PotentialReferent
  *   post:
  *     summary: Assign majors to a referent (Admin)
  *     tags: [UniversityUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [majorIds]
+ *             properties:
+ *               majorIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: uuid
  */
 router.post("/:id/majors", isSystemAdmin, validate(AssignMajorsSchema), assignMajorsToReferent);
 
@@ -216,6 +246,28 @@ router.post("/:id/majors", isSystemAdmin, validate(AssignMajorsSchema), assignMa
  *   post:
  *     summary: Assign companies to a referent (Admin)
  *     tags: [UniversityUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [companyIds]
+ *             properties:
+ *               companyIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: uuid
  */
 router.post("/:id/companies", isSystemAdmin, validate(AssignCompaniesSchema), assignCompaniesToReferent);
 

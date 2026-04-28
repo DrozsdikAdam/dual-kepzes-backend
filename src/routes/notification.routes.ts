@@ -31,7 +31,7 @@ router.use(authenticateToken); // Minden értesítés route védett
  * @swagger
  * /api/notifications:
  *   get:
- *     summary: List my active/unread notifications
+ *     summary: List my active, non-archived notifications
  *     tags: [Notifications]
  *     security:
  *       - bearerAuth: []
@@ -191,7 +191,7 @@ router.delete("/:id", requireNotificationOwnership, deleteNotification); // Tör
  * @swagger
  * /api/notifications:
  *   post:
- *     summary: Create a manual notification (Test)
+ *     summary: Create a manual notification (System Admin)
  *     tags: [Notifications]
  *     security:
  *       - bearerAuth: []
