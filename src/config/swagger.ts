@@ -6,7 +6,7 @@ const options: swaggerJsdoc.Options = {
      definition: {
           openapi: '3.0.0',
           info: {
-               title: 'Duális Képzés Backend API',
+               title: 'Dualis Kepzes Backend API',
                version: '1.0.0',
                description: 'API documentation for the Dual Education platform',
           },
@@ -61,36 +61,30 @@ const options: swaggerJsdoc.Options = {
                          type: 'object',
                          required: ['status'],
                          properties: {
-                              status: { type: 'string', enum: ['ACCEPTED', 'REJECTED'] },
+                              status: { type: 'string', enum: ['ACCEPTED', 'REJECTED', 'NO_RESPONSE'] },
                               companyNote: { type: 'string' }
                          },
-                         description: 'A státusz ACCEPTED esetén automatikusan létrejön egy duális partnerség. Ha a hallgatónak már van aktív vagy folyamatban lévő kapcsolata, a rendszer 400 Bad Request hibát dob.'
+                         description: 'ACCEPTED status creates a dual partnership automatically unless the student already has an active or pending one.'
                     },
                     UpdateEvaluation: {
                          type: 'object',
+                         required: ['status'],
                          properties: {
+                              status: { type: 'string', enum: ['SUBMITTED', 'ACCEPTED', 'REJECTED', 'NO_RESPONSE'] },
                               companyNote: { type: 'string' }
                          }
                     },
                     CreatePosition: {
                          type: 'object',
-                         required: ['companyId', 'title', 'location'],
+                         required: ['companyId', 'title', 'locationId'],
                          properties: {
                               companyId: { type: 'string', format: 'uuid' },
                               title: { type: 'string' },
                               description: { type: 'string' },
+                              majorId: { type: 'string', format: 'uuid' },
+                              locationId: { type: 'string', format: 'uuid' },
                               type: { type: 'string', enum: ['DUAL', 'PROFESSIONAL_PRACTICE', 'REGULAR_WORK'], default: 'DUAL' },
                               deadline: { type: 'string', format: 'date-time' },
-                              location: {
-                                   type: 'object',
-                                   required: ['zipCode', 'city', 'address'],
-                                   properties: {
-                                        zipCode: { type: 'string' },
-                                        city: { type: 'string' },
-                                        address: { type: 'string' },
-                                        country: { type: 'string' }
-                                   }
-                              },
                               tags: {
                                    type: 'array',
                                    items: {
@@ -108,17 +102,10 @@ const options: swaggerJsdoc.Options = {
                          properties: {
                               title: { type: 'string' },
                               description: { type: 'string' },
+                              majorId: { type: 'string', format: 'uuid' },
+                              locationId: { type: 'string', format: 'uuid' },
                               type: { type: 'string', enum: ['DUAL', 'PROFESSIONAL_PRACTICE', 'REGULAR_WORK'] },
                               deadline: { type: 'string', format: 'date-time' },
-                              location: {
-                                   type: 'object',
-                                   properties: {
-                                        zipCode: { type: 'string' },
-                                        city: { type: 'string' },
-                                        address: { type: 'string' },
-                                        country: { type: 'string' }
-                                   }
-                              },
                               tags: {
                                    type: 'array',
                                    items: {
@@ -140,13 +127,16 @@ const options: swaggerJsdoc.Options = {
                               description: { type: 'string' },
                               contactName: { type: 'string' },
                               contactEmail: { type: 'string', format: 'email' },
-                              website: { type: 'string', format: 'uri' },
+                              website: { type: 'string', format: 'uri', nullable: true },
                               logoUrl: { type: 'string', format: 'uri' },
+                              hasOwnApplication: { type: 'boolean', default: false },
+                              externalApplicationUrl: { type: 'string', format: 'uri', nullable: true },
                               locations: {
                                    type: 'array',
                                    items: {
                                         type: 'object',
                                         properties: {
+                                             id: { type: 'string', format: 'uuid' },
                                              country: { type: 'string' },
                                              zipCode: { type: 'number' },
                                              city: { type: 'string' },
@@ -164,13 +154,16 @@ const options: swaggerJsdoc.Options = {
                               description: { type: 'string' },
                               contactName: { type: 'string' },
                               contactEmail: { type: 'string', format: 'email' },
-                              website: { type: 'string', format: 'uri' },
+                              website: { type: 'string', format: 'uri', nullable: true },
                               logoUrl: { type: 'string', format: 'uri' },
+                              hasOwnApplication: { type: 'boolean' },
+                              externalApplicationUrl: { type: 'string', format: 'uri', nullable: true },
                               locations: {
                                    type: 'array',
                                    items: {
                                         type: 'object',
                                         properties: {
+                                             id: { type: 'string', format: 'uuid' },
                                              country: { type: 'string' },
                                              zipCode: { type: 'number' },
                                              city: { type: 'string' },

@@ -227,6 +227,8 @@ router.patch("/company/:id/evaluate", isCompanyEmployee, validate(EvaluateApplic
  *     responses:
  *       200:
  *         description: Evaluation updated successfully
+ *       400:
+ *         description: Invalid status transition or invalid payload
  */
 router.patch("/company/:id", isCompanyEmployee, validate(UpdateApplicationSchema), updateEvaluation)
 
