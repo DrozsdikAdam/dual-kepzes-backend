@@ -216,6 +216,10 @@ SUPABASE_S3_ACCESS_KEY_ID=your_access_key
 SUPABASE_S3_SECRET_ACCESS_KEY=your_secret_key
 SUPABASE_S3_BUCKET_NAME=ImageBucket
 SUPABASE_PUBLIC_URL=https://your-project.supabase.co/storage/v1/object/public
+
+# Helyi fájltárolás beállítások (S3 alternatívája fejlesztéshez)
+IS_LOCAL_STORING=true
+BACKEND_URL=http://localhost:3000
 ```
 
 ## Fontos működési megjegyzések
