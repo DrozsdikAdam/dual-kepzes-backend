@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
+import path from "path";
 
 import { securityMiddleware } from "./middlewares/security.middleware";
 import { sanitizationMiddleware } from "./middlewares/sanitization.middleware";
@@ -40,6 +41,10 @@ app.use(cors(corsOptions));
 app.use(securityMiddleware);
 app.use(express.json());
 app.use(sanitizationMiddleware);
+
+// Serve static files from 'uploads' directory
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 // Auth Rate Limiter
 app.use("/api/auth", authRateLimiter, authRoutes);
 app.use("/api", apiRateLimiter);
