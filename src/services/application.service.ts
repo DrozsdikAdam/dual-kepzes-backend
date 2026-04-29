@@ -34,6 +34,24 @@ export class ApplicationService {
                throw new BadRequestError('Már jelentkeztél erre a pozícióra.');
           }
 
+          // Check if student already has an active or pending dual partnership
+          const activePartnership = await prisma.dualPartnership.findFirst({
+               where: {
+                    studentId,
+                    status: {
+                         in: [
+                              PartnershipStatus.PENDING_MENTOR,
+                              PartnershipStatus.PENDING_UNIVERSITY,
+                              PartnershipStatus.ACTIVE
+                         ]
+                    }
+               }
+          });
+
+          if (activePartnership) {
+               throw new BadRequestError('Már rendelkezel duális kapcsolattal, így nem jelentkezhetsz újabb pozícióra.');
+          }
+
           const application = await prisma.application.create({
                data: {
                     studentId,
