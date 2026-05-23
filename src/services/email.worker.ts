@@ -28,11 +28,12 @@ export const emailWorker = isRedisEnabled
                     }
                }
 
+               const isHtml = body.trim().startsWith("<");
                await mailer.sendMail({
                     from: '"Duális Képzés" <no-reply@dualis.hu>',
                     to: email,
                     subject: subject,
-                    text: body
+                    ...(isHtml ? { html: body } : { text: body })
                })
 
                if (notificationId) {
