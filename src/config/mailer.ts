@@ -10,16 +10,13 @@ const isEmailsEnabled = process.env.EMAILS_ENABLED !== 'false';
 const isDev = process.env.NODE_ENV === 'development';
 
 // Az emailek akkor vannak konfigurálva, ha van user/pass ÉS nincsenek letiltva ÉS nem development módban vagyunk
-const isMailerConfigured = !!(smtpUser && smtpPass) && isEmailsEnabled && !isDev;
+const isMailerConfigured = isEmailsEnabled && !isDev;
 
 export const mailer = isMailerConfigured
      ? nodemailer.createTransport({
           host: smtpHost,
           port: smtpPort,
-          auth: {
-               user: smtpUser,
-               pass: smtpPass,
-          }
+
      })
      : {
           sendMail: async (options: any) => {
