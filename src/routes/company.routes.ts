@@ -33,6 +33,17 @@ const router = Router();
 
 // Minden routehoz szükséges a bejelentkezés
 
+/**
+ * @swagger
+ * /api/companies:
+ *   get:
+ *     summary: List all active companies
+ *     tags: [Companies]
+ *     responses:
+ *       200:
+ *         description: List of active companies
+ */
+router.get("/", getAllCompanies);
 
 /**
  * @swagger
@@ -113,18 +124,6 @@ router.get("/pending", isSystemAdmin, getPendingCompanies);
  *         description: List of companies with own application platform
  */
 router.get("/own-application", getOwnApplicationCompanies);
-
-/**
- * @swagger
- * /api/companies:
- *   get:
- *     summary: List all active companies
- *     tags: [Companies]
- *     responses:
- *       200:
- *         description: List of active companies
- */
-router.get("/", getAllCompanies);
 
 /**
  * @swagger
