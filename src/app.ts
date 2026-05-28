@@ -63,9 +63,9 @@ app.use("/api/university-users", universityUserRoutes);
 app.use("/api/users", genericUserRoutes);
 
 //company endpoints
-app.use("/api/companies", companyRoutes);
-// A company router alá nesteljük be a companyImages-t
+// A company router alá nesteljük be a companyImages-t (id előtt kell lennie, különben a companyRoutes authenticateToken-je elkapja)
 app.use("/api/companies/:companyId/images", companyImageRoutes);
+app.use("/api/companies", companyRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/locations", locationRoutes);
 
