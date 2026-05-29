@@ -238,7 +238,7 @@ router.get("/potential-referents", isUniversityStaff, validate(PotentialReferent
  *                   type: string
  *                   format: uuid
  */
-router.post("/:id/majors", isSystemAdmin, validate(AssignMajorsSchema), assignMajorsToReferent);
+router.post("/:id/majors", isUniversityStaff, validate(AssignMajorsSchema), assignMajorsToReferent);
 
 /**
  * @swagger
@@ -269,6 +269,6 @@ router.post("/:id/majors", isSystemAdmin, validate(AssignMajorsSchema), assignMa
  *                   type: string
  *                   format: uuid
  */
-router.post("/:id/companies", isSystemAdmin, validate(AssignCompaniesSchema), assignCompaniesToReferent);
+router.post("/:id/companies", isUniversityStaff, validate(AssignCompaniesSchema), assignCompaniesToReferent);
 
 export default router;
