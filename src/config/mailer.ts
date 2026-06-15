@@ -1,26 +1,41 @@
 import nodemailer from "nodemailer";
 
-// Support both MAILTRAP_* and general SMTP_* environment variables
-const smtpUser = process.env.SMTP_USER || process.env.MAILTRAP_USER;
-const smtpPass = process.env.SMTP_PASS || process.env.MAILTRAP_PASS;
-const smtpHost = process.env.SMTP_HOST || "sandbox.smtp.mailtrap.io";
+const cleanEnvVar = (val: string | undefined): string | undefined => {
+     if (!val) return undefined;
+     const trimmed = val.trim();
+     if (trimmed === '""' || trimmed === "''" || trimmed === "") {
+          return undefined;
+     }
+     // Remove wrapping double quotes if present
+     if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+          return trimmed.slice(1, -1);
+     }
+     return trimmed;
+};
+
+const smtpHost = cleanEnvVar(process.env.SMTP_HOST) || "sandbox.smtp.mailtrap.io";
 const smtpPort = Number(process.env.SMTP_PORT) || 2525;
 
-const isEmailsEnabled = process.env.EMAILS_ENABLED !== 'false';
+export const mailFrom = cleanEnvVar(process.env.MAIL_FROM) || '"Duális Képzés" <no-reply@dualis.hu>';
+
 const isDev = process.env.NODE_ENV === 'development';
 
-// Az emailek akkor vannak konfigurálva, ha van user/pass ÉS nincsenek letiltva ÉS nem development módban vagyunk
-const isMailerConfigured = isEmailsEnabled && !isDev;
+// Az emailek akkor vannak engedélyezve, ha:
+// 1. Éles környezetben vagyunk ÉS nincsenek letiltva (EMAILS_ENABLED !== 'false')
+// 2. Vagy fejlesztői környezetben vagyunk, de kifejezetten bekapcsoltuk (EMAILS_ENABLED === 'true')
+const isEmailsEnabled = process.env.EMAILS_ENABLED === 'true' || (process.env.EMAILS_ENABLED !== 'false' && !isDev);
+
+const isMailerConfigured = isEmailsEnabled;
 
 export const mailer = isMailerConfigured
      ? nodemailer.createTransport({
           host: smtpHost,
           port: smtpPort,
-
+          secure: smtpPort === 465, // true for 465, false for other ports
      })
      : {
           sendMail: async (options: any) => {
-               const reason = !isEmailsEnabled ? "EMAILS_ENABLED=false" : isDev ? "NODE_ENV=development" : "SMTP NOT CONFIGURED";
+               const reason = !isEmailsEnabled ? "EMAILS_ENABLED is false" : "SMTP NOT CONFIGURED";
                console.log(`--- MOCK EMAIL SENT (${reason}) ---`);
                console.log(`To: ${options.to}`);
                console.log(`Subject: ${options.subject}`);
