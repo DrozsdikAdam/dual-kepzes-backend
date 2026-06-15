@@ -4,11 +4,13 @@ import { CompanyInput, CompanyUpdateInput } from '../schemas/job.schema';
 import { CompanyWithAdminInput } from '../schemas/company.schema';
 import { PaginationParams, getPrismaSkipTake, paginate } from '../utils/pagination.util';
 import { hashPassword } from '../utils/auth.util';
-import { Role, Prisma } from '@prisma/client';
+import { Role, Prisma, RegistrationStatus } from '@prisma/client';
 import { prepareLocationData } from '../utils/location.util';
 import { notificationService } from './notification.service';
 import { notifySystemAdmins } from '../utils/notification.util';
 import { NOTIFICATION_TYPES } from '../utils/constants';
+import { addEmailToQueue } from './email.queue';
+import { generateCompanyApprovalEmail, generatePendingActivationEmail } from '../utils/email.util';
 
 export class CompanyService {
      private companySelect = {
@@ -16,6 +18,7 @@ export class CompanyService {
           name: true,
           taxId: true,
           description: true,
+          status: true,
           location: {
                select: {
                     id: true,
@@ -220,6 +223,18 @@ export class CompanyService {
                type: NOTIFICATION_TYPES.COMPANY_CREATE
           }).catch(err => console.error('[CompanyService.createWithAdmin] Notification error:', err));
 
+          // Send pending email to company admin
+          try {
+               const emailHtml = generatePendingActivationEmail(adminInput.fullName);
+               await addEmailToQueue({
+                    email: adminInput.email,
+                    subject: 'Regisztráció jóváhagyásra vár - Duális Képzés',
+                    body: emailHtml
+               });
+          } catch (err) {
+               console.error('[CompanyService.createWithAdmin] Error sending registration email:', err);
+          }
+
           return company;
      }
 
@@ -304,7 +319,7 @@ export class CompanyService {
      async getPending(params: Required<PaginationParams>) {
           const { skip, take } = getPrismaSkipTake(params);
           const where = {
-               status: 'PENDING' as const,
+               status: { in: [RegistrationStatus.PENDING, RegistrationStatus.REJECTED] },
                deletedAt: null
           };
 
@@ -329,7 +344,17 @@ export class CompanyService {
 
           if (!company) throw new NotFoundError('Cég');
 
-          return await prisma.$transaction(async (tx) => {
+          // Fetch company admin users to notify
+          const companyAdmins = await prisma.user.findMany({
+               where: {
+                    role: Role.COMPANY_ADMIN,
+                    companyEmployee: {
+                         companyId: id
+                    }
+               }
+          });
+
+          const result = await prisma.$transaction(async (tx) => {
                // Activate company
                const updatedCompany = await tx.company.update({
                     where: { id },
@@ -350,6 +375,20 @@ export class CompanyService {
                     data: { isActive: true }
                });
 
+               // Create database notifications for company admins
+               const notifications = [];
+               for (const admin of companyAdmins) {
+                    const notification = await tx.notification.create({
+                         data: {
+                              userId: admin.id,
+                              title: 'Cég regisztráció jóváhagyva',
+                              message: `A(z) ${updatedCompany.name} cég regisztrációja jóváhagyásra került. Mostantól bejelentkezhetsz.`,
+                              type: NOTIFICATION_TYPES.COMPANY_STATUS,
+                         }
+                    });
+                    notifications.push({ admin, notification, companyName: updatedCompany.name });
+               }
+
                // Notifications
                notifySystemAdmins({
                     title: "Cég jóváhagyva",
@@ -357,8 +396,27 @@ export class CompanyService {
                     type: NOTIFICATION_TYPES.COMPANY_STATUS
                }).catch(err => console.error('[CompanyService.approve] Admin notification error:', err));
 
-               return updatedCompany;
+               return { updatedCompany, notifications };
           });
+
+          // Send emails outside transaction
+          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+          const loginUrl = `${frontendUrl}/`;
+
+          for (const item of result.notifications) {
+               const { admin, notification, companyName } = item;
+               if (notificationService.shouldSendEmail(admin.role, NOTIFICATION_TYPES.COMPANY_STATUS, admin.isEmailEnabled)) {
+                    const emailHtml = generateCompanyApprovalEmail(companyName, admin.fullName, loginUrl);
+                    addEmailToQueue({
+                         notificationId: notification.id,
+                         email: admin.email,
+                         subject: 'Céges fiók aktiválva - Duális Képzés',
+                         body: emailHtml
+                    }).catch(err => console.error('[CompanyService.approve] Email queue error:', err));
+               }
+          }
+
+          return result.updatedCompany;
      }
 
      async reject(id: string) {

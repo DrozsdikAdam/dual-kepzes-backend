@@ -32,6 +32,7 @@ export interface MappedCompany {
      name: string;
      taxId?: string;
      description?: string | null;
+     status?: string;
      contactName?: string;
      contactEmail?: string;
      website?: string | null;

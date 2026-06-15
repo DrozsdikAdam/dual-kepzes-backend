@@ -57,6 +57,7 @@ export const mapCompany = (company: (Partial<Company> & {
           name: rest.name!,
           taxId: rest.taxId,
           description: rest.description,
+          status: rest.status,
           contactName: rest.contactName,
           contactEmail: rest.contactEmail,
           website: rest.website,

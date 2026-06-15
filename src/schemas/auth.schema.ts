@@ -29,7 +29,7 @@ export const studentBaseSchema = baseUserSchema.extend({
         country: z.string().trim().min(1).optional(),
         zipCode: z.coerce.number().min(1000).max(9999).optional(),
         city: z.string().trim().min(1).optional(),
-        address: z.string().trim().includes(" ").optional(),
+        address: z.string().trim().includes(" ", { message: "A címnek tartalmaznia kell legalább egy szóközt (pl. utca és házszám)" }).optional(),
     }).optional(),
     highSchool: z.string().trim().min(1),
     highSchoolLocation: z.string().trim().min(1, { message: "A középiskola helyszíne kötelező." }),

@@ -16,7 +16,7 @@ export const CompanyCreateSchema = z.object({
             country: z.string().trim().min(1).optional(),
             zipCode: z.coerce.number().min(1000).max(9999).optional(),
             city: z.string().trim().min(1).optional(),
-            address: z.string().trim().includes(" ").optional(),
+            address: z.string().trim().includes(" ", { message: "A címnek tartalmaznia kell legalább egy szóközt (pl. utca és házszám)" }).optional(),
         })).optional().default([]),
         contactName: z
             .string()
@@ -29,7 +29,11 @@ export const CompanyCreateSchema = z.object({
             .email({ message: "Érvénytelen email cím formátum" }),
         description: z.string().optional(),
         logoUrl: z.string().trim().url("Érvénytelen logó URL").optional(),
-        website: z.string().trim().url("Érvénytelen weboldal URL").optional().nullable(),
+        website: z
+            .string()
+            .trim()
+            .min(1, "A weboldal megadása kötelező")
+            .url("Érvénytelen weboldal URL"),
         hasOwnApplication: z.boolean().default(false),
         externalApplicationUrl: z.string().trim().url("Érvénytelen külső jelentkezési URL").optional().nullable(),
     }).refine((data) => {

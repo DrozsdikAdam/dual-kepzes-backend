@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const UpdateEmployeeSchema = z.object({
     body: z.object({
-        fullName: z.string().trim().includes(" ").min(1).optional(),
+        fullName: z.string().trim().includes(" ", { message: "A teljes névnek tartalmaznia kell legalább egy szóközt" }).min(1).optional(),
         phoneNumber: z.string().trim().regex(/^\+?[0-9]{7,15}$/).optional(),
         jobTitle: z.string().trim().min(1).optional(),
         isActive: z.boolean().optional()

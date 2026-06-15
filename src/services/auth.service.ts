@@ -3,7 +3,7 @@ import { hashPassword, comparePassword, generateToken, generateResetToken, hashT
 import { RegisterInput, LoginInput, CompanyAdminRegisterInput, SystemAdminRegisterInput } from '../schemas/auth.schema';
 import { BadRequestError, UnauthorizedError, ForbiddenError } from '../errors/AppError';
 import { Role, User } from '@prisma/client';
-import { generateVerificationEmail, generatePasswordResetEmail } from '../utils/email.util';
+import { generateVerificationEmail, generatePasswordResetEmail, generateWelcomeEmail, generatePendingActivationEmail } from '../utils/email.util';
 import { addEmailToQueue } from './email.queue';
 import { notificationService } from './notification.service';
 import { prepareLocationData } from '../utils/location.util';
@@ -79,12 +79,26 @@ export class AuthService {
           });
 
 
-          // Verification email sending disabled as per request
-          /*
-          if (process.env.NODE_ENV !== 'development') {
-               await this.sendVerificationEmail(result.id);
+          // Send welcome/pending email
+          try {
+               if (result.role === Role.MENTOR) {
+                    const emailHtml = generatePendingActivationEmail(result.fullName);
+                    await addEmailToQueue({
+                         email: result.email,
+                         subject: 'Regisztráció jóváhagyásra vár - Duális Képzés',
+                         body: emailHtml
+                    });
+               } else {
+                    const emailHtml = generateWelcomeEmail(result.fullName);
+                    await addEmailToQueue({
+                         email: result.email,
+                         subject: 'Üdvözöljük a Duális Képzési Rendszerben!',
+                         body: emailHtml
+                    });
+               }
+          } catch (err) {
+               console.error('[AuthService.register] Error sending registration email:', err);
           }
-          */
 
           return result;
      }
@@ -117,6 +131,18 @@ export class AuthService {
                return user;
           });
 
+          // Send pending email
+          try {
+               const emailHtml = generatePendingActivationEmail(result.fullName);
+               await addEmailToQueue({
+                    email: result.email,
+                    subject: 'Regisztráció jóváhagyásra vár - Duális Képzés',
+                    body: emailHtml
+               });
+          } catch (err) {
+               console.error('[AuthService.registerCompanyAdmin] Error sending registration email:', err);
+          }
+
           return result;
      }
 
@@ -135,6 +161,18 @@ export class AuthService {
                     isEmailVerified: true
                }
           });
+
+          // Send welcome email
+          try {
+               const emailHtml = generateWelcomeEmail(user.fullName);
+               await addEmailToQueue({
+                    email: user.email,
+                    subject: 'Üdvözöljük a Duális Képzési Rendszerben!',
+                    body: emailHtml
+               });
+          } catch (err) {
+               console.error('[AuthService.registerSystemAdmin] Error sending registration email:', err);
+          }
 
           return user;
      }

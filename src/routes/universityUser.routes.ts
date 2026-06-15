@@ -15,9 +15,9 @@ import {
      getPotentialReferents
 } from "../controllers/universityUser.controller";
 import { validate } from "../middlewares/validate.middleware";
-import { 
-     UniversityUserUpdateSchema, 
-     AssignMajorsSchema, 
+import {
+     UniversityUserUpdateSchema,
+     AssignMajorsSchema,
      AssignCompaniesSchema,
      PotentialReferentsQuerySchema
 } from "../schemas/universityUser.schema";
@@ -95,6 +95,54 @@ router.delete("/me", isUniversityUser, deleteMeUniversityUser);
  */
 router.get("/", isUniversityStaff, getUniversityUsers);
 
+// --- Referensi hozzárendelések ---
+
+/**
+ * @swagger
+ * /api/university-users/me/assignments:
+ *   get:
+ *     summary: Get my assigned majors and companies (Referent)
+ *     tags: [UniversityUsers]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get("/me/assignments", isUniversityUser, getMyAssignments);
+
+/**
+ * @swagger
+ * /api/university-users/referents:
+ *   get:
+ *     summary: List all active referents
+ *     tags: [UniversityUsers]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get("/referents", isUniversityStaff, listAllReferents);
+
+/**
+ * @swagger
+ * /api/university-users/potential-referents:
+ *   get:
+ *     summary: List potential referents for a partnership (Staff/Admin)
+ *     tags: [UniversityUsers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: studentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: positionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ */
+router.get("/potential-referents", isUniversityStaff, validate(PotentialReferentsQuerySchema), getPotentialReferents);
+
 /**
  * @swagger
  * /api/university-users/{id}:
@@ -160,54 +208,6 @@ router.patch("/:id", isSystemAdmin, validate(UniversityUserUpdateSchema), update
  *         description: Account deleted successfully
  */
 router.delete("/:id", isSystemAdmin, deleteUniversityUser)
-
-// --- Referensi hozzárendelések ---
-
-/**
- * @swagger
- * /api/university-users/me/assignments:
- *   get:
- *     summary: Get my assigned majors and companies (Referent)
- *     tags: [UniversityUsers]
- *     security:
- *       - bearerAuth: []
- */
-router.get("/me/assignments", isUniversityUser, getMyAssignments);
-
-/**
- * @swagger
- * /api/university-users/referents:
- *   get:
- *     summary: List all active referents
- *     tags: [UniversityUsers]
- *     security:
- *       - bearerAuth: []
- */
-router.get("/referents", isUniversityStaff, listAllReferents);
-
-/**
- * @swagger
- * /api/university-users/potential-referents:
- *   get:
- *     summary: List potential referents for a partnership (Staff/Admin)
- *     tags: [UniversityUsers]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: studentId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *       - in: query
- *         name: positionId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- */
-router.get("/potential-referents", isUniversityStaff, validate(PotentialReferentsQuerySchema), getPotentialReferents);
 
 /**
  * @swagger
