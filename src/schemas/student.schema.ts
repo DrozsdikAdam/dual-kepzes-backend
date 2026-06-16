@@ -33,7 +33,7 @@ export const StudentUpdateSchema = z.object({
         hasLanguageCert: z.boolean().optional(),
         language: z.string().optional(),
         languageLevel: z.string().optional(),
-        motivationLetter: z.string().max(500, { message: "A motivációs levél maximum 500 karakter lehet." }).optional(),
+        motivationLetter: z.string().max(1000, { message: "A motivációs levél maximum 1000 karakter lehet." }).optional(),
         isAvailableForWork: z.boolean().optional(),
     }).superRefine((data, ctx) => {
         if (data.isAvailableForWork && !data.motivationLetter) {

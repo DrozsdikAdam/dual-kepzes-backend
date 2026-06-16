@@ -47,7 +47,7 @@ export const studentBaseSchema = baseUserSchema.extend({
     language: z.string().trim().min(1).optional(),
     languageLevel: z.string().trim().min(1).optional(),
 
-    motivationLetter: z.string().trim().max(500, { message: "A motivációs levél maximum 500 karakter lehet." }).optional(),
+    motivationLetter: z.string().trim().max(1000, { message: "A motivációs levél maximum 1000 karakter lehet." }).optional(),
 });
 
 export const studentSchema = studentBaseSchema.superRefine((data, ctx) => {
