@@ -18,7 +18,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
 export const uploadImageMiddleware = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // Maximum 10 MB per fájl feltöltéskor
+    fileSize: 5 * 1024 * 1024, // Maximum 5 MB per fájl feltöltéskor
   },
   fileFilter,
 });

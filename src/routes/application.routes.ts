@@ -78,11 +78,11 @@ router.post("/", isStudent, requireIdempotency(), validate(CreateApplicationSche
  *               cv:
  *                 type: string
  *                 format: binary
- *                 description: Önéletrajz (PDF vagy Word, max 25MB)
+ *                 description: Önéletrajz (PDF vagy Word, max 5MB)
  *               motivationLetter:
  *                 type: string
  *                 format: binary
- *                 description: Motivációs levél (PDF vagy Word, max 25MB, opcionális)
+ *                 description: Motivációs levél (PDF vagy Word, max 5MB, opcionális)
  *     responses:
  *       201:
  *         description: Jelentkezés sikeresen beküldve, dokumentumok továbbítva

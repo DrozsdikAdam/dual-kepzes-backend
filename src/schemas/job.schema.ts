@@ -47,33 +47,42 @@ export const CompanyCreateSchema = z.object({
     }),
 });
 
+const PositionCreateBodyBase = z.object({
+    companyId: z.string().uuid(),
+    title: z.string().min(3),
+    description: z.string().optional(),
+    majorId: z.string().uuid("Érvénytelen szak azonosító").optional().nullable(),
+    locationId: z.string().uuid("Érvénytelen helyszín azonosító"),
+    type: z.enum(['DUAL', 'PROFESSIONAL_PRACTICE', 'REGULAR_WORK']).default('DUAL'),
+    deadline: z.coerce.date().optional().nullable(),
+    tags: z.array(
+        z.object({
+            name: z.string()
+                .trim()
+                .min(1)
+                .transform((val) => {
+                    const trimmed = val.replace(/\s+/g, " ");
+                    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+                }),
+            category: z.string()
+                .trim()
+                .min(1)
+                .default("Technology")
+        })
+    )
+        .optional()
+        .default([]),
+});
+
 export const PositionCreateSchema = z.object({
-    body: z.object({
-        companyId: z.string().uuid(),
-        title: z.string().min(3),
-        description: z.string().optional(),
-        majorId: z.string().uuid("Érvénytelen szak azonosító").optional(),
-        locationId: z.string().uuid("Érvénytelen helyszín azonosító"),
-        type: z.enum(['DUAL', 'PROFESSIONAL_PRACTICE', 'REGULAR_WORK']).default('DUAL'),
-        deadline: z.coerce.date().optional().nullable(),
-        tags: z.array(
-            z.object({
-                name: z.string()
-                    .trim()
-                    .min(1)
-                    .transform((val) => {
-                        // Ugyanaz a normalizálás, mint eddig
-                        const trimmed = val.replace(/\s+/g, " ");
-                        return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
-                    }),
-                category: z.string()
-                    .trim()
-                    .min(1)
-                    .default("Technology") // Ha a kliens nem küldi, ez lesz az alapértelmezett
-            })
-        )
-            .optional()
-            .default([]),
+    body: PositionCreateBodyBase.refine((data) => {
+        if (data.type !== 'REGULAR_WORK' && !data.majorId) {
+            return false;
+        }
+        return true;
+    }, {
+        message: "A szak kiválasztása kötelező duális állás és szakmai gyakorlat esetén.",
+        path: ["majorId"]
     }),
 });
 
@@ -94,7 +103,15 @@ export const PositionUpdateSchema = z.object({
     params: z.object({
         id: z.string().uuid("Érvénytelen pozíció azonosító"),
     }),
-    body: PositionCreateSchema.shape.body.omit({ companyId: true }).partial()
+    body: PositionCreateBodyBase.omit({ companyId: true }).partial().refine((data) => {
+        if (data.type !== undefined && data.type !== 'REGULAR_WORK' && data.majorId === null) {
+            return false;
+        }
+        return true;
+    }, {
+        message: "A szak kiválasztása kötelező duális állás és szakmai gyakorlat esetén.",
+        path: ["majorId"]
+    })
 })
 
 export type CompanyInput = z.infer<typeof CompanyCreateSchema>["body"];

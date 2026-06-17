@@ -245,25 +245,29 @@ export const submitApplicationFiles = async (req: Request, res: Response, next: 
             throw new NotFoundError("Pozíció");
         }
 
-        // Céges adminok email címeinek lekérése
-        const companyAdminUsers = await prisma.user.findMany({
-            where: {
-                role: Role.COMPANY_ADMIN,
-                companyEmployee: {
-                    companyId: position.company.id
-                }
-            },
-            select: { id: true, email: true }
-        });
-
-        if (companyAdminUsers.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: "A cégnek nincs regisztrált adminisztrátora, akinek továbbíthatnánk a dokumentumokat."
+        // Címzett e-mail címek meghatározása (elsődlegesen a cég kapcsolattartási címe, másodlagosan a cégadminok)
+        let adminEmails: string[] = [];
+        if (position.company.contactEmail && position.company.contactEmail.trim()) {
+            adminEmails = [position.company.contactEmail.trim()];
+        } else {
+            const companyAdminUsers = await prisma.user.findMany({
+                where: {
+                    role: Role.COMPANY_ADMIN,
+                    companyEmployee: {
+                        companyId: position.company.id
+                    }
+                },
+                select: { id: true, email: true }
             });
+            adminEmails = companyAdminUsers.map(admin => admin.email);
         }
 
-        const adminEmails = companyAdminUsers.map(admin => admin.email);
+        if (adminEmails.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "A céghez nem tartozik elérhető e-mail cím, ahová a dokumentumokat továbbíthatnánk."
+            });
+        }
 
         const attachments = [
             {

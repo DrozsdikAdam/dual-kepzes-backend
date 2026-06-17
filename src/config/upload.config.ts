@@ -18,8 +18,8 @@ const ALLOWED_MIME_TYPES = [
      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 ];
 
-// Fájlméret limit: 25MB (bytes-ban)
-const MAX_FILE_SIZE = 25 * 1024 * 1024;
+// Fájlméret limit: 5MB (bytes-ban)
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 // Fájl szűrő - csak PDF és Word dokumentumokat enged
 const fileFilter = (
