@@ -2,6 +2,10 @@
 
 Backend API a duális képzési rendszerhez. A szolgáltatás hallgatók, céges szerepkörök, egyetemi felhasználók és rendszeradminisztrátorok folyamatait támogatja egy role-based, REST alapú backenddel.
 
+## Megjegyzés
+
+A docker-compose.yml és az nginx mappa egy szintel fentebb kell kerüljön, mint a backend a szerveren
+
 ## Áttekintés
 
 A projekt fő céljai:

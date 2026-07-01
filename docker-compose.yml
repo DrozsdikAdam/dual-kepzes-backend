@@ -1,13 +1,76 @@
 services:
-  app:
+  db:
+    image: mirror.gcr.io/library/postgres:15
+    container_name: dual_db
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    restart: always
+    environment:
+      POSTGRES_USER: dualis
+      POSTGRES_PASSWORD: dualis_password
+      POSTGRES_DB: dual_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: dual-kepzes-backend
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     env_file:
-      - .env
+      - ./backend/.env
     ports:
-      - "${PORT:-3000}:3000"
+      - "5000:3000"
+    depends_on:
+      - db
+      - redis
     volumes:
-      - ./uploads:/app/uploads
+      - backend_uploads:/app/uploads
     restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: dual-redis
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://dualiskepzes.nje.hu
+    container_name: dual-kepzes-frontend
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  nginx:
+    build: ./nginx
+    container_name: dual-kepzes-nginx
+    user: "0:0"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/ssl/nginx/dualiskepzes_nje_hu/server.pem:/etc/nginx/ssl/cert.pem:ro
+      - /etc/ssl/nginx/dualiskepzes_nje_hu/server.key:/etc/nginx/ssl/key.pem:ro
+      - /etc/ssl/nginx/dualiskepzes_nje_hu/server_bundle.pem:/etc/nginx/ssl/chain.pem:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - frontend
+
+volumes:
+  postgres_data:
+  backend_uploads:
