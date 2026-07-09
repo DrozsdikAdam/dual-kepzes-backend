@@ -48,6 +48,7 @@ const VALID_APPLICATION_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus
 const VALID_PARTNERSHIP_TRANSITIONS: Record<PartnershipStatus, PartnershipStatus[]> = {
      [PartnershipStatus.PENDING_MENTOR]: [
           PartnershipStatus.PENDING_UNIVERSITY,
+          PartnershipStatus.ACTIVE,
           PartnershipStatus.TERMINATED
      ],
      [PartnershipStatus.PENDING_UNIVERSITY]: [

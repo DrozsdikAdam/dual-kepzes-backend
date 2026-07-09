@@ -1,5 +1,5 @@
 import prisma from '../config/prisma';
-import { PartnershipStatus } from '@prisma/client';
+import { PartnershipStatus, Role } from '@prisma/client';
 
 export class StatsService {
      async getSystemStats() {
@@ -476,6 +476,84 @@ export class StatsService {
                ...s,
                studentsByMajor: Object.values(s.studentsByMajor)
           }));
+     }
+
+     async getAllReferentsCompaniesStats() {
+          const totalCompaniesCount = await prisma.company.count({
+               where: { deletedAt: null }
+          });
+
+          const activeCompaniesCount = await prisma.company.count({
+               where: { isActive: true, deletedAt: null }
+          });
+
+          const referents = await prisma.user.findMany({
+               where: {
+                    role: Role.UNIVERSITY_USER,
+                    isActive: true,
+                    deletedAt: null
+               },
+               select: {
+                    id: true,
+                    fullName: true,
+                    email: true,
+                    managedCompanies: {
+                         where: { deletedAt: null },
+                         select: {
+                              id: true,
+                              name: true,
+                              description: true,
+                              website: true,
+                              logoUrl: true,
+                              isActive: true,
+                              positions: {
+                                   where: { deletedAt: null },
+                                   select: {
+                                        id: true,
+                                        dualPartnerships: {
+                                             where: {
+                                                  status: PartnershipStatus.ACTIVE,
+                                                  deletedAt: null
+                                             },
+                                             select: {
+                                                  id: true
+                                             }
+                                        }
+                                   }
+                              }
+                         }
+                    }
+               }
+          });
+
+          const mappedReferents = referents.map(ref => ({
+               id: ref.id,
+               fullName: ref.fullName,
+               email: ref.email,
+               companies: ref.managedCompanies.map(c => {
+                    const activePositionsCount = c.positions.length;
+                    const activePartnershipsCount = c.positions.reduce(
+                         (sum, p) => sum + p.dualPartnerships.length,
+                         0
+                    );
+                    return {
+                         id: c.id,
+                         name: c.name,
+                         description: c.description,
+                         website: c.website,
+                         logoUrl: c.logoUrl,
+                         isActive: c.isActive,
+                         activePositionsCount,
+                         activePartnershipsCount
+                    };
+               })
+          }));
+
+          return {
+               totalCompaniesCount,
+               activeCompaniesCount,
+               referents: mappedReferents
+          };
      }
 }
 export const statsService = new StatsService();

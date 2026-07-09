@@ -205,15 +205,19 @@ export class PartnershipService {
 
           const partnership = await prisma.dualPartnership.findFirst({
                where: { id: partnershipId },
-               select: { status: true, studentId: true }
+               select: { status: true, studentId: true, uniEmployeeId: true }
           });
 
           if (!partnership) {
                throw new NotFoundError('Partneri kapcsolat');
           }
 
+          // Tranzakció vagy frissítés attól függően, hogy van-e már egyetemi felelős
+          const hasUniEmployee = !!partnership.uniEmployeeId;
+          const targetStatus = hasUniEmployee ? PartnershipStatus.ACTIVE : PartnershipStatus.PENDING_UNIVERSITY;
+
           // Státusz átmenet validálása
-          validatePartnershipTransition(partnership.status, PartnershipStatus.PENDING_UNIVERSITY);
+          validatePartnershipTransition(partnership.status, targetStatus);
 
           // Verify partnership belongs to company
           const validApplication = await prisma.application.findFirst({
@@ -231,28 +235,52 @@ export class PartnershipService {
           // Resolve mentor ID (handle both employee ID and user ID)
           const finalMentorId = await this.resolveMentorId(mentorId, companyId);
 
-          const updated = await prisma.dualPartnership.update({
-               where: { id: partnershipId },
-               data: {
-                    mentorId: finalMentorId,
-                    status: PartnershipStatus.PENDING_UNIVERSITY
-               },
-               select: this.getPartnershipSelect()
-          });
+          let updated;
+          if (hasUniEmployee) {
+               // mind a mentor, mind az egyetemi felelős hozzá van rendelve -> tranzakcióban aktiváljuk
+               const [updatedPartnership] = await prisma.$transaction([
+                    prisma.dualPartnership.update({
+                         where: { id: partnershipId },
+                         data: {
+                              mentorId: finalMentorId,
+                              status: targetStatus
+                         },
+                         select: this.getPartnershipSelect()
+                    }),
+                    prisma.studentProfile.update({
+                         where: { id: partnership.studentId },
+                         data: { isAvailableForWork: false }
+                    })
+               ]);
+               updated = updatedPartnership;
+          } else {
+               updated = await prisma.dualPartnership.update({
+                    where: { id: partnershipId },
+                    data: {
+                         mentorId: finalMentorId,
+                         status: targetStatus
+                    },
+                    select: this.getPartnershipSelect()
+               });
+          }
 
           // Notifications
           notificationService.create({
                userId: (updated as any).student.userId,
-               title: "Mentor hozzárendelve",
-               message: `A(z) ${(updated as any).position?.company.name || "érintett"} cégnél kijelöltek számodra egy mentort. A partnerség mostantól az egyetemi jóváhagyásra vár.`,
-               type: NOTIFICATION_TYPES.MENTOR_ASSIGNED
+               title: hasUniEmployee ? "Partnerség aktívvá vált" : "Mentor hozzárendelve",
+               message: hasUniEmployee
+                    ? `A(z) ${(updated as any).position?.company.name || "érintett"} cégnél kijelöltek számodra egy mentort. A partnerség aktívvá vált.`
+                    : `A(z) ${(updated as any).position?.company.name || "érintett"} cégnél kijelöltek számodra egy mentort. A partnerség mostantól az egyetemi jóváhagyásra vár.`,
+               type: hasUniEmployee ? NOTIFICATION_TYPES.PARTNERSHIP_STATUS_UPDATE : NOTIFICATION_TYPES.MENTOR_ASSIGNED
           }).catch(err => console.error('[PartnershipService.assignMentor] Student notification error:', err));
 
-          notifySystemAdmins({
-               title: "Új jóváhagyásra váró partnerség",
-               message: `Egy új duális partnerség mentor kijelölése megtörtént, és egyetemi jóváhagyásra vár: ${(updated as any).student.user.fullName} - ${(updated as any).position?.company.name || "Ismeretlen cég"}`,
-               type: NOTIFICATION_TYPES.PARTNERSHIP_PENDING_UNIVERSITY
-          }).catch(err => console.error('[PartnershipService.assignMentor] Admin notification error:', err));
+          if (!hasUniEmployee) {
+               notifySystemAdmins({
+                    title: "Új jóváhagyásra váró partnerség",
+                    message: `Egy új duális partnerség mentor kijelölése megtörtént, és egyetemi jóváhagyásra vár: ${(updated as any).student.user.fullName} - ${(updated as any).position?.company.name || "Ismeretlen cég"}`,
+                    type: NOTIFICATION_TYPES.PARTNERSHIP_PENDING_UNIVERSITY
+               }).catch(err => console.error('[PartnershipService.assignMentor] Admin notification error:', err));
+          }
 
           if ((updated as any).mentor) {
                notificationService.create({
@@ -275,45 +303,61 @@ export class PartnershipService {
                throw new NotFoundError('Partneri kapcsolat');
           }
 
-          // Státusz átmenet validálása
-          validatePartnershipTransition(partnership.status, PartnershipStatus.ACTIVE);
-
-          // Ellenőrizzük, hogy van-e mentor hozzárendelve
-          if (!partnership.mentorId) {
-               throw new ForbiddenError('A partnerség nem aktiválható mentor nélkül. Előbb rendelj hozzá egy mentort.');
-          }
-
-          // Tranzakcióban frissítjük a partnerséget és a diák elérhetőségét
+          const hasMentor = !!partnership.mentorId;
           const finalUniEmployeeId = uniEmployeeId || await universityUserService.findReferentForPartnership(partnership.studentId, partnership.positionId!);
 
-          const [updatedPartnership] = await prisma.$transaction([
-               prisma.dualPartnership.update({
+          let updatedPartnership;
+
+          if (hasMentor) {
+               // Státusz átmenet validálása (csak ha még nem aktív)
+               if (partnership.status !== PartnershipStatus.ACTIVE) {
+                    validatePartnershipTransition(partnership.status, PartnershipStatus.ACTIVE);
+               }
+
+               // Tranzakcióban frissítjük a partnerséget és a diák elérhetőségét
+               const [updated] = await prisma.$transaction([
+                    prisma.dualPartnership.update({
+                         where: { id },
+                         data: {
+                              uniEmployeeId: finalUniEmployeeId,
+                              status: PartnershipStatus.ACTIVE
+                         },
+                         select: this.getPartnershipSelect()
+                    }),
+                    prisma.studentProfile.update({
+                         where: { id: partnership.studentId },
+                         data: { isAvailableForWork: false }
+                    })
+               ]);
+               updatedPartnership = updated;
+          } else {
+               // Nincs még mentor. Hozzárendeljük az egyetemi felelőst, de a státusz marad PENDING_MENTOR
+               updatedPartnership = await prisma.dualPartnership.update({
                     where: { id },
                     data: {
-                         uniEmployeeId: finalUniEmployeeId,
-                         status: PartnershipStatus.ACTIVE
+                         uniEmployeeId: finalUniEmployeeId
                     },
                     select: this.getPartnershipSelect()
-               }),
-               prisma.studentProfile.update({
-                    where: { id: partnership.studentId },
-                    data: { isAvailableForWork: false }
-               })
-          ]);
+               });
+          }
 
           // Notifications
           notificationService.create({
                userId: (updatedPartnership as any).student.userId,
-               title: "Egyetemi felelős hozzárendelve",
-               message: `A(z) ${(updatedPartnership as any).position?.company.name || "érintett"} céggel kötött partnerségedhez hozzárendelték az egyetemi felelőst. A partnerség aktívvá vált.`,
-               type: NOTIFICATION_TYPES.UNI_USER_ASSIGNED
+               title: hasMentor ? "Egyetemi felelős hozzárendelve" : "Egyetemi felelős kijelölve",
+               message: hasMentor
+                    ? `A(z) ${(updatedPartnership as any).position?.company.name || "érintett"} céggel kötött partnerségedhez hozzárendelték az egyetemi felelőst. A partnerség aktívvá vált.`
+                    : `A(z) ${(updatedPartnership as any).position?.company.name || "érintett"} céggel kötött partnerségedhez kijelölték az egyetemi felelőst. A partnerség aktiválásához még a cégnek is ki kell jelölnie egy mentort.`,
+               type: hasMentor ? NOTIFICATION_TYPES.UNI_USER_ASSIGNED : NOTIFICATION_TYPES.PARTNERSHIP_STATUS_UPDATE
           }).catch(err => console.error('[PartnershipService.assignUniversityUser] Student notification error:', err));
 
           if ((updatedPartnership as any).uniEmployee) {
                notificationService.create({
                     userId: (updatedPartnership as any).uniEmployee.id,
                     title: "Új partnerség hozzárendelve",
-                    message: `Egy új aktív duális partnerséghez téged rendeltek hozzá egyetemi felelősként: ${(updatedPartnership as any).student.user.fullName} - ${(updatedPartnership as any).position?.company.name || "Ismeretlen cég"}`,
+                    message: hasMentor
+                         ? `Egy új aktív duális partnerséghez téged rendeltek hozzá egyetemi felelősként: ${(updatedPartnership as any).student.user.fullName} - ${(updatedPartnership as any).position?.company.name || "Ismeretlen cég"}`
+                         : `Egy új duális partnerséghez téged rendeltek hozzá egyetemi felelősként: ${(updatedPartnership as any).student.user.fullName} - ${(updatedPartnership as any).position?.company.name || "Ismeretlen cég"} (A cég mentorára vár)`,
                     type: NOTIFICATION_TYPES.PARTNERSHIP_ASSIGNED_TO_UNI_USER
                }).catch(err => console.error('[PartnershipService.assignUniversityUser] Uni employee notification error:', err));
           }

@@ -90,3 +90,12 @@ export const getReferentOverview = async (req: Request, res: Response, next: Nex
         next(error);
     }
 };
+
+export const getAllReferentsCompaniesStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const stats = await statsService.getAllReferentsCompaniesStats();
+        res.json({ success: true, data: stats });
+    } catch (error) {
+        next(error);
+    }
+};
