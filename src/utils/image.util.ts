@@ -35,7 +35,7 @@ export const processAndSaveImage = async (buffer: Buffer, entityType: string): P
     fs.writeFileSync(filePath, processedBuffer);
 
     const publicUrlPrefix = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`;
-    const url = `${publicUrlPrefix}/uploads/${entityType}/${filename}`;
+    const url = `${publicUrlPrefix}/api/uploads/${entityType}/${filename}`;
 
     return { filename, url };
   } else {
@@ -65,8 +65,9 @@ export const deleteImageFile = async (url: string) => {
     const isLocalStoring = process.env.IS_LOCAL_STORING === 'true';
 
     if (isLocalStoring) {
-      if (url && url.includes('/uploads/')) {
-        const urlParts = url.split('/uploads/');
+      const pathKey = url.includes('/api/uploads/') ? '/api/uploads/' : '/uploads/';
+      if (url && url.includes(pathKey)) {
+        const urlParts = url.split(pathKey);
         const localPathPart = urlParts[urlParts.length - 1]; // pl. company/uuid.webp
         const filePath = path.join(process.cwd(), 'uploads', localPathPart);
         if (fs.existsSync(filePath)) {

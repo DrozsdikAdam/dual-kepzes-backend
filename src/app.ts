@@ -43,7 +43,7 @@ app.use(express.json());
 app.use(sanitizationMiddleware);
 
 // Serve static files from 'uploads' directory
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+app.use('/api/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Auth Rate Limiter
 app.use("/api/auth", authRateLimiter, authRoutes);
