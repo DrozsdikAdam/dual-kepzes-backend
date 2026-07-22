@@ -15,7 +15,8 @@ import {
     PositionCreateSchema,
     PositionUpdateSchema,
 } from "../schemas/job.schema";
-import { authenticateToken, isCompanyAdmin, isCompanyEmployee } from "../middlewares/auth.middleware";
+import { authenticateToken, isCompanyAdmin, isCompanyEmployee, requireRole } from "../middlewares/auth.middleware";
+import { Role } from "@prisma/client";
 import { requirePositionOwnership } from "../middlewares/ownership.middleware";
 import { requireIdempotency } from "../middlewares/idempotency.middleware";
 
@@ -196,7 +197,7 @@ router.patch(
  */
 router.delete("/positions/:id",
     authenticateToken,
-    isCompanyEmployee,
+    requireRole([Role.SYSTEM_ADMIN, Role.COMPANY_ADMIN, Role.MENTOR]),
     requirePositionOwnership,
     deletePosition
 );
